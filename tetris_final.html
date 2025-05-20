@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tetris para Telemóvel - João Soares e Silva - Exercício M2025</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0;
+      background-color: #f0f0f0;
+    }
+
+    #tetris-container {
+      background-color: #222;
+      border: 5px solid #333;
+      margin-top: 10px;
+      width: 90vw;
+      max-width: 360px;
+      position: relative;
+    }
+
+    #tetris-canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    #score {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: white;
+      font-size: 16px;
+    }
+
+    #controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      padding: 15px;
+      max-width: 90vw;
+    }
+
+    .button {
+      flex: 1 1 40%;
+      padding: 15px;
+      font-size: 18px;
+      min-width: 100px;
+      cursor: pointer;
+      background-color: #444;
+      color: white;
+      border: none;
+      border-radius: 8px;
+    }
+
+    .button:active {
+      background-color: #666;
+    }
+
+    @media (min-width: 500px) {
+      .button {
+        flex: 0 1 auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="tetris-container">
+    <canvas id="tetris-canvas" width="240" height="400"></canvas>
+    <div id="score">Pontuação: 0</div>
+  </div>
+  <div id="controls">
+    <button class="button" onclick="moveLeft()">Esquerda</button>
+    <button class="button" onclick="rotate()">Rodar</button>
+    <button class="button" onclick="moveRight()">Direita</button>
+    <button class="button" onclick="drop()">Descer</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('tetris-canvas');
+    const context = canvas.getContext('2d');
+    const scoreElement = document.getElementById('score');
+
+    const grid = [];
+    const gridRows = 20;
+    const gridCols = 12;
+    const blockSize = 20;
+
+    let currentPiece = null;
+    let currentX = 0;
+    let currentY = 0;
+    let currentRotation = 0;
+    let score = 0;
+    let gameInterval;
+    const gameSpeed = 500;
+
+    const colors = [null, 'cyan', 'blue', 'orange', 'yellow', 'green', 'purple', 'red'];
+    const shapes = [
+      [[0,0],[0,-1],[0,1],[0,2]], // I
+      [[0,0],[-1,0],[1,0],[1,-1]], // L
+      [[0,0],[-1,0],[1,0],[1,1]],  // J
+      [[0,0],[-1,0],[0,-1],[1,-1]], // S
+      [[0,0],[-1,-1],[0,-1],[1,0]], // Z
+      [[0,0],[-1,0],[0,-1],[-1,-1]], // O
+      [[0,0],[-1,0],[1,0],[0,-1]]  // T
+    ];
+
+    function createGrid() {
+      for (let y = 0; y < gridRows; y++) {
+        grid[y] = Array(gridCols).fill(0);
+      }
+    }
+
+    function createPiece() {
+      const randomShapeIndex = Math.floor(Math.random() * shapes.length);
+      return {
+        shape: shapes[randomShapeIndex],
+        colorIndex: randomShapeIndex + 1
+      };
+    }
+
+    function spawnPiece() {
+      currentPiece = createPiece();
+      currentX = Math.floor(gridCols / 2);
+      currentY = 0;
+      currentRotation = 0;
+
+      if (checkCollision(0, 0)) {
+        gameOver();
+      }
+    }
+
+    function getRotatedShape() {
+      return currentPiece.shape.map(([x, y]) => [-y, x]);
+    }
+
+    function getShape() {
+      let shape = currentPiece.shape;
+      for (let i = 0; i < currentRotation; i++) {
+        shape = shape.map(([x, y]) => [-y, x]);
+      }
+      return shape;
+    }
+
+    function checkCollision(offsetX, offsetY, newShape = null) {
+      const shape = newShape || getShape();
+      for (const [x, y] of shape) {
+        const newX = currentX + x + offsetX;
+        const newY = currentY + y + offsetY;
+        if (
+          newY >= gridRows ||
+          newX < 0 ||
+          newX >= gridCols ||
+          (newY >= 0 && grid[newY][newX] !== 0)
+        ) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function moveLeft() {
+      if (!checkCollision(-1, 0)) currentX--;
+    }
+
+    function moveRight() {
+      if (!checkCollision(1, 0)) currentX++;
+    }
+
+    function moveDown() {
+      if (!checkCollision(0, 1)) {
+        currentY++;
+      } else {
+        mergePiece();
+        clearLines();
+        spawnPiece();
+      }
+    }
+
+    function drop() {
+      while (!checkCollision(0, 1)) {
+        currentY++;
+      }
+      mergePiece();
+      clearLines();
+      spawnPiece();
+    }
+
+    function rotate() {
+      const newRotation = (currentRotation + 1) % 4;
+      const rotatedShape = getRotatedShape();
+      if (!checkCollision(0, 0, rotatedShape)) {
+        currentRotation = newRotation;
+      }
+    }
+
+    function mergePiece() {
+      const shape = getShape();
+      for (const [x, y] of shape) {
+        grid[currentY + y][currentX + x] = currentPiece.colorIndex;
+      }
+    }
+
+    function clearLines() {
+      let linesCleared = 0;
+      for (let y = gridRows - 1; y >= 0; y--) {
+        if (grid[y].every(cell => cell !== 0)) {
+          linesCleared++;
+          grid.splice(y, 1);
+          grid.unshift(Array(gridCols).fill(0));
+        }
+      }
+      score += linesCleared * linesCleared * 100;
+      updateScore();
+    }
+
+    function updateScore() {
+      scoreElement.textContent = `Pontuação: ${score}`;
+    }
+
+    function drawBlock(x, y, colorIndex) {
+      context.fillStyle = colors[colorIndex];
+      context.fillRect(x * blockSize, y * blockSize, blockSize, blockSize);
+      context.strokeStyle = '#000';
+      context.strokeRect(x * blockSize, y * blockSize, blockSize, blockSize);
+    }
+
+    function drawGrid() {
+      for (let y = 0; y < gridRows; y++) {
+        for (let x = 0; x < gridCols; x++) {
+          if (grid[y][x] !== 0) {
+            drawBlock(x, y, grid[y][x]);
+          }
+        }
+      }
+    }
+
+    function drawPiece() {
+      if (currentPiece) {
+        for (const [x, y] of getShape()) {
+          drawBlock(currentX + x, currentY + y, currentPiece.colorIndex);
+        }
+      }
+    }
+
+    function draw() {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      drawGrid();
+      drawPiece();
+    }
+
+    function gameLoop() {
+      moveDown();
+      draw();
+    }
+
+    function startGame() {
+      createGrid();
+      spawnPiece();
+      score = 0;
+      updateScore();
+      clearInterval(gameInterval);
+      gameInterval = setInterval(gameLoop, gameSpeed);
+    }
+
+    function gameOver() {
+      clearInterval(gameInterval);
+      alert(`Fim de Jogo! Pontuação: ${score}`);
+      startGame();
+    }
+
+    startGame();
+  </script>
+</body>
+</html>
