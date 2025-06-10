@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instalação Remota de Linux em Moçambique (Computadores de Baixos Recursos)</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 20px; background-color: #f4f4f4; color: #333; }
+        .container { max-width: 900px; margin: auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1, h2 { color: #2c3e50; }
+        h2 { border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 30px; }
+        ul { list-style-type: disc; margin-left: 20px; }
+        ol { list-style-type: decimal; margin-left: 20px; }
+        li { margin-bottom: 10px; }
+        b { color: #e74c3c; }
+        p { margin-bottom: 15px; }
+        .important { background-color: #ffe0b2; border-left: 5px solid #ff9800; padding: 15px; margin-top: 20px; }
+        code { background-color: #e0e0e0; padding: 2px 4px; border-radius: 3px; font-family: monospace; }
+        pre { background-color: #eee; padding: 15px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Guia de Instalação Remota de Linux para Estudantes em Moçambique</h1>
+        <p>Olá! Este guia foi criado para o ajudar a instalar o Linux remotamente em computadores com recursos limitados em Moçambique, utilizando uma ligação à internet que pode não ser ideal. A nossa prioridade será a eficiência e a resiliência.</p>
+
+        <p class="important">
+            <b>Nota Importante:</b> A instalação remota de um sistema operativo é um processo complexo. Os seus estudantes precisarão de ter um nível básico de familiaridade com o computador e capacidade para seguir instruções precisas. Idealmente, ter alguém no local com conhecimentos técnicos mínimos para auxiliar é crucial.
+        </p>
+
+        <hr>
+
+        <h2>1. Preparação Pré-Instalação (Em Moçambique)</h2>
+        <p>Antes de começar a instalar, é fundamental que os estudantes façam estas preparações:</p>
+        <ol>
+            <li><b>Computador Ligado e com Acesso à Internet:</b> O computador deve estar ligado à eletricidade e ter uma forma de se ligar à internet (Ethernet ou Wi-Fi).</li>
+            <li><b>Acesso à BIOS/UEFI:</b> Os estudantes devem saber como entrar na BIOS ou UEFI do computador para mudar a ordem de boot. Geralmente, isto envolve premir uma tecla (como F2, F10, F12, DEL) repetidamente ao ligar o computador.</li>
+            <li><b>Pen Drive Vazia (mínimo 8GB):</b> Precisaremos de uma pen drive para criar um "live USB" ou um disco de instalação.</li>
+            <li><b>Software de Comunicação:</b> Utilize plataformas como WhatsApp, Skype, Google Meet ou Jitsi para comunicação por voz/vídeo e partilha de ecrã (se possível). A comunicação é vital para orientar os estudantes.</li>
+            <li><b>Teclado e Rato Funcionais:</b> Assegure-se de que os periféricos básicos funcionam.</li>
+        </ol>
+
+        <hr>
+
+        <h2>2. Escolha da Distribuição Linux Ideal</h2>
+        <p>Para computadores de fracos recursos, a escolha da distribuição é crucial. Recomendo distribuições "leves":</p>
+        <ul>
+            <li><b>Lubuntu:</b> Baseado em Ubuntu, usa o ambiente de trabalho LXQt, que é muito leve.</li>
+            <li><b>Xubuntu:</b> Também baseado em Ubuntu, mas com o ambiente de trabalho Xfce, que é um pouco mais pesado que o LXQt, mas ainda assim leve.</li>
+            <li><b>Puppy Linux:</b> Extremamente leve, pode até correr completamente da RAM, ideal para máquinas muito antigas, mas a curva de aprendizagem pode ser um pouco maior.</li>
+            <li><b>Linux Lite:</b> Projetado especificamente para utilizadores de Windows que transitam para Linux e para computadores mais antigos.</li>
+            <li><b>AntiX:</b> Uma distribuição muito leve e versátil para computadores mais antigos e com poucos recursos.</li>
+        </ul>
+        <p><b>Recomendação:</b> Comece com <b>Lubuntu</b> ou <b>Linux Lite</b>, pois oferecem um bom equilíbrio entre leveza e facilidade de uso para quem está a começar.</p>
+
+        <hr>
+
+        <h2>3. Criação do Live USB Remotamente</h2>
+        <p>Esta é a parte mais complexa e crucial, pois não pode estar fisicamente presente. Terá de guiar os estudantes passo a passo.</p>
+        <ol>
+            <li><b>Download da Imagem ISO:</b>
+                <ul>
+                    <li>Peça aos estudantes para descarregar a imagem ISO da distribuição Linux escolhida para o computador deles. Forneça o link direto para evitar confusões.</li>
+                    <li><b>Estratégia para Internet Lenta:</b> Se a internet for muito lenta ou instável, pode ser mais eficiente enviar a ISO por um serviço de partilha de ficheiros que suporte pausas e recomeços (como um cliente BitTorrent para um torrent da ISO, se disponível, ou um gestor de downloads como o `wget` se eles tiverem acesso à linha de comandos no Windows, mas isso é mais avançado).</li>
+                    <li>**Alternativa (Se possível):** Se alguém de confiança em Moçambique tiver uma ligação melhor, pode descarregar a ISO e copiá-la para a pen drive.</li>
+                </ul>
+            </li>
+            <li><b>Software para Criar o Live USB:</b>
+                <ul>
+                    <li>O software mais recomendado e fácil de usar no Windows é o <b>Rufus</b> ou o <b>Balena Etcher</b>.</li>
+                    <li>Guie os estudantes para descarregar um deles (Rufus é mais compacto e direto).</li>
+                    <li><b>Instruções para o Rufus:</b>
+                        <ol>
+                            <li>Ligar a pen drive ao computador.</li>
+                            <li>Abrir o Rufus.</li>
+                            <li>Selecionar a pen drive em "Dispositivo".</li>
+                            <li>Clicar em "SELECIONAR" e escolher o ficheiro ISO descarregado.</li>
+                            <li>Manter as outras opções como predefinidas (ou pedir para usar as predefinições se o Rufus sugerir diferentes modos).</li>
+                            <li>Clicar em "INICIAR" e confirmar qualquer aviso (avise que os dados na pen drive serão apagados!).</li>
+                            <li>Este processo pode demorar algum tempo. Mantenha-se em comunicação constante.</li>
+                        </ol>
+                    </li>
+                </ul>
+            </li>
+        </ol>
+
+        <hr>
+
+        <h2>4. Boot do Live USB e Instalação (Orientação Remota)</h2>
+        <p>Com o Live USB criado, os estudantes devem bootar a partir dele.</p>
+        <ol>
+            <li><b>Alterar a Ordem de Boot na BIOS/UEFI:</b>
+                <ul>
+                    <li>Peça aos estudantes para reiniciar o computador.</li>
+                    <li>Enquanto o computador reinicia, eles devem premir a tecla correta (F2, F10, F12, DEL, etc.) para entrar na BIOS/UEFI.</li>
+                    <li>Navegue-os através dos menus (geralmente usando as setas do teclado) para encontrar a opção "Boot Order" ou "Boot Priority".</li>
+                    <li>Mude a ordem para que a pen drive (será listada pelo nome ou como "USB HDD", "Removable Device") seja a primeira opção.</li>
+                    <li>Salve as alterações e saia da BIOS/UEFI (geralmente F10). O computador irá reiniciar.</li>
+                </ul>
+            </li>
+            <li><b>Iniciar o Ambiente Live:</b>
+                <ul>
+                    <li>Se tudo correr bem, o computador deverá iniciar a partir da pen drive.</li>
+                    <li>Irá aparecer um menu com opções. Geralmente, a opção "Try [Nome da Distro] without installing" ou similar é a melhor para testar antes de instalar. Selecione essa opção.</li>
+                    <li>Isto carregará o ambiente Linux diretamente da pen drive, sem instalar nada no disco rígido. Isto é excelente para verificar se o hardware é compatível.</li>
+                </ul>
+            </li>
+            <li><b>Verificação no Ambiente Live:</b>
+                <ul>
+                    <li>Uma vez no ambiente live, peça aos estudantes para verificar se o Wi-Fi funciona, se o teclado e o rato respondem, e se a resolução do ecrã parece normal.</li>
+                    <li>É um bom momento para iniciar uma chamada de voz/vídeo novamente para ter comunicação em tempo real.</li>
+                </ul>
+            </li>
+            <li><b>Iniciar o Instalador:</b>
+                <ul>
+                    <li>No ambiente live, haverá um ícone no ambiente de trabalho chamado "Install [Nome da Distro]" ou algo semelhante. Peça para o executarem.</li>
+                    <li>O instalador é geralmente gráfico e relativamente intuitivo.</li>
+                </ul>
+            </li>
+            <li><b>Passos Comuns da Instalação (Guia Remota):</b>
+                <ul>
+                    <li><b>Linguagem:</b> Escolher "Português (Portugal)" ou "Português (Moçambique)" se disponível.</li>
+                    <li><b>Layout do Teclado:</b> Escolher "Português (Portugal)" ou o layout apropriado para o teclado que estão a usar.</li>
+                    <li><b>Ligação à Internet:</b> Se o Wi-Fi não foi configurado automaticamente, o instalador pode perguntar para ligar. Ajude-os a selecionar a rede e introduzir a palavra-passe.</li>
+                    <li><b>Tipo de Instalação:</b>
+                        <ul>
+                            <li><b>"Apagar disco e instalar [Nome da Distro]":</b> Esta é a opção mais simples, mas **AVISE-OS QUE IRÁ APAGAR TUDO NO DISCO RÍGIDO**. Só escolha esta opção se o computador for dedicado ao Linux e não tiver dados importantes.</li>
+                            <li><b>"Instalação personalizada" ou "Something else":</b> Se houver um Windows ou outros dados que querem manter, é preciso ser mais cuidadoso e criar partições manualmente. **Isto é avançado e não recomendado para uma primeira instalação remota com pouca experiência.** Se for absolutamente necessário, terá de os guiar passo a passo na criação de partições para a raiz (`/`), `swap` (memória virtual, se tiverem pouca RAM) e talvez `/home`.</li>
+                        </ul>
+                    </li>
+                    <li><b>Localização:</b> Selecionar a sua localização no mapa ou na lista (Moçambique).</li>
+                    <li><b>Criar Utilizador:</b>
+                        <ul>
+                            <li>Pedir para criar um nome de utilizador e palavra-passe. Escolham uma palavra-passe que consigam memorizar facilmente.</li>
+                            <li>Podem escolher a opção de "Iniciar sessão automaticamente" para simplificar, mas é menos seguro.</li>
+                        </ul>
+                    </li>
+                    <li><b>Progresso da Instalação:</b> O instalador irá copiar os ficheiros e configurar o sistema. Este processo pode demorar. Mantenha-se em comunicação.</li>
+                </ul>
+            </li>
+            <li><b>Reiniciar após a Instalação:</b>
+                <ul>
+                    <li>Quando a instalação estiver completa, o instalador irá pedir para reiniciar o computador.</li>
+                    <li>**IMPORTANTE:** Quando reiniciar, eles devem remover a pen drive USB imediatamente.</li>
+                    <li>O computador deverá agora iniciar no novo sistema Linux instalado.</li>
+                </ul>
+            </li>
+        </ol>
+
+        <hr>
+
+        <h2>5. Configuração Pós-Instalação e Suporte Remoto</h2>
+        <p>Parabéns, o Linux deve estar instalado! Agora vem a parte de garantir que os estudantes conseguem usá-lo e receber suporte.</p>
+        <ol>
+            <li><b>Atualizar o Sistema:</b>
+                <ul>
+                    <li>Uma das primeiras coisas a fazer é atualizar o sistema. Peça para abrir o Terminal (geralmente Ctrl+Alt+T) e digitar os seguintes comandos:
+                        <pre>sudo apt update</pre>
+                        <pre>sudo apt upgrade -y</pre>
+                    </li>
+                    <li>Isto irá descarregar e instalar as últimas atualizações. A internet lenta pode tornar este processo demorado.</li>
+                </ul>
+            </li>
+            <li><b>Instalar Software Essencial:</b>
+                <ul>
+                    <li>Navegador web (Firefox já vem instalado, mas podem preferir Chrome/Chromium).</li>
+                    <li>Suite de escritório (LibreOffice já vem instalado).</li>
+                    <li>VLC Media Player para multimédia.</li>
+                    <li>Ferramentas de comunicação (se necessário, como Skype, Jitsi desktop client).</li>
+                </ul>
+            </li>
+            <li><b>Ferramentas de Acesso Remoto (Importante para o seu Suporte):</b>
+                <ul>
+                    <li>Para o seu suporte a longo prazo, instale uma ferramenta de acesso remoto nos computadores dos estudantes.
+                        <ul>
+                            <li><b>TeamViewer:</b> É fácil de usar para ambos os lados, mas pode ser um pouco pesado para computadores antigos e requer uma conta.</li>
+                            <li><b>AnyDesk:</b> Semelhante ao TeamViewer, muitas vezes com melhor desempenho em ligações fracas.</li>
+                            <li><b>Chrome Remote Desktop:</b> Leve e integrado com o Chrome, mas requer que os estudantes tenham uma conta Google e o Chrome instalado.</li>
+                            <li><b>Remmina (Cliente RDP/VNC) + Servidor VNC (TigerVNC/TightVNC):</b> Esta é uma opção mais "Linux-nativa" e leve. Terá de configurar um servidor VNC no lado deles e usar o Remmina no seu lado. É mais técnico, mas muito eficiente.</li>
+                        </ul>
+                    </li>
+                    <li><b>Instruções para configurar o acesso remoto:</b>
+                        <ul>
+                            <li>Escolha uma ferramenta e guie-os na instalação (por exemplo, `sudo apt install teamviewer` se for a sua escolha, ou descarregar o `.deb` do site oficial).</li>
+                            <li>Peça para eles partilharem o ID e a palavra-passe para que possa aceder ao computador e dar suporte diretamente.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+            <li><b>Educação Contínua:</b>
+                <ul>
+                    <li>Ensine o básico do Linux: navegar no ambiente de trabalho, abrir aplicações, usar o explorador de ficheiros.</li>
+                    <li>Ensine a usar o Terminal para comandos básicos como `ls`, `cd`, `pwd`, `sudo apt update`, `sudo apt upgrade`.</li>
+                    <li>Pode-se criar pequenos guias em PDF ou vídeo para eles consultarem.</li>
+                </ul>
+            </li>
+        </ol>
+
+        <hr>
+
+        <!--<h2>Considerações Adicionais para Moçambique e Internet Lenta</h2>
+        <ul>
+            <li><b>Tolerância a Falhas:</b> Prepare-se para que a internet falhe e a instalação seja interrompida. Terá de recomeçar algumas vezes.</li>
+            <li><b>Download Offline:</b> Se possível, descarregue os .deb (pacotes de instalação) de aplicações essenciais no seu lado e tente transferi-los para os estudantes em formato zip/tar, para que possam instalar offline depois. Isto é mais complexo, mas pode poupar largura de banda.</li>
+            <li><b>Comunicação Clara e Paciência:</b> Seja extremamente claro nas suas instruções. Use linguagem simples. Tenha muita paciência.</li>
+            <li><b>Horários:</b> Tente agendar as sessões de instalação para horários em que a ligação à internet em Moçambique tende a ser mais estável (se houver essa informação).</li>
+            <li><b>Testes Prévios:</b> Se tiver um computador antigo consigo, tente replicar o processo para antecipar problemas.</li>
+        </ul>-->
+
+        <p>Este processo será um desafio, mas a sua dedicação em levar o conhecimento de Linux aos estudantes em Moçambique é louvável. Boa sorte!</p>
+    </div>
+</body>
+</html>
