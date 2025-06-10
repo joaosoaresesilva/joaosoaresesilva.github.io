@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Plano de Limpeza de Terreno Rústico</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+    }
+    canvas {
+      max-width: 700px;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Plano de Limpeza para Terreno Rústico</h1>
+  <p><strong>Área:</strong> 50m x 100m = 5.000 m²</p>
+  <p><strong>Vegetação dominante:</strong> Carvalhos, Medronheiros, Loureiros</p>
+  <p><strong>Objetivo:</strong> Limpeza e ordenamento da vegetação mantendo espécies autóctones.</p>
+
+  <h2>Fases de Intervenção</h2>
+  <ol>
+    <li><strong>Identificação das espécies</strong> (dias 1–3): mapeamento e marcação.</li>
+    <li><strong>Desbaste seletivo</strong> (dias 4–10): remoção de espécies invasoras e vegetação densa.</li>
+    <li><strong>Poda e ordenamento</strong> (dias 11–15): limpeza dos carvalhos, medronheiros e loureiros.</li>
+    <li><strong>Criação de aceiros</strong> (dias 16–18): segurança contra incêndios.</li>
+    <li><strong>Manutenção periódica</strong> (mensal): monitorização e controlo de regeneração.</li>
+  </ol>
+
+  <h2>Distribuição Estimada de Vegetação</h2>
+  <canvas id="vegetacaoChart"></canvas>
+
+  <script>
+    const ctx = document.getElementById('vegetacaoChart').getContext('2d');
+    const vegetacaoChart = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: ['Carvalhos', 'Medronheiros', 'Loureiros', 'Outros'],
+        datasets: [{
+          data: [40, 30, 20, 10],
+          backgroundColor: ['#8B4513', '#B22222', '#228B22', '#A9A9A9'],
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'bottom'
+          },
+          title: {
+            display: true,
+            text: 'Distribuição Estimada da Vegetação no Terreno'
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
