@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Plano de Limpeza de Terreno</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px; /* Reduzida a margem para telas menores */
+      line-height: 1.6; /* Melhoria na legibilidade */
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(50px, 1fr)); /* Auto-ajuste para células */
+      gap: 2px;
+      width: 100%;
+      max-width: 600px;
+      border: 2px solid #000;
+      margin: 20px auto; /* Centraliza a grade */
+    }
+    .cell {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: white;
+      font-weight: bold;
+      word-break: break-word; /* Previne estouro de texto em telas pequenas */
+      padding: 2px; /* Pequeno padding para texto */
+    }
+    .legend {
+      margin-top: 20px;
+    }
+    .legend div {
+      margin-bottom: 5px;
+    }
+    .info {
+      margin-top: 20px;
+      background-color: #f4f4f4;
+      padding: 15px; /* Aumentado o padding */
+      border-left: 4px solid #1f77b4;
+      border-radius: 5px; /* Cantos arredondados */
+    }
+    .form-section {
+      margin-bottom: 20px;
+      padding: 15px; /* Aumentado o padding */
+      background-color: #eaeaea;
+      border-left: 4px solid #555;
+      border-radius: 5px; /* Cantos arredondados */
+    }
+    label {
+      display: block;
+      margin-bottom: 10px; /* Espaçamento maior entre labels */
+      font-weight: bold;
+    }
+    input[type="range"] {
+      width: calc(100% - 70px); /* Ajuste para preencher a largura disponível */
+      vertical-align: middle;
+    }
+    output {
+      font-weight: bold;
+      margin-left: 10px;
+      display: inline-block; /* Para manter na mesma linha do slider */
+      min-width: 40px; /* Garante espaço para o número */
+      text-align: right;
+    }
+    button {
+      background-color: #4CAF50; /* Cor verde para o botão */
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 10px;
+      width: 100%; /* Botão ocupa 100% da largura em telas pequenas */
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    ul {
+      list-style-type: none; /* Remove marcadores de lista */
+      padding: 0;
+    }
+    ul li {
+      margin-bottom: 8px;
+    }
+
+    /* Media Queries para responsividade */
+    @media (max-width: 768px) { /* Para tablets e celulares */
+      body {
+        margin: 15px;
+      }
+      h1 {
+        font-size: 24px;
+      }
+      input[type="range"] {
+        width: calc(100% - 60px); /* Ajuste para telas menores */
+      }
+      output {
+        min-width: 30px;
+      }
+    }
+
+    @media (max-width: 480px) { /* Para celulares pequenos */
+      body {
+        margin: 10px;
+      }
+      h1 {
+        font-size: 20px;
+      }
+      .grid {
+        grid-template-columns: repeat(auto-fit, minmax(40px, 1fr)); /* Células menores */
+      }
+      .cell {
+        font-size: 10px;
+      }
+      button {
+        padding: 8px 12px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Plano de Limpeza para Terreno Rústico</h1>
+  <p><strong>Objetivo:</strong> Manter todas as árvores e limpar o capim com máquina rotativa.</p>
+
+  <div class="form-section">
+    <h3>Introduza os Parâmetros</h3>
+    <form id="paramForm">
+      <label>Largura do terreno (10–500m):
+        <input type="range" id="largura" min="10" max="500" value="50" oninput="larguraOutput.value = largura.value">
+        <output id="larguraOutput">50</output> m
+      </label>
+      <label>Comprimento do terreno (10–100m):
+        <input type="range" id="comprimento" min="10" max="100" value="100" oninput="comprimentoOutput.value = comprimento.value">
+        <output id="comprimentoOutput">100</output> m
+      </label>
+      <label>Número de pessoas (1–10):
+        <input type="range" id="pessoas" min="1" max="10" value="2" oninput="pessoasOutput.value = pessoas.value">
+        <output id="pessoasOutput">2</output>
+      </label>
+      <label>Horas de trabalho por pessoa (1–6):
+        <input type="range" id="horas" min="1" max="6" value="6" oninput="horasOutput.value = horas.value">
+        <output id="horasOutput">6</output> h
+      </label>
+      <label>Área limpa por hora por pessoa (fixo):
+        <input type="range" id="areaHora" min="50" max="200" step="10" value="100" oninput="areaHoraOutput.value = areaHora.value">
+        <output id="areaHoraOutput">100</output> m²/h
+      </label>
+      <button type="button" onclick="atualizarPlaneamento()">Atualizar Planeamento</button>
+    </form>
+  </div>
+
+  <div class="info" id="resultado">
+    </div>
+
+  <div class="grid" id="gridContainer">
+    </div>
+
+  <script>
+    function atualizarPlaneamento() {
+      const largura = parseFloat(document.getElementById('largura').value);
+      const comprimento = parseFloat(document.getElementById('comprimento').value);
+      const pessoas = parseFloat(document.getElementById('pessoas').value);
+      const horas = parseFloat(document.getElementById('horas').value);
+      const areaHora = parseFloat(document.getElementById('areaHora').value);
+
+      const areaTotal = largura * comprimento;
+      const areaPessoaDia = areaHora * horas;
+      const areaTotalDia = areaPessoaDia * pessoas;
+      const dias = Math.ceil(areaTotal / areaTotalDia);
+
+      const resultado = `
+        <h3>Planeamento Atualizado</h3>
+        <ul>
+          <li><strong>Área Total:</strong> ${largura}m x ${comprimento}m = ${areaTotal.toLocaleString()} m²</li>
+          <li><strong>Área diária por pessoa:</strong> ${areaPessoaDia.toLocaleString()} m²</li>
+          <li><strong>Total de área tratada por dia (${pessoas} pessoas):</strong> ${areaTotalDia.toLocaleString()} m²</li>
+          <li><strong>Número total de dias estimado:</strong> ${dias} dias</li>
+        </ul>
+      `;
+      document.getElementById('resultado').innerHTML = resultado;
+
+      const gridContainer = document.getElementById('gridContainer');
+      gridContainer.innerHTML = '';
+
+      const totalCells = 50;
+      const areasPerCell = areaTotal / totalCells;
+      const cellsPerDay = areaTotalDia / areasPerCell;
+
+      for (let i = 0; i < totalCells; i++) {
+        const dia = Math.floor(i / cellsPerDay) + 1;
+        const color = `hsl(${(dia * 50) % 360}, 70%, 50%)`;
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.style.backgroundColor = color;
+        cell.textContent = `D${dia}`;
+        gridContainer.appendChild(cell);
+      }
+    }
+
+    window.onload = atualizarPlaneamento;
+  </script>
+</body>
+</html>
