@@ -11,15 +11,14 @@
     .grid {
       display: grid;
       grid-template-columns: repeat(10, 1fr);
-      grid-template-rows: repeat(5, 1fr);
       gap: 2px;
-      width: 500px;
-      height: 250px;
+      width: 100%;
+      max-width: 600px;
       border: 2px solid #000;
+      margin-top: 20px;
     }
     .cell {
-      width: 100%;
-      height: 100%;
+      aspect-ratio: 1;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -33,105 +32,114 @@
     .legend div {
       margin-bottom: 5px;
     }
-    .day1 { background-color: #1f77b4; }
-    .day2 { background-color: #ff7f0e; }
-    .day3 { background-color: #2ca02c; }
-    .day4 { background-color: #d62728; }
-    .day5 { background-color: #9467bd; }
     .info {
       margin-top: 20px;
       background-color: #f4f4f4;
       padding: 10px;
       border-left: 4px solid #1f77b4;
     }
+    .form-section {
+      margin-bottom: 20px;
+      padding: 10px;
+      background-color: #eaeaea;
+      border-left: 4px solid #555;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+    }
+    input[type="range"] {
+      width: 300px;
+    }
+    output {
+      font-weight: bold;
+      margin-left: 10px;
+    }
   </style>
 </head>
 <body>
   <h1>Plano de Limpeza para Terreno Rústico</h1>
-  <p><strong>Área Total:</strong> 50m (largura) x 100m (comprimento) = 5.000 m²</p>
   <p><strong>Vegetação dominante:</strong> Carvalhos, Medronheiros, Loureiros</p>
   <p><strong>Objetivo:</strong> Manter todas as árvores e limpar o capim com máquina rotativa.</p>
 
-  <div class="info">
-    <h3>Parâmetros do Planeamento</h3>
-    <ul>
-      <li><strong>Número de pessoas:</strong> 2</li>
-      <li><strong>Horas de trabalho por dia:</strong> 6 horas</li>
-      <li><strong>Área por pessoa por hora:</strong> 100 m²</li>
-      <li><strong>Área diária por pessoa:</strong> 600 m²</li>
-      <li><strong>Total de área tratada por dia (2 pessoas):</strong> 1.200 m²</li>
-      <li><strong>Número total de dias estimado:</strong> 5 dias (5.000 m² / 1.200 m² por dia ≈ 4,2 dias)</li>
-    </ul>
+  <div class="form-section">
+    <h3>Introduza os Parâmetros</h3>
+    <form id="paramForm">
+      <label>Largura do terreno (10–500m):
+        <input type="range" id="largura" min="10" max="500" value="50" oninput="larguraOutput.value = largura.value">
+        <output id="larguraOutput">50</output> m
+      </label>
+      <label>Comprimento do terreno (10–100m):
+        <input type="range" id="comprimento" min="10" max="100" value="100" oninput="comprimentoOutput.value = comprimento.value">
+        <output id="comprimentoOutput">100</output> m
+      </label>
+      <label>Número de pessoas (1–10):
+        <input type="range" id="pessoas" min="1" max="10" value="2" oninput="pessoasOutput.value = pessoas.value">
+        <output id="pessoasOutput">2</output>
+      </label>
+      <label>Horas de trabalho por pessoa (1–6):
+        <input type="range" id="horas" min="1" max="6" value="6" oninput="horasOutput.value = horas.value">
+        <output id="horasOutput">6</output> h
+      </label>
+      <label>Área limpa por hora por pessoa (fixo):
+        <input type="range" id="areaHora" min="50" max="200" step="10" value="100" oninput="areaHoraOutput.value = areaHora.value">
+        <output id="areaHoraOutput">100</output> m²/h
+      </label>
+      <button type="button" onclick="atualizarPlaneamento()">Atualizar Planeamento</button>
+    </form>
   </div>
 
-  <h2>Divisão do Terreno em Parcelas Diárias</h2>
-  <p>O terreno está dividido em 5 linhas por 10 colunas (parcelas de 10m x 10m cada). Cada cor representa o trabalho a realizar por uma pessoa por dia.</p>
-
-  <div class="grid">
-    <!-- Linha 1 -->
-    <div class="cell day1">1</div>
-    <div class="cell day1">2</div>
-    <div class="cell day1">3</div>
-    <div class="cell day1">4</div>
-    <div class="cell day1">5</div>
-    <div class="cell day2">6</div>
-    <div class="cell day2">7</div>
-    <div class="cell day2">8</div>
-    <div class="cell day2">9</div>
-    <div class="cell day2">10</div>
-    <!-- Linha 2 -->
-    <div class="cell day3">11</div>
-    <div class="cell day3">12</div>
-    <div class="cell day3">13</div>
-    <div class="cell day3">14</div>
-    <div class="cell day3">15</div>
-    <div class="cell day4">16</div>
-    <div class="cell day4">17</div>
-    <div class="cell day4">18</div>
-    <div class="cell day4">19</div>
-    <div class="cell day4">20</div>
-    <!-- Linha 3 -->
-    <div class="cell day5">21</div>
-    <div class="cell day5">22</div>
-    <div class="cell day5">23</div>
-    <div class="cell day5">24</div>
-    <div class="cell day5">25</div>
-    <div class="cell day1">26</div>
-    <div class="cell day1">27</div>
-    <div class="cell day1">28</div>
-    <div class="cell day1">29</div>
-    <div class="cell day1">30</div>
-    <!-- Linha 4 -->
-    <div class="cell day2">31</div>
-    <div class="cell day2">32</div>
-    <div class="cell day2">33</div>
-    <div class="cell day2">34</div>
-    <div class="cell day2">35</div>
-    <div class="cell day3">36</div>
-    <div class="cell day3">37</div>
-    <div class="cell day3">38</div>
-    <div class="cell day3">39</div>
-    <div class="cell day3">40</div>
-    <!-- Linha 5 -->
-    <div class="cell day4">41</div>
-    <div class="cell day4">42</div>
-    <div class="cell day4">43</div>
-    <div class="cell day4">44</div>
-    <div class="cell day4">45</div>
-    <div class="cell day5">46</div>
-    <div class="cell day5">47</div>
-    <div class="cell day5">48</div>
-    <div class="cell day5">49</div>
-    <div class="cell day5">50</div>
+  <div class="info" id="resultado">
+    <!-- Resultado do cálculo será inserido aqui -->
   </div>
 
-  <div class="legend">
-    <h3>Legenda das Cores</h3>
-    <div><span style="background-color:#1f77b4;color:white;padding:2px 5px">Dia 1</span></div>
-    <div><span style="background-color:#ff7f0e;color:white;padding:2px 5px">Dia 2</span></div>
-    <div><span style="background-color:#2ca02c;color:white;padding:2px 5px">Dia 3</span></div>
-    <div><span style="background-color:#d62728;color:white;padding:2px 5px">Dia 4</span></div>
-    <div><span style="background-color:#9467bd;color:white;padding:2px 5px">Dia 5</span></div>
+  <div class="grid" id="gridContainer">
+    <!-- Células de planeamento por dia -->
   </div>
+
+  <script>
+    function atualizarPlaneamento() {
+      const largura = parseFloat(document.getElementById('largura').value);
+      const comprimento = parseFloat(document.getElementById('comprimento').value);
+      const pessoas = parseFloat(document.getElementById('pessoas').value);
+      const horas = parseFloat(document.getElementById('horas').value);
+      const areaHora = parseFloat(document.getElementById('areaHora').value);
+
+      const areaTotal = largura * comprimento;
+      const areaPessoaDia = areaHora * horas;
+      const areaTotalDia = areaPessoaDia * pessoas;
+      const dias = Math.ceil(areaTotal / areaTotalDia);
+
+      const resultado = `
+        <h3>Planeamento Atualizado</h3>
+        <ul>
+          <li><strong>Área Total:</strong> ${largura}m x ${comprimento}m = ${areaTotal.toLocaleString()} m²</li>
+          <li><strong>Área diária por pessoa:</strong> ${areaPessoaDia.toLocaleString()} m²</li>
+          <li><strong>Total de área tratada por dia (${pessoas} pessoas):</strong> ${areaTotalDia.toLocaleString()} m²</li>
+          <li><strong>Número total de dias estimado:</strong> ${dias} dias</li>
+        </ul>
+      `;
+      document.getElementById('resultado').innerHTML = resultado;
+
+      const gridContainer = document.getElementById('gridContainer');
+      gridContainer.innerHTML = '';
+
+      const totalCells = 50;
+      const areasPerCell = areaTotal / totalCells;
+      const cellsPerDay = areaTotalDia / areasPerCell;
+
+      for (let i = 0; i < totalCells; i++) {
+        const dia = Math.floor(i / cellsPerDay) + 1;
+        const color = `hsl(${(dia * 50) % 360}, 70%, 50%)`;
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.style.backgroundColor = color;
+        cell.textContent = `D${dia}`;
+        gridContainer.appendChild(cell);
+      }
+    }
+
+    window.onload = atualizarPlaneamento;
+  </script>
 </body>
 </html>
