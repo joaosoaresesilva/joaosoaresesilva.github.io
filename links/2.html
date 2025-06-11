@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Plano de Limpeza com Imagem Aérea</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+    }
+    .form-section {
+      margin-bottom: 20px;
+      padding: 10px;
+      background-color: #eaeaea;
+      border-left: 4px solid #555;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+    }
+    input[type="range"], input[type="number"] {
+      width: 300px;
+    }
+    canvas {
+      margin-top: 20px;
+      border: 2px solid #000;
+      max-width: 100%;
+      height: auto;
+    }
+    .info {
+      margin-top: 20px;
+      background-color: #f4f4f4;
+      padding: 10px;
+      border-left: 4px solid #1f77b4;
+    }
+  </style>
+</head>
+<body>
+  <h1>Plano de Limpeza com Imagem Aérea</h1>
+  <p><strong>Objetivo:</strong> Utilizar uma imagem aérea do terreno e estimar a área com base na escala para planeamento de trabalho.</p>
+
+  <div class="form-section">
+    <h3>Parâmetros de entrada</h3>
+    <label>Escala (metros por pixel):
+      <input type="number" id="escala" min="0.01" step="0.01" value="0.5"> m/pixel
+    </label>
+    <label>Largura em pixels da área a considerar:
+      <input type="number" id="larguraPx" value="400"> px
+    </label>
+    <label>Altura em pixels da área a considerar:
+      <input type="number" id="alturaPx" value="300"> px
+    </label>
+    <label>Número de pessoas:
+      <input type="range" id="pessoas" min="1" max="10" value="2" oninput="pessoasOutput.value = pessoas.value">
+      <output id="pessoasOutput">2</output>
+    </label>
+    <label>Horas de trabalho por pessoa:
+      <input type="range" id="horas" min="1" max="6" value="6" oninput="horasOutput.value = horas.value">
+      <output id="horasOutput">6</output> h
+    </label>
+    <label>Área limpa por hora por pessoa:
+      <input type="range" id="areaHora" min="50" max="200" step="10" value="100" oninput="areaHoraOutput.value = areaHora.value">
+      <output id="areaHoraOutput">100</output> m²/h
+    </label>
+    <button type="button" onclick="calcularArea()">Calcular Planeamento</button>
+  </div>
+
+  <canvas id="canvas"></canvas>
+
+  <div class="info" id="resultado">
+    <!-- Resultado será inserido aqui -->
+  </div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const imagem = new Image();
+
+    imagem.onload = function() {
+      canvas.width = imagem.width;
+      canvas.height = imagem.height;
+      ctx.drawImage(imagem, 0, 0);
+    }
+    imagem.src = 'fontes.png'; // imagem pré-carregada
+
+    function calcularArea() {
+      const escala = parseFloat(document.getElementById('escala').value);
+      const larguraPx = parseFloat(document.getElementById('larguraPx').value);
+      const alturaPx = parseFloat(document.getElementById('alturaPx').value);
+      const pessoas = parseFloat(document.getElementById('pessoas').value);
+      const horas = parseFloat(document.getElementById('horas').value);
+      const areaHora = parseFloat(document.getElementById('areaHora').value);
+
+      const larguraM = larguraPx * escala;
+      const alturaM = alturaPx * escala;
+      const areaTotal = larguraM * alturaM;
+
+      const areaPessoaDia = areaHora * horas;
+      const areaTotalDia = areaPessoaDia * pessoas;
+      const dias = Math.ceil(areaTotal / areaTotalDia);
+
+      const resultado = `
+        <h3>Planeamento Estimado</h3>
+        <ul>
+          <li><strong>Área em metros:</strong> ${larguraM.toFixed(2)} m x ${alturaM.toFixed(2)} m</li>
+          <li><strong>Área Total:</strong> ${areaTotal.toFixed(2)} m²</li>
+          <li><strong>Área tratada por dia:</strong> ${areaTotalDia.toFixed(2)} m²</li>
+          <li><strong>Número estimado de dias:</strong> ${dias}</li>
+        </ul>
+      `;
+
+      document.getElementById('resultado').innerHTML = resultado;
+    }
+  </script>
+</body>
+</html>
