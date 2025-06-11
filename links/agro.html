@@ -34,6 +34,12 @@
       padding: 10px;
       border-left: 4px solid #1f77b4;
     }
+    .escala-section {
+      margin-top: 20px;
+      background-color: #d0f0d0;
+      padding: 10px;
+      border-left: 4px solid #4CAF50;
+    }
   </style>
 </head>
 <body>
@@ -43,7 +49,7 @@
   <div class="form-section">
     <h3>Parâmetros de entrada</h3>
     <label>Escala (metros por pixel):
-      <input type="number" id="escala" min="0.01" step="0.01" value="0.5"> m/pixel
+      <input type="number" id="escala" min="0.01" step="0.01" value="0.1786"> m/pixel
     </label>
     <label>Número de pessoas:
       <input type="range" id="pessoas" min="1" max="10" value="2" oninput="pessoasOutput.value = pessoas.value">
@@ -60,6 +66,12 @@
     <button type="button" onclick="calcularArea()">Calcular Planeamento</button>
   </div>
 
+  <div class="escala-section">
+    <h3>Medição de Escala</h3>
+    <button onclick="ativarMedicaoEscala()">Ativar Medição da Escala</button>
+    <div id="escalaInfo" style="margin-top:10px;"></div>
+  </div>
+
   <canvas id="canvas"></canvas>
 
   <div class="info" id="resultado">
@@ -73,6 +85,9 @@
     let startX, startY, endX, endY;
     let isDrawing = false;
     let rect = {};
+    let medirEscala = false;
+    let escalaPonto1 = null;
+    let escalaPonto2 = null;
 
     imagem.onload = function() {
       canvas.width = imagem.width;
@@ -80,46 +95,38 @@
       ctx.drawImage(imagem, 0, 0);
     }
     imagem.src = 'fontes.png';
-let escalaTmp = 20; // metros conhecidos
-let ponto1 = null;
-
-canvas.addEventListener('click', function(e) {
-  const rectCanvas = canvas.getBoundingClientRect();
-  const x = e.clientX - rectCanvas.left;
-  const y = e.clientY - rectCanvas.top;
-
-  if (!ponto1) {
-    ponto1 = { x, y };
-    ctx.beginPath();
-    ctx.arc(x, y, 5, 0, 2 * Math.PI);
-    ctx.fillStyle = 'blue';
-    ctx.fill();
-  } else {
-    ctx.beginPath();
-    ctx.arc(x, y, 5, 0, 2 * Math.PI);
-    ctx.fillStyle = 'blue';
-    ctx.fill();
-    ctx.moveTo(ponto1.x, ponto1.y);
-    ctx.lineTo(x, y);
-    ctx.strokeStyle = 'blue';
-    ctx.stroke();
-
-    const dx = x - ponto1.x;
-    const dy = y - ponto1.y;
-    const distanciaPixels = Math.sqrt(dx * dx + dy * dy);
-    const escalaCalculada = escalaTmp / distanciaPixels;
-
-    alert(`Distância medida: ${distanciaPixels.toFixed(2)} px\\nEscala estimada: ${escalaCalculada.toFixed(4)} metros/pixel`);
-
-    document.getElementById('escala').value = escalaCalculada.toFixed(4);
-    ponto1 = null;
-  }
-});
 
     canvas.addEventListener('mousedown', function(e) {
       const rectCanvas = canvas.getBoundingClientRect();
-      startX = e.clientX - rectCanvas.left;
-      startY = e.clientY - rectCanvas.top;
+      const x = e.clientX - rectCanvas.left;
+      const y = e.clientY - rectCanvas.top;
+
+      if (medirEscala) {
+        if (!escalaPonto1) {
+          escalaPonto1 = { x, y };
+          document.getElementById('escalaInfo').innerText = 'Selecione o segundo ponto da escala...';
+        } else {
+          escalaPonto2 = { x, y };
+          const dx = escalaPonto2.x - escalaPonto1.x;
+          const dy = escalaPonto2.y - escalaPonto1.y;
+          const distanciaPixels = Math.sqrt(dx * dx + dy * dy);
+
+          const metros = prompt("Introduza a distância real em metros entre os dois pontos selecionados:");
+          if (metros && !isNaN(metros)) {
+            const escala = parseFloat(metros) / distanciaPixels;
+            document.getElementById('escala').value = escala.toFixed(4);
+            document.getElementById('escalaInfo').innerText = `Escala calculada: ${escala.toFixed(4)} metros/pixel`;
+          }
+          medirEscala = false;
+          escalaPonto1 = null;
+          escalaPonto2 = null;
+          ctx.drawImage(imagem, 0, 0);
+        }
+        return;
+      }
+
+      startX = x;
+      startY = y;
       isDrawing = true;
     });
 
@@ -146,6 +153,13 @@ canvas.addEventListener('click', function(e) {
         height: Math.abs(endY - startY)
       };
     });
+
+    function ativarMedicaoEscala() {
+      medirEscala = true;
+      escalaPonto1 = null;
+      escalaPonto2 = null;
+      document.getElementById('escalaInfo').innerText = 'Clique no primeiro ponto da escala...';
+    }
 
     function calcularArea() {
       if (!rect.width || !rect.height) {
