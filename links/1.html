@@ -80,6 +80,41 @@
       ctx.drawImage(imagem, 0, 0);
     }
     imagem.src = 'fontes.png';
+let escalaTmp = 20; // metros conhecidos
+let ponto1 = null;
+
+canvas.addEventListener('click', function(e) {
+  const rectCanvas = canvas.getBoundingClientRect();
+  const x = e.clientX - rectCanvas.left;
+  const y = e.clientY - rectCanvas.top;
+
+  if (!ponto1) {
+    ponto1 = { x, y };
+    ctx.beginPath();
+    ctx.arc(x, y, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = 'blue';
+    ctx.fill();
+  } else {
+    ctx.beginPath();
+    ctx.arc(x, y, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = 'blue';
+    ctx.fill();
+    ctx.moveTo(ponto1.x, ponto1.y);
+    ctx.lineTo(x, y);
+    ctx.strokeStyle = 'blue';
+    ctx.stroke();
+
+    const dx = x - ponto1.x;
+    const dy = y - ponto1.y;
+    const distanciaPixels = Math.sqrt(dx * dx + dy * dy);
+    const escalaCalculada = escalaTmp / distanciaPixels;
+
+    alert(`Distância medida: ${distanciaPixels.toFixed(2)} px\\nEscala estimada: ${escalaCalculada.toFixed(4)} metros/pixel`);
+
+    document.getElementById('escala').value = escalaCalculada.toFixed(4);
+    ponto1 = null;
+  }
+});
 
     canvas.addEventListener('mousedown', function(e) {
       const rectCanvas = canvas.getBoundingClientRect();
