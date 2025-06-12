@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt">
 <head>
@@ -32,6 +31,7 @@
       height: auto;
       cursor: crosshair;
       display: block; /* Garante que o canvas ocupa sua própria linha */
+      touch-action: none; /* Previne o scroll padrão em touch devices ao interagir com o canvas */
     }
     .info {
       margin-top: 20px;
@@ -110,17 +110,39 @@
     }
     imagem.src = 'carregal.png';
 
+    // Função para obter coordenadas relativas ao canvas (para mouse e touch)
+    function getCanvasCoordinates(event) {
+        const rectCanvas = canvas.getBoundingClientRect();
+        let clientX, clientY;
+
+        if (event.touches && event.touches.length > 0) {
+            clientX = event.touches[0].clientX;
+            clientY = event.touches[0].clientY;
+        } else {
+            clientX = event.clientX;
+            clientY = event.clientY;
+        }
+
+        const scaleX = canvas.width / rectCanvas.width;
+        const scaleY = canvas.height / rectCanvas.height;
+        const x = (clientX - rectCanvas.left) * scaleX;
+        const y = (clientY - rectCanvas.top) * scaleY;
+        return { x, y };
+    }
+
+    // Eventos de Mouse
     canvas.addEventListener('mousedown', function(e) {
-      const rectCanvas = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rectCanvas.width;
-      const scaleY = canvas.height / rectCanvas.height;
-      const x = (e.clientX - rectCanvas.left) * scaleX;
-      const y = (e.clientY - rectCanvas.top) * scaleY;
+      const { x, y } = getCanvasCoordinates(e);
 
       if (medirEscala) {
         if (!escalaPonto1) {
           escalaPonto1 = { x, y };
           document.getElementById('escalaInfo').innerText = 'Selecione o segundo ponto da escala...';
+          // Desenha um ponto para visualização (opcional)
+          ctx.fillStyle = 'blue';
+          ctx.beginPath();
+          ctx.arc(x, y, 5, 0, 2 * Math.PI);
+          ctx.fill();
         } else {
           escalaPonto2 = { x, y };
           const dx = escalaPonto2.x - escalaPonto1.x;
@@ -138,24 +160,20 @@
           escalaPonto2 = null;
           ctx.drawImage(imagem, 0, 0, canvas.width, canvas.height); // Redesenha a imagem após a medição
         }
-        return;
+        return; // Retorna para evitar a lógica de seleção de área
       }
-      
+            
       startX = x;
       startY = y;
       isDrawing = true;
     });
 
     canvas.addEventListener('mousemove', function(e) {
-      if (!isDrawing) return;
-      // Não redesenha a imagem se estivermos a medir a escala
-      if (medirEscala) return; 
+      if (!isDrawing || medirEscala) return; // Não desenha se não estiver a desenhar ou se estiver a medir escala
 
-      const rectCanvas = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rectCanvas.width;
-      const scaleY = canvas.height / rectCanvas.height;
-      endX = (e.clientX - rectCanvas.left) * scaleX;
-      endY = (e.clientY - rectCanvas.top) * scaleY;
+      const { x: currentX, y: currentY } = getCanvasCoordinates(e);
+      endX = currentX;
+      endY = currentY;
 
       const width = endX - startX;
       const height = endY - startY;
@@ -166,32 +184,31 @@
     });
 
     canvas.addEventListener('mouseup', function(e) {
-      // Evita que isDrawing seja definido como false se estivermos a medir a escala
-      if (!medirEscala) { 
-        isDrawing = false;
-        rect = {
-          x: Math.min(startX, endX),
-          y: Math.min(startY, endY),
-          width: Math.abs(endX - startX),
-          height: Math.abs(endY - startY)
-        };
-      }
+      if (medirEscala) return; // Se estiver a medir escala, não faz nada com isDrawing ou rect
+
+      isDrawing = false;
+      rect = {
+        x: Math.min(startX, endX),
+        y: Math.min(startY, endY),
+        width: Math.abs(endX - startX),
+        height: Math.abs(endY - startY)
+      };
     });
 
-    // Adiciona suporte a toque para dispositivos móveis
+    // Eventos de Toque (Touch)
     canvas.addEventListener('touchstart', function(e) {
       e.preventDefault(); // Impede o scroll da página ao arrastar no canvas
-      const touch = e.touches[0];
-      const rectCanvas = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rectCanvas.width;
-      const scaleY = canvas.height / rectCanvas.height;
-      const x = (touch.clientX - rectCanvas.left) * scaleX;
-      const y = (touch.clientY - rectCanvas.top) * scaleY;
+      const { x, y } = getCanvasCoordinates(e);
 
       if (medirEscala) {
         if (!escalaPonto1) {
           escalaPonto1 = { x, y };
           document.getElementById('escalaInfo').innerText = 'Selecione o segundo ponto da escala...';
+          // Desenha um ponto para visualização (opcional)
+          ctx.fillStyle = 'blue';
+          ctx.beginPath();
+          ctx.arc(x, y, 5, 0, 2 * Math.PI);
+          ctx.fill();
         } else {
           escalaPonto2 = { x, y };
           const dx = escalaPonto2.x - escalaPonto1.x;
@@ -209,26 +226,21 @@
           escalaPonto2 = null;
           ctx.drawImage(imagem, 0, 0, canvas.width, canvas.height);
         }
-        return;
+        return; // Retorna para evitar a lógica de seleção de área
       }
-
+      
       startX = x;
       startY = y;
       isDrawing = true;
     });
 
     canvas.addEventListener('touchmove', function(e) {
-      if (!isDrawing) return;
-      // Não redesenha a imagem se estivermos a medir a escala
-      if (medirEscala) return;
+      if (!isDrawing || medirEscala) return; // Não desenha se não estiver a desenhar ou se estiver a medir escala
 
       e.preventDefault(); // Impede o scroll da página ao arrastar no canvas
-      const touch = e.touches[0];
-      const rectCanvas = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rectCanvas.width;
-      const scaleY = canvas.height / rectCanvas.height;
-      endX = (touch.clientX - rectCanvas.left) * scaleX;
-      endY = (touch.clientY - rectCanvas.top) * scaleY;
+      const { x: currentX, y: currentY } = getCanvasCoordinates(e);
+      endX = currentX;
+      endY = currentY;
 
       const width = endX - startX;
       const height = endY - startY;
@@ -239,16 +251,15 @@
     });
 
     canvas.addEventListener('touchend', function(e) {
-      // Evita que isDrawing seja definido como false se estivermos a medir a escala
-      if (!medirEscala) {
-        isDrawing = false;
-        rect = {
-          x: Math.min(startX, endX),
-          y: Math.min(startY, endY),
-          width: Math.abs(endX - startX),
-          height: Math.abs(endY - startY)
-        };
-      }
+      if (medirEscala) return; // Se estiver a medir escala, não faz nada com isDrawing ou rect
+
+      isDrawing = false;
+      rect = {
+        x: Math.min(startX, endX),
+        y: Math.min(startY, endY),
+        width: Math.abs(endX - startX),
+        height: Math.abs(endY - startY)
+      };
     });
 
     function ativarMedicaoEscala() {
@@ -256,8 +267,7 @@
       escalaPonto1 = null;
       escalaPonto2 = null;
       document.getElementById('escalaInfo').innerText = 'Clique no primeiro ponto da escala...';
-      // Limpa qualquer seleção retangular existente visualmente
-      ctx.drawImage(imagem, 0, 0, canvas.width, canvas.height);
+      ctx.drawImage(imagem, 0, 0, canvas.width, canvas.height); // Limpa qualquer seleção retangular existente visualmente
     }
 
     function calcularArea() {
@@ -293,5 +303,6 @@
   </script>
 </body>
 </html>
+
 
 
