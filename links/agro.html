@@ -1,12 +1,14 @@
+
 <!DOCTYPE html>
 <html lang="pt">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Plano de Limpeza de Terreno com Imagem Aérea</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 40px;
+      margin: 20px; /* Reduzido para melhor visualização em móveis */
     }
     .form-section {
       margin-bottom: 20px;
@@ -18,8 +20,10 @@
       display: block;
       margin-bottom: 8px;
     }
-    input[type="range"], input[type="number"] {
-      width: 300px;
+    input[type="range"],
+    input[type="number"] {
+      width: 100%; /* Alterado para 100% para responsividade */
+      max-width: 300px; /* Mantém um limite de largura para desktops */
     }
     canvas {
       margin-top: 20px;
@@ -27,6 +31,7 @@
       max-width: 100%;
       height: auto;
       cursor: crosshair;
+      display: block; /* Garante que o canvas ocupa sua própria linha */
     }
     .info {
       margin-top: 20px;
@@ -91,16 +96,96 @@
     let escalaPonto2 = null;
 
     imagem.onload = function() {
-      canvas.width = imagem.width;
-      canvas.height = imagem.height;
-      ctx.drawImage(imagem, 0, 0);
+      // Ajusta as dimensões do canvas para a imagem, respeitando a largura máxima
+      const maxWidth = canvas.parentElement.offsetWidth; // Largura do elemento pai
+      const aspectRatio = imagem.width / imagem.height;
+      
+      canvas.width = Math.min(imagem.width, maxWidth);
+      canvas.height = canvas.width / aspectRatio;
+
+      // Se a imagem for menor que a largura máxima, use as dimensões originais
+      if (imagem.width < maxWidth) {
+          canvas.width = imagem.width;
+          canvas.height = imagem.height;
+      }
+
+      ctx.drawImage(imagem, 0, 0, canvas.width, canvas.height);
     }
     imagem.src = 'fontes.png';
 
     canvas.addEventListener('mousedown', function(e) {
       const rectCanvas = canvas.getBoundingClientRect();
-      const x = e.clientX - rectCanvas.left;
-      const y = e.clientY - rectCanvas.top;
+      // Ajusta as coordenadas para a escala do canvas redimensionado
+      const scaleX = canvas.width / rectCanvas.width;
+      const scaleY = canvas.height / rectCanvas.height;
+      const x = (e.clientX - rectCanvas.left) * scaleX;
+      const y = (e.clientY - rectCanvas.top) * scaleY;
+
+      if (medirEscala) {
+        if (!escalaPonto1) {
+          escalaPonto1 = { x, y };
+          document.getElementById('escalaInfo').innerText = 'Selecione o segundo ponto da escala...';
+        } else {
+          escalaPonto2 = { x, y };
+          const dx = escalaPonto2.x - escalaPonto1.x;
+          const dy = escalaPonto2.y - escalaPalaPonto1.y;
+          const distanciaPixels = Math.sqrt(dx * dx + dy * dy);
+
+          const metros = prompt("Introduza a distância real em metros entre os dois pontos selecionados:");
+          if (metros && !isNaN(metros)) {
+            const escala = parseFloat(metros) / distanciaPixels;
+            document.getElementById('escala').value = escala.toFixed(4);
+            document.getElementById('escalaInfo').innerText = `Escala calculada: ${escala.toFixed(4)} metros/pixel`;
+          }
+          medirEscala = false;
+          escalaPonto1 = null;
+          escalaPonto2 = null;
+          // Redesenha a imagem após a medição
+          ctx.drawImage(imagem, 0, 0, canvas.width, canvas.height);
+        }
+        return;
+      }
+
+      startX = x;
+      startY = y;
+      isDrawing = true;
+    });
+
+    canvas.addEventListener('mousemove', function(e) {
+      if (!isDrawing) return;
+      const rectCanvas = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rectCanvas.width;
+      const scaleY = canvas.height / rectCanvas.height;
+      endX = (e.clientX - rectCanvas.left) * scaleX;
+      endY = (e.clientY - rectCanvas.top) * scaleY;
+
+      const width = endX - startX;
+      const height = endY - startY;
+      ctx.drawImage(imagem, 0, 0, canvas.width, canvas.height); // Redesenha a imagem
+      ctx.strokeStyle = 'red';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(startX, startY, width, height);
+    });
+
+    canvas.addEventListener('mouseup', function(e) {
+      isDrawing = false;
+      rect = {
+        x: Math.min(startX, endX),
+        y: Math.min(startY, endY),
+        width: Math.abs(endX - startX),
+        height: Math.abs(endY - startY)
+      };
+    });
+
+    // Adiciona suporte a toque para dispositivos móveis
+    canvas.addEventListener('touchstart', function(e) {
+      e.preventDefault(); // Impede o scroll da página ao arrastar no canvas
+      const touch = e.touches[0];
+      const rectCanvas = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rectCanvas.width;
+      const scaleY = canvas.height / rectCanvas.height;
+      const x = (touch.clientX - rectCanvas.left) * scaleX;
+      const y = (touch.clientY - rectCanvas.top) * scaleY;
 
       if (medirEscala) {
         if (!escalaPonto1) {
@@ -121,7 +206,7 @@
           medirEscala = false;
           escalaPonto1 = null;
           escalaPonto2 = null;
-          ctx.drawImage(imagem, 0, 0);
+          ctx.drawImage(imagem, 0, 0, canvas.width, canvas.height);
         }
         return;
       }
@@ -131,21 +216,25 @@
       isDrawing = true;
     });
 
-    canvas.addEventListener('mousemove', function(e) {
+    canvas.addEventListener('touchmove', function(e) {
       if (!isDrawing) return;
+      e.preventDefault(); // Impede o scroll da página ao arrastar no canvas
+      const touch = e.touches[0];
       const rectCanvas = canvas.getBoundingClientRect();
-      endX = e.clientX - rectCanvas.left;
-      endY = e.clientY - rectCanvas.top;
+      const scaleX = canvas.width / rectCanvas.width;
+      const scaleY = canvas.height / rectCanvas.height;
+      endX = (touch.clientX - rectCanvas.left) * scaleX;
+      endY = (touch.clientY - rectCanvas.top) * scaleY;
 
       const width = endX - startX;
       const height = endY - startY;
-      ctx.drawImage(imagem, 0, 0);
+      ctx.drawImage(imagem, 0, 0, canvas.width, canvas.height);
       ctx.strokeStyle = 'red';
       ctx.lineWidth = 2;
       ctx.strokeRect(startX, startY, width, height);
     });
 
-    canvas.addEventListener('mouseup', function(e) {
+    canvas.addEventListener('touchend', function(e) {
       isDrawing = false;
       rect = {
         x: Math.min(startX, endX),
@@ -154,6 +243,7 @@
         height: Math.abs(endY - startY)
       };
     });
+
 
     function ativarMedicaoEscala() {
       medirEscala = true;
@@ -190,7 +280,6 @@
           <li><strong>Número estimado de dias:</strong> ${dias}</li>
         </ul>
       `;
-
       document.getElementById('resultado').innerHTML = resultado;
     }
   </script>
