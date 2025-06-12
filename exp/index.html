@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Plano de Trabalho em Terreno com Imagem Aérea</title>
+  <title>Plano de Limpeza de Terreno com Imagem Aérea</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -47,7 +47,7 @@
   </style>
 </head>
 <body>
-  <h1>Plano de Trabalho(Limpeza, Plantio, Colheita) Terreno Fornecendo a Imagem Aérea</h1>
+  <h1>Plano de Limpeza de Terreno Fornecendo a Imagem Aérea</h1>
   <p><strong>Objetivo:</strong> Utilizar uma imagem aérea do terreno e estimar a área com base na escala para planeamento de trabalho.</p>
 
   <div class="form-section">
@@ -63,7 +63,7 @@
       <input type="range" id="horas" min="1" max="6" value="6" oninput="horasOutput.value = horas.value">
       <output id="horasOutput">6</output> h
     </label>
-    <label>Área trabalhada por hora por pessoa:
+    <label>Área limpa por hora por pessoa:
       <input type="range" id="areaHora" min="50" max="200" step="10" value="100" oninput="areaHoraOutput.value = areaHora.value">
       <output id="areaHoraOutput">100</output> m²/h
     </label>
@@ -95,26 +95,22 @@
     let escalaPonto2 = null;
 
     imagem.onload = function() {
-      // Ajusta as dimensões do canvas para a imagem, respeitando a largura máxima
-      const maxWidth = canvas.parentElement.offsetWidth; // Largura do elemento pai
+      const maxWidth = canvas.parentElement.offsetWidth;
       const aspectRatio = imagem.width / imagem.height;
       
       canvas.width = Math.min(imagem.width, maxWidth);
       canvas.height = canvas.width / aspectRatio;
 
-      // Se a imagem for menor que a largura máxima, use as dimensões originais
       if (imagem.width < maxWidth) {
           canvas.width = imagem.width;
           canvas.height = imagem.height;
       }
-
       ctx.drawImage(imagem, 0, 0, canvas.width, canvas.height);
     }
     imagem.src = 'luabo.png';
 
     canvas.addEventListener('mousedown', function(e) {
       const rectCanvas = canvas.getBoundingClientRect();
-      // Ajusta as coordenadas para a escala do canvas redimensionado
       const scaleX = canvas.width / rectCanvas.width;
       const scaleY = canvas.height / rectCanvas.height;
       const x = (e.clientX - rectCanvas.left) * scaleX;
@@ -127,7 +123,7 @@
         } else {
           escalaPonto2 = { x, y };
           const dx = escalaPonto2.x - escalaPonto1.x;
-          const dy = escalaPonto2.y - escalaPalaPonto1.y;
+          const dy = escalaPonto2.y - escalaPonto1.y;
           const distanciaPixels = Math.sqrt(dx * dx + dy * dy);
 
           const metros = prompt("Introduza a distância real em metros entre os dois pontos selecionados:");
@@ -139,12 +135,11 @@
           medirEscala = false;
           escalaPonto1 = null;
           escalaPonto2 = null;
-          // Redesenha a imagem após a medição
-          ctx.drawImage(imagem, 0, 0, canvas.width, canvas.height);
+          ctx.drawImage(imagem, 0, 0, canvas.width, canvas.height); // Redesenha a imagem após a medição
         }
         return;
       }
-
+      
       startX = x;
       startY = y;
       isDrawing = true;
@@ -152,6 +147,9 @@
 
     canvas.addEventListener('mousemove', function(e) {
       if (!isDrawing) return;
+      // Não redesenha a imagem se estivermos a medir a escala
+      if (medirEscala) return; 
+
       const rectCanvas = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rectCanvas.width;
       const scaleY = canvas.height / rectCanvas.height;
@@ -167,13 +165,16 @@
     });
 
     canvas.addEventListener('mouseup', function(e) {
-      isDrawing = false;
-      rect = {
-        x: Math.min(startX, endX),
-        y: Math.min(startY, endY),
-        width: Math.abs(endX - startX),
-        height: Math.abs(endY - startY)
-      };
+      // Evita que isDrawing seja definido como false se estivermos a medir a escala
+      if (!medirEscala) { 
+        isDrawing = false;
+        rect = {
+          x: Math.min(startX, endX),
+          y: Math.min(startY, endY),
+          width: Math.abs(endX - startX),
+          height: Math.abs(endY - startY)
+        };
+      }
     });
 
     // Adiciona suporte a toque para dispositivos móveis
@@ -217,6 +218,9 @@
 
     canvas.addEventListener('touchmove', function(e) {
       if (!isDrawing) return;
+      // Não redesenha a imagem se estivermos a medir a escala
+      if (medirEscala) return;
+
       e.preventDefault(); // Impede o scroll da página ao arrastar no canvas
       const touch = e.touches[0];
       const rectCanvas = canvas.getBoundingClientRect();
@@ -234,21 +238,25 @@
     });
 
     canvas.addEventListener('touchend', function(e) {
-      isDrawing = false;
-      rect = {
-        x: Math.min(startX, endX),
-        y: Math.min(startY, endY),
-        width: Math.abs(endX - startX),
-        height: Math.abs(endY - startY)
-      };
+      // Evita que isDrawing seja definido como false se estivermos a medir a escala
+      if (!medirEscala) {
+        isDrawing = false;
+        rect = {
+          x: Math.min(startX, endX),
+          y: Math.min(startY, endY),
+          width: Math.abs(endX - startX),
+          height: Math.abs(endY - startY)
+        };
+      }
     });
-
 
     function ativarMedicaoEscala() {
       medirEscala = true;
       escalaPonto1 = null;
       escalaPonto2 = null;
       document.getElementById('escalaInfo').innerText = 'Clique no primeiro ponto da escala...';
+      // Limpa qualquer seleção retangular existente visualmente
+      ctx.drawImage(imagem, 0, 0, canvas.width, canvas.height);
     }
 
     function calcularArea() {
