@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circuito para Carregamento de Telemóvel com Painel Solar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            color: #0056b3;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        code {
+            background-color: #eef;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap; /* Para quebrar linhas longas */
+            display: block; /* Para blocos de código */
+            padding: 10px;
+            margin: 15px 0;
+            border: 1px solid #ddd;
+        }
+        pre {
+            background-color: #eef;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto; /* Para scroll horizontal em códigos longos */
+        }
+        ul {
+            list-style-type: disc;
+            margin-left: 20px;
+        }
+        strong {
+            color: #0056b3;
+        }
+        .note {
+            background-color: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 10px 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Guia para Carregamento de Telemóvel com Painel Solar</h1>
+
+        <p>Circuito simplificado e os valores típicos dos componentes para um regulador de tensão step-down (buck converter) para carregar o seu telemóvel a partir do painel solar.</p>
+
+        <div class="note">
+            <p>É importante notar que, embora este seja um circuito comum e funcional, <strong>construir circuitos eletrónicos requer algum conhecimento e cuidado</strong>. Se não tem experiência, comprar um <strong>módulo regulador DC-DC buck pronto a usar com saída USB</strong> é a opção mais segura, rápida e fiável. Eles são muito baratos e já vêm com todas as proteções e componentes otimizados.</p>
+        </div>
+
+        <hr>
+
+        <h2>Circuito Regulador de Tensão Simples (LM2596)</h2>
+
+        <p>Este circuito utiliza o <strong>LM2596</strong>, um CI (circuito integrado) regulador de tensão step-down bastante popular e fácil de encontrar.</p>
+
+        <h3>Componentes Necessários:</h3>
+        <ul>
+            <li><strong>U1:</strong> LM2596-ADJ (versão ajustável)</li>
+            <li><strong>D1:</strong> Díodo Schottky (ex: 1N5822 ou similar, 3A/40V)</li>
+            <li><strong>L1:</strong> Indutor de 33 µH (micro-Henry)</li>
+            <li><strong>C1:</strong> Condensador eletrolítico de 100 µF (micro-Farad), 35V ou superior</li>
+            <li><strong>C2:</strong> Condensador eletrolítico de 220 µF (micro-Farad), 10V ou superior</li>
+            <li><strong>R1:</strong> Resistor de 3 kΩ ou 3.01 kΩ (para uma saída de aproximadamente 5V)</li>
+            <li><strong>R2:</strong> Resistor de 1 kΩ (para uma saída de aproximadamente 5V)</li>
+            <li><strong>D2:</strong> Díodo de proteção de polaridade (ex: 1N4007 ou um díodo Schottky como o 1N5822) - Opcional, mas recomendado na entrada do painel.</li>
+            <li><strong>Fusível:</strong> 2A (na entrada do painel) - Opcional, mas recomendado.</li>
+            <li><strong>Tomada USB-A Fêmea:</strong> Para ligar o telemóvel.</li>
+        </ul>
+
+        <hr>
+
+        <h2>Esquema do Circuito</h2>
+        <pre><code>
+           Painel Solar 15V
+           (+) ---| |--- Fusível 2A ---| |--- D2 (1N5822) --- VIN (Pino 1 do LM2596)
+                     |                                       |
+                     |                                       |
+                   GND ------------------------------------ GND (Pino 3 do LM2596)
+                                                             |
+                                                             |
+                                                    +--------+-------+
+                                                    |  LM2596        |
+                                                    |                |
+                                           VIN (Pino 1) ----- D1 (Cátodo)
+                                                    |        |
+                                                    |        |
+                                           GND (Pino 3) ----- GND
+                                                    |        |
+                                                    |        |
+                                         Feedback (Pino 4) --+---- R2 (1k Ohm) --- GND
+                                                    |        |
+                                                    +--------+
+                                                    |
+                                                    |
+                                           Switch (Pino 2) --- L1 (33uH) --- Cátodo de D1
+                                                    |        |
+                                                    |        |
+                                                    +--------+
+                                                    |
+                                                    |
+                                                    +--- C2 (220uF) --- GND
+                                                    |
+                                                    |
+                                                    +--- Tomada USB-A (VCC)
+                                                    |
+                                                    |
+                                                    +--- R1 (3k Ohm) --- Feedback (Pino 4 do LM2596)
+                                                    |
+                                                    |
+                                                    +--- Tomada USB-A (GND)
+        </code></pre>
+
+        <h3>Explicação dos Pinos do LM2596:</h3>
+        <ul>
+            <li><strong>Pino 1 (VIN):</strong> Entrada de tensão do painel solar.</li>
+            <li><strong>Pino 2 (SWITCH):</strong> Saída do comutador interno do LM2596, liga-se ao indutor L1.</li>
+            <li><strong>Pino 3 (GND):</strong> Terra/Referência do circuito.</li>
+            <li><strong>Pino 4 (FEEDBACK):</strong> Pino de realimentação que monitoriza a tensão de saída e ajusta o ciclo de trabalho para manter a tensão desejada. É aqui que R1 e R2 se ligam.</li>
+            <li><strong>Pino 5 (ON/OFF):</strong> Pino de controlo, geralmente ligado ao VIN para operação contínua (ou pode ser usado para ligar/desligar o circuito). No diagrama, assume-se que está ligado internamente ou através de um jumper no módulo.</li>
+        </ul>
+
+        <h3>Cálculo dos Resistores para a Saída ($V_{out} = 5V$):</h3>
+        <p>A tensão de saída do LM2596-ADJ é determinada pela fórmula:</p>
+        <p><code>$V_{out} = 1.23V * (1 + R1/R2)$</code></p>
+        <p>Para obter aproximadamente 5V, com Vref = 1.23V (tensão de referência interna do LM2596):</p>
+        <ul>
+            <li>Se escolher <strong>R2 = 1 kΩ (1000 Ω)</strong></li>
+            <li>Então <strong>R1 = 3.065 * 1000 = 3065 Ω</strong>.</li>
+        </ul>
+        <p>Um valor comercial próximo seria **3 kΩ ou 3.01 kΩ**.</p>
+        <p>Portanto, a combinação recomendada para 5V é:</p>
+        <ul>
+            <li><strong>R1: 3 kΩ ou 3.01 kΩ</strong></li>
+            <li><strong>R2: 1 kΩ</strong></li>
+        </ul>
+        <div class="note">
+            <p><strong>Atenção:</strong> Em módulos comerciais do LM2596, geralmente há um <strong>potenciómetro multi-volta</strong> que faz o papel de R1 ou R2, permitindo ajustar a tensão de saída com precisão, o que é muito mais prático.</p>
+        </div>
+
+        <hr>
+
+        <h2>Considerações Importantes para Montagem</h2>
+        <ul>
+            <li><strong>Placa de Circuito Impresso (PCB) ou Breadboard:</strong> Para uma montagem permanente e fiável, use uma PCB. Para testes, pode usar uma breadboard, mas não é recomendada para correntes mais altas ou uso a longo prazo devido a conexões soltas.</li>
+            <li><strong>Cuidado com a Polaridade:</strong> Verifique sempre a polaridade dos condensadores eletrolíticos e do painel solar. Inverter a polaridade pode danificar os componentes e o circuito.</li>
+            <li><strong>Díodo D2:</strong> Este díodo é crucial para evitar que a corrente volte do circuito para o painel solar quando não há luz, o que poderia descarregar a bateria do telemóvel. Um díodo Schottky (como o 1N5822) é preferível pela sua baixa queda de tensão.</li>
+            <li><strong>Dissipação de Calor:</strong> O LM2596 pode aquecer, especialmente se a diferença entre a tensão de entrada e saída for grande ou se a corrente de saída for elevada. Certifique-se de que o chip tem um bom contacto com uma área de cobre na PCB ou use um pequeno dissipador de calor se for necessário.</li>
+            <li><strong>Segurança:</strong> Adicionar um <strong>fusível</strong> na entrada do painel protege o circuito e o seu telemóvel contra picos de corrente ou curtos-circuitos.</li>
+        </ul>
+
+        <hr>
+
+        <h2>Recomendação Final</h2>
+        <p>Como especialista, volto a reforçar: a forma mais fácil e segura de fazer isto é <strong>comprar um módulo regulador de tensão DC-DC buck já montado</strong>, especialmente aqueles que já vêm com uma porta USB integrada. Pode encontrá-los facilmente online por 2 a 5 euros.</p>
+        <p>Pesquise por "LM2596 DC-DC Buck converter USB" ou "Step-down converter 12V to 5V USB". Eles já vêm otimizados, testados e muitos têm proteções integradas. Apenas terá de ligar os fios do painel à entrada do módulo.</p>
+
+        <p>Se ainda tiver dúvidas ou quiser explorar mais, por favor, pergunte!</p>
+    </div>
+</body>
+</html>
