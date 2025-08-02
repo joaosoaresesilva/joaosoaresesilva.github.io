@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simulador de Propagação de Incêndio</title>
+  <title>Simulador de Propagação de Incêndio - Ajuda ao Combate</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -52,7 +52,7 @@
   </style>
 </head>
 <body>
-  <h1>Simulador de Propagação de Incêndio - Combate a Incêndio</h1>
+  <h1>Simulador de Propagação de Incêndio - Ajuda ao Combate</h1>
   <p><strong>Objetivo:</strong> Simular a propagação de uma frente de incêndio com base na velocidade/direção do vento e na escala da imagem.</p>
 
   <div class="form-section">
@@ -72,8 +72,9 @@
   </div>
   
   <div class="form-section controls">
-      <button type="button" onclick="iniciarSimulacao()">Iniciar Simulação</button>
-      <button type="button" onclick="pararSimulacao()">Parar/Reiniciar Simulação</button>
+      <!-- ALTERAÇÃO: Texto dos botões para maior clareza -->
+      <button type="button" onclick="iniciarSimulacao()">Iniciar / Reiniciar Simulação</button>
+      <button type="button" onclick="pararSimulacao()">Parar Simulação</button>
   </div>
 
 
@@ -90,7 +91,7 @@
   <canvas id="canvas"></canvas>
 
   <div class="info" id="resultado">
-    <p><em>Clique no mapa para definir o ponto onde se deu a ignição do incêndio.</em></p>
+    <p><em>Clique no mapa para definir o ponto de ignição do incêndio.</em></p>
   </div>
 
   <script>
@@ -103,7 +104,7 @@
 
     let pontoIgnicao = null;
     let simulationInterval = null;
-    let tempoSimulado = 0; // em minutos
+    let tempoSimulado = 0;
     let areaArdiaTotal = 0;
     let frentesIncendio = [];
 
@@ -120,7 +121,7 @@
       }
       desenharBase();
     }
-    imagem.src = 'carregal.png'; // Imagem de exemplo
+    imagem.src = 'carregal.png'; 
 
     function desenharBase() {
         ctx.drawImage(imagem, 0, 0, canvas.width, canvas.height);
@@ -142,7 +143,10 @@
     }
 
     canvas.addEventListener('click', function(e) {
-        if (simulationInterval) return; // Não permite alterar ignição durante simulação
+        if (simulationInterval) {
+            alert("Pare a simulação atual antes de definir um novo ponto de ignição.");
+            return;
+        }
         const { x, y } = getCanvasCoordinates(e);
 
         if (medirEscala) {
@@ -155,9 +159,7 @@
                 ctx.fill();
             } else {
                 const escalaPonto2 = { x, y };
-                const dx = escalaPonto2.x - escalaPonto1.x;
-                const dy = escalaPonto2.y - escalaPonto1.y;
-                const distanciaPixels = Math.sqrt(dx * dx + dy * dy);
+                const distanciaPixels = Math.sqrt(Math.pow(escalaPonto2.x - escalaPonto1.x, 2) + Math.pow(escalaPonto2.y - escalaPonto1.y, 2));
                 const metros = prompt("Introduza a distância real em metros entre os pontos:");
                 if (metros && !isNaN(metros)) {
                     const escalaCalculada = parseFloat(metros) / distanciaPixels;
@@ -169,8 +171,14 @@
                 desenharBase();
             }
         } else {
+            // ALTERAÇÃO: Ao clicar num novo ponto, o estado da simulação anterior é limpo.
             pontoIgnicao = { x, y };
-            document.getElementById('resultado').innerHTML = `<p>Ponto de ignição definido em (${pontoIgnicao.x.toFixed(0)}, ${pontoIgnicao.y.toFixed(0)}). Clique em "Iniciar Simulação".</p>`;
+            frentesIncendio = [];
+            tempoSimulado = 0;
+            areaArdiaTotal = 0;
+            document.getElementById('resultado').innerHTML = `<p>Ponto de ignição definido em (${pontoIgnicao.x.toFixed(0)}, ${pontoIgnicao.y.toFixed(0)}). Clique em "Iniciar / Reiniciar Simulação".</p>`;
+            
+            // Limpa o mapa e desenha apenas o novo ponto de ignição.
             desenharBase();
             ctx.fillStyle = 'red';
             ctx.beginPath();
@@ -189,15 +197,15 @@
       document.getElementById('escalaInfo').innerText = 'Clique no primeiro ponto da escala...';
     }
 
+    // ALTERAÇÃO: A função agora apenas para o intervalo, não limpa o canvas.
     function pararSimulacao() {
+        if (!simulationInterval) return; // Faz nada se já estiver parado
+
         clearInterval(simulationInterval);
         simulationInterval = null;
-        tempoSimulado = 0;
-        areaArdiaTotal = 0;
-        frentesIncendio = [];
-        pontoIgnicao = null;
-        desenharBase();
-        document.getElementById('resultado').innerHTML = `<p>Simulação parada/reiniciada. Clique no mapa para um novo ponto de ignição.</p>`;
+        
+        const finalResult = document.getElementById('resultado').innerHTML;
+        document.getElementById('resultado').innerHTML = '<h3>Simulação Parada</h3>' + finalResult + '<p><em>Para recomeçar, clique em "Iniciar / Reiniciar Simulação". Para uma nova simulação, clique noutro ponto do mapa.</em></p>';
     }
 
     function iniciarSimulacao() {
@@ -206,9 +214,12 @@
             return;
         }
         if (simulationInterval) {
-            alert("A simulação já está a decorrer.");
+            alert("A simulação já está a decorrer. Pare-a primeiro se quiser reiniciar.");
             return;
         }
+
+        // ALTERAÇÃO: Limpa qualquer estado visual anterior antes de iniciar.
+        desenharBase();
 
         // Resetar estado para nova simulação a partir do ponto existente
         tempoSimulado = 0;
@@ -219,41 +230,34 @@
             center: { x: pontoIgnicao.x, y: pontoIgnicao.y },
         }];
 
-        // Inicia o loop da simulação (1 segundo real = 5 minutos de simulação)
         simulationInterval = setInterval(atualizarSimulacao, 1000);
     }
 
     function atualizarSimulacao() {
-        tempoSimulado += 5; // Simula 5 minutos a cada passo
+        tempoSimulado += 5; 
 
         const velocidadeVento_kmh = parseFloat(document.getElementById('velocidadeVento').value);
         const direcaoVento_graus = parseFloat(document.getElementById('direcaoVento').value);
         const taxaBase_mh = parseFloat(document.getElementById('taxaPropagacao').value);
         const escala = parseFloat(document.getElementById('escala').value);
 
-        // --- Cálculos de Propagação ---
-        // Fator de vento simples: aumenta a propagação. Modelo muito simplificado.
         const fatorVento = 1 + (velocidadeVento_kmh / 10); 
         const taxaPropagacaoTotal_mh = taxaBase_mh * fatorVento;
         const propagacao_metros_5min = (taxaPropagacaoTotal_mh / 60) * 5;
         const propagacao_pixels_5min = propagacao_metros_5min / escala;
 
-        // Propagação lateral (para alargar a frente)
-        const propagacaoLateral_mh = taxaBase_mh * 0.2; // 20% da taxa base
+        const propagacaoLateral_mh = taxaBase_mh * 0.2;
         const propagacaoLateral_metros_5min = (propagacaoLateral_mh / 60) * 5;
         const propagacaoLateral_pixels_5min = propagacaoLateral_metros_5min / escala;
 
-        // Converter direção (0=Norte) para ângulo matemático (0=Este) e para radianos
         const anguloRad = ((direcaoVento_graus - 90 + 360) % 360) * Math.PI / 180;
         
         const dx = Math.cos(anguloRad) * propagacao_pixels_5min;
         const dy = Math.sin(anguloRad) * propagacao_pixels_5min;
 
-        // Vetor perpendicular para alargamento da frente
         const dx_lat = -Math.sin(anguloRad) * propagacaoLateral_pixels_5min;
         const dy_lat = Math.cos(anguloRad) * propagacaoLateral_pixels_5min;
 
-        // Atualizar a última frente de incêndio
         const ultimaFrente = frentesIncendio[frentesIncendio.length - 1];
         const novaFrente = {
             p1: { x: ultimaFrente.p1.x + dx - dx_lat, y: ultimaFrente.p1.y + dy - dy_lat },
@@ -262,8 +266,6 @@
         };
         frentesIncendio.push(novaFrente);
 
-        // --- Cálculo da Área Ardida ---
-        // Aproximação da área do trapézio formado entre a frente antiga e a nova
         const dist_p1 = Math.sqrt(Math.pow(novaFrente.p1.x - ultimaFrente.p1.x, 2) + Math.pow(novaFrente.p1.y - ultimaFrente.p1.y, 2));
         const dist_p2 = Math.sqrt(Math.pow(novaFrente.p2.x - ultimaFrente.p2.x, 2) + Math.pow(novaFrente.p2.y - ultimaFrente.p2.y, 2));
         const distMedia_pixels = (dist_p1 + dist_p2) / 2;
@@ -273,10 +275,8 @@
         const areaAdicional_m2 = areaAdicional_pixels * (escala * escala);
         areaArdiaTotal += areaAdicional_m2;
         
-        // --- Desenhar no Canvas ---
-        desenharBase(); // Redesenha a imagem de fundo
+        desenharBase();
 
-        // Desenha a área total ardida
         ctx.beginPath();
         ctx.moveTo(frentesIncendio[0].p1.x, frentesIncendio[0].p1.y);
         for(let i = 1; i < frentesIncendio.length; i++){
@@ -286,14 +286,13 @@
             ctx.lineTo(frentesIncendio[i].p2.x, frentesIncendio[i].p2.y);
         }
         ctx.closePath();
-        ctx.fillStyle = "rgba(100, 40, 0, 0.4)"; // Cor da área ardida
+        ctx.fillStyle = "rgba(100, 40, 0, 0.4)";
         ctx.fill();
 
-        // Desenha as linhas de frente a cada 5 minutos
-        const corBase = [255, 255, 0]; // Amarelo
-        const corFinal = [139, 0, 0];   // Vermelho Escuro
+        const corBase = [255, 255, 0];
+        const corFinal = [139, 0, 0];
         frentesIncendio.forEach((frente, index) => {
-            const progresso = Math.min(index / 24, 1); // A cor fica totalmente vermelha após 2 horas (24 * 5 min)
+            const progresso = Math.min(index / 24, 1);
             const r = corBase[0] + (corFinal[0] - corBase[0]) * progresso;
             const g = corBase[1] + (corFinal[1] - corBase[1]) * progresso;
             const b = corBase[2] + (corFinal[2] - corBase[2]) * progresso;
@@ -306,7 +305,6 @@
             ctx.stroke();
         });
 
-        // --- Atualizar Informações ---
         const areaPorHora = (areaArdiaTotal / tempoSimulado) * 60 || 0;
         const resultadoHTML = `
             <h3>Resultados da Simulação</h3>
