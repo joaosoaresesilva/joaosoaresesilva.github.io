@@ -53,7 +53,7 @@
 </head>
 <body>
   <h1>Simulador de Propagação e Combate</h1>
-  <p><strong>Objetivo:</strong> Simular a propagação de uma frente de incêndio com base na velocidade/direção do vento e na escala da imagem.</p>
+  <p><strong>Objetivo:</strong> Simular a propagação de uma frente de incêndio com base na velocidade/direção do vento e considerando a escala da imagem.</p>
 
   <div class="form-section">
     <h3>Parâmetros do Incêndio</h3>
@@ -80,7 +80,7 @@
 
   <div class="escala-section">
     <h3>Medição de Escala</h3>
-    <p><em>(Opcional) Clique nos dois extremos da barra de escala da sua imagem para calibrar.</em></p>
+    <p><em>(Opcional) Clique nos dois extremos da barra de escala em baixo no mapa para calibração.</em></p>
     <label>Escala (metros por pixel):
       <input type="number" id="escala" min="0.01" step="0.01" value="0.5"> m/pixel
     </label>
@@ -91,7 +91,7 @@
   <canvas id="canvas"></canvas>
 
   <div class="info" id="resultado">
-    <p><em>Clique no mapa para definir o ponto de ignição do incêndio.</em></p>
+    <p><em>Clique no mapa para definir o ponto onde houve suposta ignição do incêndio.</em></p>
   </div>
 
   <script>
@@ -178,7 +178,7 @@
             areaArdiaTotal = 0;
             document.getElementById('resultado').innerHTML = `<p>Ponto de ignição definido em (${pontoIgnicao.x.toFixed(0)}, ${pontoIgnicao.y.toFixed(0)}). Clique em "Iniciar / Reiniciar Simulação".</p>`;
             
-            // Limpa o mapa e desenha apenas o novo ponto de ignição.
+            // Limpa o mapa e desenha apenas o novo ponto de suposta ignição.
             desenharBase();
             ctx.fillStyle = 'red';
             ctx.beginPath();
@@ -199,7 +199,7 @@
 
     // ALTERAÇÃO: A função agora apenas para o intervalo, não limpa o canvas.
     function pararSimulacao() {
-        if (!simulationInterval) return; // Faz nada se já estiver parado
+        if (!simulationInterval) return; // Não fazer nada se já estiver parado
 
         clearInterval(simulationInterval);
         simulationInterval = null;
@@ -218,10 +218,10 @@
             return;
         }
 
-        // ALTERAÇÃO: Limpa qualquer estado visual anterior antes de iniciar.
+        // ALTERAÇÃO: Limpa o anterior estado visual antes de iniciar
         desenharBase();
 
-        // Resetar estado para nova simulação a partir do ponto existente
+        // Faz reset do estado para uma nova simulação a partir de um já ponto existente
         tempoSimulado = 0;
         areaArdiaTotal = 0;
         frentesIncendio = [{
