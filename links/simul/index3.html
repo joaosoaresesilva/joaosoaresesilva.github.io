@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt">
 <head>
@@ -149,7 +148,7 @@
         canvas.height = newHeight;
         desenharBase();
     }
-    imagem.src = '../aerea1.jpg';
+    imagem.src = '../aerea1.jpg'; // Verifique se o caminho para a imagem está correto
 
     canvasDirecaoVento.width = 100;
     canvasDirecaoVento.height = 100;
@@ -311,14 +310,13 @@
         return { x: (clientX - rectCanvas.left) * scaleX, y: (clientY - rectCanvas.top) * scaleY };
     }
 
-    // Eventos para Desktop
     canvas.addEventListener('click', handleCanvasClick);
-
-    // Eventos para Touch
     canvas.addEventListener('touchstart', handleCanvasClick);
 
     function handleCanvasClick(e) {
         e.preventDefault();
+        console.log("Clique no mapa detectado. Medir escala:", medirEscala, "Intervalo de simulação:", simulationInterval);
+
         if (simulationInterval) {
             alert("Pare a simulação atual antes de definir um novo ponto de ignição.");
             return;
@@ -372,7 +370,8 @@
         pararSimulacao();
         medirEscala = true;
         escalaPonto1 = null;
-        document.getElementById('escalaInfo').innerText = 'Clique no primeiro ponto da escala...';
+        document.getElementById('escalaInfo').innerText = 'Modo de medição de escala ativo. Clique no primeiro ponto da escala...';
+        document.getElementById('resultado').innerHTML = '<p><em>A medir a escala. Clique no mapa para começar.</em></p>';
         desenharBase();
     }
     
@@ -380,6 +379,7 @@
         medirEscala = false;
         escalaPonto1 = null;
         document.getElementById('escalaInfo').innerText = '';
+        document.getElementById('resultado').innerHTML = '<p><em>Modo de medição de escala cancelado. Clique no mapa para definir o ponto de ignição.</em></p>';
         desenharBase();
     }
 
@@ -517,20 +517,17 @@
         }
 
         // --- Desenhar os marcadores dos carros ao lado da linha azul ---
-        const distanciaCarrosDaLinha = 15; // Distância em pixels
-        // Vetor perpendicular à direção do vento
+        const distanciaCarrosDaLinha = 15;
         const ux_perp = Math.cos(anguloRad + Math.PI / 2);
         const uy_perp = Math.sin(anguloRad + Math.PI / 2);
 
         localizacoesCarros.forEach((carro, index) => {
-            // Desloca o ponto do carro perpendicularmente à linha azul
             const deslocamentoX = ux_perp * distanciaCarrosDaLinha * (index % 2 === 0 ? 1 : -1);
             const deslocamentoY = uy_perp * distanciaCarrosDaLinha * (index % 2 === 0 ? 1 : -1);
 
             const carroX = carro.x + deslocamentoX;
             const carroY = carro.y + deslocamentoY;
 
-            // Desenha o marcador
             ctx.fillStyle = 'red';
             ctx.strokeStyle = 'white';
             ctx.lineWidth = 1;
@@ -539,7 +536,6 @@
             ctx.fill();
             ctx.stroke();
 
-            // Adiciona um número ao lado para diferenciar os carros
             ctx.fillStyle = 'white';
             ctx.strokeStyle = 'black';
             ctx.lineWidth = 2;
