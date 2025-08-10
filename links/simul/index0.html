@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt">
 <head>
@@ -8,25 +9,18 @@
     body { font-family: Arial, sans-serif; margin: 20px; }
     .form-section { margin-bottom: 20px; padding: 10px; background-color: #fcecec; border-left: 4px solid #c00; }
     label { display: block; margin-bottom: 8px; }
-    input[type="range"], input[type="number"] { width: 100%; max-width: 300px; }
+    input[type="number"] { width: 100%; max-width: 300px; }
     canvas { margin-top: 20px; border: 2px solid #000; max-width: 100%; height: auto; cursor: crosshair; display: block; touch-action: none; }
     .info { margin-top: 20px; background-color: #f4f4f4; padding: 10px; border-left: 4px solid #1f77b4; }
     .escala-section { margin-top: 20px; background-color: #d0f0d0; padding: 10px; border-left: 4px solid #4CAF50; }
     .controls button { margin-right: 10px; padding: 8px 12px; }
     .controls label { display:inline-block; margin-left:10px; }
 
-    /* Estilos para o novo layout dos controles */
-    .parameters-container { display: flex; align-items: center; justify-content: flex-start; gap: 40px; }
-    .vertical-slider { display: flex; flex-direction: column-reverse; align-items: center; width: 50px; }
-    .vertical-slider label { text-align: center; }
-    .vertical-slider input[type="range"] { writing-mode: bt-lr; /* Vertical orientation */
-                                            -webkit-appearance: slider-vertical; /* For WebKit browsers */
-                                            width: 10px;
-                                            height: 150px;
-                                            padding: 0 5px; }
-    .vertical-slider output { margin-top: 10px; }
-    #canvasDirecaoVento { width: 150px; height: 150px; border: 1px solid black; cursor: pointer; }
-    .wind-control-group { text-align: center; }
+    /* Estilos para o novo layout dos controles circulares */
+    .parameters-container { display: flex; align-items: flex-start; justify-content: center; gap: 40px; text-align: center; }
+    .circular-control-group { display: flex; flex-direction: column; align-items: center; }
+    .circular-control-group canvas { margin: 0; border: 1px solid black; cursor: pointer; }
+    .circular-control-group output { font-weight: bold; margin-top: 5px; }
   </style>
 </head>
 <body>
@@ -37,24 +31,21 @@
     <h3>Parâmetros do Incêndio</h3>
     <div class="parameters-container">
         
-      <div class="vertical-slider">
-        <label>Velocidade do Vento (km/h):
-          <input type="range" id="velocidadeVento" min="0" max="50" value="10" oninput="velocidadeVentoOutput.value = this.value; desenharBase();">
-        </label>
+      <div class="circular-control-group">
+        <label>Velocidade do Vento (km/h)</label>
+        <canvas id="canvasVelocidadeVento" width="120" height="120"></canvas>
         <output id="velocidadeVentoOutput">10</output> km/h
       </div>
       
-      <div class="wind-control-group">
-        <label>Direção do Vento (0° = Norte):
-          <canvas id="canvasDirecaoVento"></canvas>
-        </label>
+      <div class="circular-control-group">
+        <label>Direção do Vento (0° = Norte)</label>
+        <canvas id="canvasDirecaoVento" width="120" height="120"></canvas>
         <output id="direcaoVentoOutput">45</output> °
       </div>
       
-      <div class="vertical-slider">
-        <label>Taxa de Propagação Base (sem vento):
-          <input type="range" id="taxaPropagacao" min="10" max="200" step="10" value="50" oninput="taxaPropagacaoOutput.value = this.value; desenharBase();">
-        </label>
+      <div class="circular-control-group">
+        <label>Taxa de Propagação Base (m/h)</label>
+        <canvas id="canvasTaxaPropagacao" width="120" height="120"></canvas>
         <output id="taxaPropagacaoOutput">50</output> m/h
       </div>
 
@@ -95,9 +86,13 @@
     const ctx = canvas.getContext('2d');
     const imagem = new Image();
 
+    const canvasVelocidadeVento = document.getElementById('canvasVelocidadeVento');
+    const ctxVelocidadeVento = canvasVelocidadeVento.getContext('2d');
     const canvasDirecaoVento = document.getElementById('canvasDirecaoVento');
     const ctxDirecaoVento = canvasDirecaoVento.getContext('2d');
-    
+    const canvasTaxaPropagacao = document.getElementById('canvasTaxaPropagacao');
+    const ctxTaxaPropagacao = canvasTaxaPropagacao.getContext('2d');
+
     let medirEscala = false;
     let escalaPonto1 = null;
     let pontoIgnicao = null;
@@ -105,7 +100,10 @@
     let tempoSimulado = 0;
     let areaArdiaTotal = 0;
     let frentesIncendio = [];
-    let direcaoVento = 45; // Valor inicial para a direção do vento
+    
+    let velocidadeVento = 10;
+    let direcaoVento = 45; 
+    let taxaPropagacao = 50;
 
     imagem.onload = function() {
       const maxWidth = canvas.parentElement.offsetWidth;
@@ -122,85 +120,182 @@
     }
     imagem.src = '../aerea1.jpg'; 
 
-    // Adiciona o novo canvas e seus eventos
-    canvasDirecaoVento.width = 150;
-    canvasDirecaoVento.height = 150;
-    desenharSeletorVento();
+    // Inicialização e eventos para os controles circulares
+    const setupCircularControl = (canvasEl, outputEl, min, max, initialValue, onUpdate) => {
+        const ctxEl = canvasEl.getContext('2d');
+        let isDragging = false;
+        let value = initialValue;
 
-    let isDragging = false;
-    canvasDirecaoVento.addEventListener('mousedown', function(e) {
-      isDragging = true;
-      atualizarDirecaoVento(e);
-    });
-    canvasDirecaoVento.addEventListener('mousemove', function(e) {
-      if (isDragging) {
-        atualizarDirecaoVento(e);
-      }
-    });
-    canvasDirecaoVento.addEventListener('mouseup', function() {
-      isDragging = false;
-    });
-    canvasDirecaoVento.addEventListener('mouseout', function() {
-      isDragging = false;
-    });
+        const drawControl = () => {
+            ctxEl.clearRect(0, 0, canvasEl.width, canvasEl.height);
+            const centerX = canvasEl.width / 2;
+            const centerY = canvasEl.height / 2;
+            const radius = 50;
+            const knobRadius = 8;
+            const fullCircleAngle = 2 * Math.PI;
+            const startAngle = 0.75 * Math.PI;
+            const endAngle = 2.25 * Math.PI;
 
-    function atualizarDirecaoVento(e) {
-      const rect = canvasDirecaoVento.getBoundingClientRect();
-      const x = e.clientX - rect.left - 75; // 75 = centro do canvas 150x150
-      const y = e.clientY - rect.top - 75;
-      let angle = Math.atan2(y, x);
-      direcaoVento = (360 + (angle * 180 / Math.PI) + 90) % 360; 
-      document.getElementById('direcaoVentoOutput').innerText = direcaoVento.toFixed(0);
-      desenharSeletorVento();
-      desenharBase();
-    }
+            // Desenhar o arco de fundo
+            ctxEl.beginPath();
+            ctxEl.arc(centerX, centerY, radius, startAngle, endAngle);
+            ctxEl.lineWidth = 6;
+            ctxEl.strokeStyle = '#eee';
+            ctxEl.stroke();
 
-    function desenharSeletorVento() {
-      ctxDirecaoVento.clearRect(0, 0, 150, 150);
-      const centerX = 75;
-      const centerY = 75;
-      const radius = 60;
+            // Calcular o ângulo do valor atual
+            const range = max - min;
+            const progress = (value - min) / range;
+            const angle = startAngle + progress * (endAngle - startAngle);
+            
+            // Desenhar o arco de progresso
+            ctxEl.beginPath();
+            ctxEl.arc(centerX, centerY, radius, startAngle, angle);
+            ctxEl.strokeStyle = '#c00';
+            ctxEl.stroke();
+
+            // Desenhar a seta/knob
+            const knobX = centerX + Math.cos(angle) * radius;
+            const knobY = centerY + Math.sin(angle) * radius;
+            ctxEl.beginPath();
+            ctxEl.arc(knobX, knobY, knobRadius, 0, 2 * Math.PI);
+            ctxEl.fillStyle = '#c00';
+            ctxEl.fill();
+            
+            // Desenhar o texto no centro
+            ctxEl.font = '16px Arial';
+            ctxEl.textAlign = 'center';
+            ctxEl.textBaseline = 'middle';
+            ctxEl.fillStyle = '#333';
+            outputEl.innerText = value.toFixed(0);
+        };
+
+        const updateValue = (e) => {
+            const rect = canvasEl.getBoundingClientRect();
+            const x = e.clientX - rect.left - canvasEl.width / 2;
+            const y = e.clientY - rect.top - canvasEl.height / 2;
+            
+            let angle = Math.atan2(y, x);
+            if (angle < 0) {
+                angle += 2 * Math.PI;
+            }
+
+            const startAngle = 0.75 * Math.PI;
+            const endAngle = 2.25 * Math.PI;
+            
+            if (angle < startAngle) {
+                angle = startAngle;
+            } else if (angle > endAngle) {
+                angle = endAngle;
+            }
+
+            const progress = (angle - startAngle) / (endAngle - startAngle);
+            value = min + progress * (max - min);
+            
+            onUpdate(value);
+            drawControl();
+            desenharBase();
+        };
+
+        canvasEl.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            updateValue(e);
+        });
+        canvasEl.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                updateValue(e);
+            }
+        });
+        canvasEl.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+        canvasEl.addEventListener('mouseout', () => {
+            isDragging = false;
+        });
+
+        drawControl();
+    };
+
+    // Configurar cada controle circular
+    setupCircularControl(canvasVelocidadeVento, document.getElementById('velocidadeVentoOutput'), 0, 50, velocidadeVento, (v) => velocidadeVento = v);
+    setupCircularControl(canvasTaxaPropagacao, document.getElementById('taxaPropagacaoOutput'), 10, 200, taxaPropagacao, (v) => taxaPropagacao = v);
+    
+    // O controle da direção do vento é um pouco diferente
+    let isDraggingDirecao = false;
+    const drawDirecaoVento = () => {
+      const ctxEl = canvasDirecaoVento.getContext('2d');
+      ctxEl.clearRect(0, 0, 120, 120);
+      const centerX = 60;
+      const centerY = 60;
+      const radius = 45;
 
       // Desenha o círculo
-      ctxDirecaoVento.beginPath();
-      ctxDirecaoVento.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-      ctxDirecaoVento.strokeStyle = '#333';
-      ctxDirecaoVento.lineWidth = 2;
-      ctxDirecaoVento.stroke();
+      ctxEl.beginPath();
+      ctxEl.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+      ctxEl.strokeStyle = '#333';
+      ctxEl.lineWidth = 2;
+      ctxEl.stroke();
 
       // Desenha os pontos cardeais
-      ctxDirecaoVento.font = '16px Arial';
-      ctxDirecaoVento.textAlign = 'center';
-      ctxDirecaoVento.textBaseline = 'middle';
-      ctxDirecaoVento.fillStyle = '#333';
-
-      ctxDirecaoVento.fillText('N', centerX, centerY - radius - 15);
-      ctxDirecaoVento.fillText('S', centerX, centerY + radius + 15);
-      ctxDirecaoVento.fillText('E', centerX + radius + 15, centerY);
-      ctxDirecaoVento.fillText('W', centerX - radius - 15, centerY);
+      ctxEl.font = '16px Arial';
+      ctxEl.textAlign = 'center';
+      ctxEl.textBaseline = 'middle';
+      ctxEl.fillStyle = '#333';
+      ctxEl.fillText('N', centerX, centerY - radius - 15);
+      ctxEl.fillText('S', centerX, centerY + radius + 15);
+      ctxEl.fillText('E', centerX + radius + 15, centerY);
+      ctxEl.fillText('W', centerX - radius - 15, centerY);
 
       // Desenha a seta da direção
       const angleRad = (direcaoVento - 90 + 360) % 360 * Math.PI / 180;
       const arrowX = centerX + Math.cos(angleRad) * radius;
       const arrowY = centerY + Math.sin(angleRad) * radius;
 
-      ctxDirecaoVento.beginPath();
-      ctxDirecaoVento.moveTo(centerX, centerY);
-      ctxDirecaoVento.lineTo(arrowX, arrowY);
-      ctxDirecaoVento.strokeStyle = '#c00';
-      ctxDirecaoVento.lineWidth = 3;
-      ctxDirecaoVento.stroke();
+      ctxEl.beginPath();
+      ctxEl.moveTo(centerX, centerY);
+      ctxEl.lineTo(arrowX, arrowY);
+      ctxEl.strokeStyle = '#c00';
+      ctxEl.lineWidth = 3;
+      ctxEl.stroke();
 
-      ctxDirecaoVento.beginPath();
+      ctxEl.beginPath();
       const headLen = 8;
-      ctxDirecaoVento.moveTo(arrowX, arrowY);
-      ctxDirecaoVento.lineTo(arrowX - headLen * Math.cos(angleRad - Math.PI/6), arrowY - headLen * Math.sin(angleRad - Math.PI/6));
-      ctxDirecaoVento.lineTo(arrowX - headLen * Math.cos(angleRad + Math.PI/6), arrowY - headLen * Math.sin(angleRad + Math.PI/6));
-      ctxDirecaoVento.closePath();
-      ctxDirecaoVento.fillStyle = '#c00';
-      ctxDirecaoVento.fill();
-    }
+      ctxEl.moveTo(arrowX, arrowY);
+      ctxEl.lineTo(arrowX - headLen * Math.cos(angleRad - Math.PI/6), arrowY - headLen * Math.sin(angleRad - Math.PI/6));
+      ctxEl.lineTo(arrowX - headLen * Math.cos(angleRad + Math.PI/6), arrowY - headLen * Math.sin(angleRad + Math.PI/6));
+      ctxEl.closePath();
+      ctxEl.fillStyle = '#c00';
+      ctxEl.fill();
+      
+      document.getElementById('direcaoVentoOutput').innerText = direcaoVento.toFixed(0);
+    };
 
+    const updateDirecaoVento = (e) => {
+      const rect = canvasDirecaoVento.getBoundingClientRect();
+      const x = e.clientX - rect.left - 60; 
+      const y = e.clientY - rect.top - 60;
+      let angle = Math.atan2(y, x);
+      direcaoVento = (360 + (angle * 180 / Math.PI) + 90) % 360; 
+      drawDirecaoVento();
+      desenharBase();
+    };
+
+    canvasDirecaoVento.addEventListener('mousedown', (e) => {
+      isDraggingDirecao = true;
+      updateDirecaoVento(e);
+    });
+    canvasDirecaoVento.addEventListener('mousemove', (e) => {
+      if (isDraggingDirecao) {
+        updateDirecaoVento(e);
+      }
+    });
+    canvasDirecaoVento.addEventListener('mouseup', () => {
+      isDraggingDirecao = false;
+    });
+    canvasDirecaoVento.addEventListener('mouseout', () => {
+      isDraggingDirecao = false;
+    });
+    drawDirecaoVento();
 
     function desenharBase() {
         ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -365,8 +460,8 @@
     function atualizarSimulacao() {
         tempoSimulado += 5; 
 
-        const velocidadeVento_kmh = parseFloat(document.getElementById('velocidadeVento').value);
-        const taxaBase_mh = parseFloat(document.getElementById('taxaPropagacao').value);
+        const velocidadeVento_kmh = velocidadeVento;
+        const taxaBase_mh = taxaPropagacao;
         const escala = parseFloat(document.getElementById('escala').value);
 
         const fatorVento = 1 + (velocidadeVento_kmh / 10); 
