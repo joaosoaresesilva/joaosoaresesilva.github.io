@@ -284,7 +284,7 @@
             areaArdiaTotal = 0;
             document.getElementById('resultado').innerHTML = `<p>Ponto de ignição definido em (${pontoIgnicao.x.toFixed(0)}, ${pontoIgnicao.y.toFixed(0)}). Clique em "Iniciar / Reiniciar Simulação".</p>`;
             desenharBase();
-            ctx.fillStyle = 'red';
+            ctx.fillStyle = 'yellow';
             ctx.beginPath();
             ctx.arc(pontoIgnicao.x, pontoIgnicao.y, 8, 0, 2 * Math.PI);
             ctx.fill();
