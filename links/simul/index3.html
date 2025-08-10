@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt">
 <head>
@@ -105,6 +106,7 @@
       <input type="number" id="capacidadeCarro" min="1000" step="100" value="5000" onchange="desenharBase()">
     </label>
     <button onclick="ativarMedicaoEscala()">Ativar Medição da Escala</button>
+    <button onclick="cancelarMedicaoEscala()">Cancelar Medição da Escala</button>
     <div id="escalaInfo" style="margin-top:10px;"></div>
   </div>
   <canvas id="canvas"></canvas>
@@ -365,12 +367,22 @@
     }
 
     document.getElementById('mostrarGrelha').addEventListener('change', desenharBase);
+
     function ativarMedicaoEscala() {
         pararSimulacao();
         medirEscala = true;
         escalaPonto1 = null;
         document.getElementById('escalaInfo').innerText = 'Clique no primeiro ponto da escala...';
+        desenharBase();
     }
+    
+    function cancelarMedicaoEscala() {
+        medirEscala = false;
+        escalaPonto1 = null;
+        document.getElementById('escalaInfo').innerText = '';
+        desenharBase();
+    }
+
     function pararSimulacao() {
         if (!simulationInterval) return;
         clearInterval(simulationInterval);
