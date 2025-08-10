@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador de Propagação de Incêndio - Ajuda ao Combate</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .form-section { margin-bottom: 20px; padding: 10px; background-color: #fcecec; border-left: 4px solid #c00; }
+    label { display: block; margin-bottom: 8px; }
+    input[type="range"], input[type="number"] { width: 100%; max-width: 300px; }
+    canvas { margin-top: 20px; border: 2px solid #000; max-width: 100%; height: auto; cursor: crosshair; display: block; touch-action: none; }
+    .info { margin-top: 20px; background-color: #f4f4f4; padding: 10px; border-left: 4px solid #1f77b4; }
+    .escala-section { margin-top: 20px; background-color: #d0f0d0; padding: 10px; border-left: 4px solid #4CAF50; }
+    .controls button { margin-right: 10px; padding: 8px 12px; }
+    .controls label { display:inline-block; margin-left:10px; }
+  </style>
+</head>
+<body>
+  <h1>Simulador de Propagação e Combate</h1>
+  <p><strong>Objetivo:</strong> Simular a propagação de uma frente de incêndio com base na velocidade/direção do vento e considerando a escala da imagem.</p>
+
+  <div class="form-section">
+    <h3>Parâmetros do Incêndio</h3>
+    <label>Velocidade do Vento (km/h):
+      <input type="range" id="velocidadeVento" min="0" max="50" value="10" oninput="velocidadeVentoOutput.value = this.value">
+      <output id="velocidadeVentoOutput">10</output> km/h
+    </label>
+    <label>Direção do Vento (0° = Norte):
+      <input type="range" id="direcaoVento" min="0" max="359" value="45" oninput="direcaoVentoOutput.value = this.value">
+      <output id="direcaoVentoOutput">45</output> °
+    </label>
+    <label>Taxa de Propagação Base (sem vento):
+      <input type="range" id="taxaPropagacao" min="10" max="200" step="10" value="50" oninput="taxaPropagacaoOutput.value = this.value">
+      <output id="taxaPropagacaoOutput">50</output> m/h
+    </label>
+  </div>
+  
+  <div class="form-section controls">
+      <button type="button" onclick="iniciarSimulacao()">Iniciar / Reiniciar Simulação</button>
+      <button type="button" onclick="pararSimulacao()">Parar Simulação</button>
+      <label><input type="checkbox" id="mostrarSemireta" checked> Mostrar semireta na frente do incêndio</label>
+  </div>
+
+  <div class="escala-section">
+    <h3>Medição de Escala</h3>
+    <p><em>(Opcional) Clique nos dois extremos da barra de escala em baixo no mapa para calibração.</em></p>
+    <label>Escala (metros por pixel):
+      <input type="number" id="escala" min="0.01" step="0.01" value="7.6"> m/pixel
+    </label>
+    <button onclick="ativarMedicaoEscala()">Ativar Medição da Escala</button>
+    <div id="escalaInfo" style="margin-top:10px;"></div>
+  </div>
+
+  <canvas id="canvas"></canvas>
+
+  <div class="info" id="resultado">
+    <p><em>Clique no mapa para definir o ponto onde houve suposta ignição do incêndio.</em></p>
+  </div>
+
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const imagem = new Image();
+
+    let medirEscala = false;
+    let escalaPonto1 = null;
+
+    let pontoIgnicao = null;
+    let simulationInterval = null;
+    let tempoSimulado = 0;
+    let areaArdiaTotal = 0;
+    let frentesIncendio = [];
+
+    imagem.onload = function() {
+      const maxWidth = canvas.parentElement.offsetWidth;
+      const aspectRatio = imagem.width / imagem.height;
+      
+      canvas.width = Math.min(imagem.width, maxWidth);
+      canvas.height = canvas.width / aspectRatio;
+
+      if (imagem.width < maxWidth) {
+          canvas.width = imagem.width;
+          canvas.height = imagem.height;
+      }
+      desenharBase();
+    }
+    imagem.src = '../aerea1.jpg'; 
+
+    function desenharBase() {
+        // desenha imagem de base
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.drawImage(imagem, 0, 0, canvas.width, canvas.height);
+
+        // se existir ponto de ignição, desenha-o
+        if (pontoIgnicao) {
+            ctx.fillStyle = 'red';
+            ctx.beginPath();
+            ctx.arc(pontoIgnicao.x, pontoIgnicao.y, 8, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        // Desenha a área ardida como um polígono que segue a frente do incêndio
+        if (frentesIncendio.length > 0) {
+            // Desenhar a área queimada
+            ctx.fillStyle = "rgba(100, 40, 0, 0.4)";
+            ctx.beginPath();
+            ctx.moveTo(pontoIgnicao.x, pontoIgnicao.y);
+
+            // Conecta os pontos da frente
+            const ultimaFrente = frentesIncendio[frentesIncendio.length - 1];
+            ultimaFrente.forEach(ponto => ctx.lineTo(ponto.x, ponto.y));
+            ctx.closePath();
+            ctx.fill();
+
+            // Desenhar as frentes com cor de gradiente
+            const corBase = [255, 255, 0];
+            const corFinal = [139, 0, 0];
+            frentesIncendio.forEach((frente, index) => {
+                const progresso = Math.min(index / 24, 1);
+                const r = corBase[0] + (corFinal[0] - corBase[0]) * progresso;
+                const g = corBase[1] + (corFinal[1] - corBase[1]) * progresso;
+                const b = corBase[2] + (corFinal[2] - corBase[2]) * progresso;
+
+                ctx.strokeStyle = `rgb(${r},${g},${b})`;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                if (frente.length > 0) {
+                    ctx.moveTo(frente[0].x, frente[0].y);
+                    for(let i = 1; i < frente.length; i++) {
+                        ctx.lineTo(frente[i].x, frente[i].y);
+                    }
+                    ctx.stroke();
+                }
+            });
+        }
+
+        // Desenhar a semirreta do vento na última frente
+        if (document.getElementById('mostrarSemireta').checked && frentesIncendio.length > 0) {
+            const ultima = frentesIncendio[frentesIncendio.length - 1];
+            const centroFrente = {
+                x: ultima.reduce((sum, p) => sum + p.x, 0) / ultima.length,
+                y: ultima.reduce((sum, p) => sum + p.y, 0) / ultima.length
+            };
+            const direcaoVento_graus = parseFloat(document.getElementById('direcaoVento').value);
+            const anguloRad = ((direcaoVento_graus - 90 + 360) % 360) * Math.PI / 180;
+            desenharSemireta(centroFrente, anguloRad);
+        }
+    }
+
+    function getCanvasCoordinates(event) {
+        const rectCanvas = canvas.getBoundingClientRect();
+        let clientX, clientY;
+        if (event.touches && event.touches.length > 0) {
+            clientX = event.touches[0].clientX;
+            clientY = event.touches[0].clientY;
+        } else {
+            clientX = event.clientX;
+            clientY = event.clientY;
+        }
+        const scaleX = canvas.width / rectCanvas.width;
+        const scaleY = canvas.height / rectCanvas.height;
+        return { x: (clientX - rectCanvas.left) * scaleX, y: (clientY - rectCanvas.top) * scaleY };
+    }
+
+    canvas.addEventListener('click', function(e) {
+        if (simulationInterval) {
+            alert("Pare a simulação atual antes de definir um novo ponto de ignição.");
+            return;
+        }
+        const { x, y } = getCanvasCoordinates(e);
+
+        if (medirEscala) {
+            if (!escalaPonto1) {
+                escalaPonto1 = { x, y };
+                document.getElementById('escalaInfo').innerText = 'Selecione o segundo ponto da escala...';
+                ctx.fillStyle = 'blue';
+                ctx.beginPath();
+                ctx.arc(x, y, 5, 0, 2 * Math.PI);
+                ctx.fill();
+            } else {
+                const escalaPonto2 = { x, y };
+                const distanciaPixels = Math.sqrt(Math.pow(escalaPonto2.x - escalaPonto1.x, 2) + Math.pow(escalaPonto2.y - escalaPonto1.y, 2));
+                const metros = prompt("Introduza a distância real em metros entre os pontos:");
+                if (metros && !isNaN(metros)) {
+                    const escalaCalculada = parseFloat(metros) / distanciaPixels;
+                    document.getElementById('escala').value = escalaCalculada.toFixed(4);
+                    document.getElementById('escalaInfo').innerText = `Escala calculada: ${escalaCalculada.toFixed(4)} m/pixel`;
+                }
+                medirEscala = false;
+                escalaPonto1 = null;
+                desenharBase();
+            }
+        } else {
+            pontoIgnicao = { x, y };
+            frentesIncendio = [];
+            tempoSimulado = 0;
+            areaArdiaTotal = 0;
+            document.getElementById('resultado').innerHTML = `<p>Ponto de ignição definido em (${pontoIgnicao.x.toFixed(0)}, ${pontoIgnicao.y.toFixed(0)}). Clique em "Iniciar / Reiniciar Simulação".</p>`;
+            
+            desenharBase();
+            ctx.fillStyle = 'red';
+            ctx.beginPath();
+            ctx.arc(pontoIgnicao.x, pontoIgnicao.y, 8, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+    });
+
+    function ativarMedicaoEscala() {
+      pararSimulacao();
+      medirEscala = true;
+      escalaPonto1 = null;
+      document.getElementById('escalaInfo').innerText = 'Clique no primeiro ponto da escala...';
+    }
+
+    function pararSimulacao() {
+        if (!simulationInterval) return;
+        clearInterval(simulationInterval);
+        simulationInterval = null;
+        
+        const finalResult = document.getElementById('resultado').innerHTML;
+        document.getElementById('resultado').innerHTML = '<h3>Simulação Parada</h3>' + finalResult + '<p><em>Para recomeçar, clique em "Iniciar / Reiniciar Simulação". Para uma nova simulação, clique noutro ponto do mapa.</em></p>';
+    }
+
+    function iniciarSimulacao() {
+        if (!pontoIgnicao) {
+            alert("Por favor, defina um ponto de ignição clicando no mapa.");
+            return;
+        }
+        if (simulationInterval) {
+            alert("A simulação já está a decorrer. Pare-a primeiro se quiser reiniciar.");
+            return;
+        }
+
+        desenharBase();
+
+        tempoSimulado = 0;
+        areaArdiaTotal = 0;
+        
+        // Inicializa a primeira frente com 21 pontos (o ponto central e 10 de cada lado)
+        const primeiraFrente = [];
+        const numPontosFrente = 21;
+        const larguraInicialFrente = 20; // pixels
+        const passoLateral = larguraInicialFrente / (numPontosFrente - 1);
+
+        for (let i = 0; i < numPontosFrente; i++) {
+            const deslocamentoX = -larguraInicialFrente / 2 + i * passoLateral;
+            primeiraFrente.push({
+                x: pontoIgnicao.x + deslocamentoX,
+                y: pontoIgnicao.y
+            });
+        }
+        frentesIncendio.push(primeiraFrente);
+
+        simulationInterval = setInterval(atualizarSimulacao, 1000);
+    }
+
+    function atualizarSimulacao() {
+        tempoSimulado += 5; 
+
+        const velocidadeVento_kmh = parseFloat(document.getElementById('velocidadeVento').value);
+        const direcaoVento_graus = parseFloat(document.getElementById('direcaoVento').value);
+        const taxaBase_mh = parseFloat(document.getElementById('taxaPropagacao').value);
+        const escala = parseFloat(document.getElementById('escala').value);
+
+        // Ajusta o fator de vento para ter uma propagação mais realista
+        const fatorVento = 1 + (velocidadeVento_kmh / 20); 
+        const taxaPropagacaoFrente_mh = taxaBase_mh * fatorVento;
+        const taxaPropagacaoLateral_mh = taxaBase_mh * 0.2;
+        const propagacaoFrente_metros_5min = (taxaPropagacaoFrente_mh / 60) * 5;
+        const propagacaoLateral_metros_5min = (taxaPropagacaoLateral_mh / 60) * 5;
+        
+        const propagacaoFrente_pixels_5min = propagacaoFrente_metros_5min / escala;
+        const propagacaoLateral_pixels_5min = propagacaoLateral_metros_5min / escala;
+
+        const anguloRad = ((direcaoVento_graus - 90 + 360) % 360) * Math.PI / 180;
+        
+        const ultimaFrente = frentesIncendio[frentesIncendio.length - 1];
+        const novaFrente = [];
+        let areaAdicional_pixels = 0;
+
+        for (let i = 0; i < ultimaFrente.length; i++) {
+            const pontoAnterior = ultimaFrente[i];
+            
+            // Calcula o ponto de propagação na direção do vento (componente principal)
+            const dx_vento = Math.cos(anguloRad) * propagacaoFrente_pixels_5min;
+            const dy_vento = Math.sin(anguloRad) * propagacaoFrente_pixels_5min;
+            
+            // Calcula a propagação lateral (componente perpendicular ao vento)
+            // A propagação lateral é menor e depende da posição do ponto na frente
+            const centroFrente = ultimaFrente[Math.floor(ultimaFrente.length / 2)];
+            const distAoCentro = Math.sqrt(Math.pow(pontoAnterior.x - centroFrente.x, 2) + Math.pow(pontoAnterior.y - centroFrente.y, 2));
+            
+            // Ângulo do ponto em relação ao centro da frente (para calcular o vetor lateral)
+            const anguloPonto = Math.atan2(pontoAnterior.y - centroFrente.y, pontoAnterior.x - centroFrente.x);
+            const dx_lateral = Math.cos(anguloPonto) * propagacaoLateral_pixels_5min;
+            const dy_lateral = Math.sin(anguloPonto) * propagacaoLateral_pixels_5min;
+
+            const novoPonto = {
+                x: pontoAnterior.x + dx_vento + dx_lateral,
+                y: pontoAnterior.y + dy_vento + dy_lateral
+            };
+            novaFrente.push(novoPonto);
+
+            // Calcula a área adicional ardida
+            if (i > 0) {
+                const pontoAnteriorFrente = ultimaFrente[i - 1];
+                const distFrenteAnterior = Math.sqrt(Math.pow(pontoAnterior.x - pontoAnteriorFrente.x, 2) + Math.pow(pontoAnterior.y - pontoAnteriorFrente.y, 2));
+                const distFrenteAtual = Math.sqrt(Math.pow(novoPonto.x - novaFrente[i-1].x, 2) + Math.pow(novoPonto.y - novaFrente[i-1].y, 2));
+                const larguraMedia = (distFrenteAnterior + distFrenteAtual) / 2;
+                const distPropagacaoMedia = Math.sqrt(Math.pow(novoPonto.x - pontoAnterior.x, 2) + Math.pow(novoPonto.y - pontoAnterior.y, 2));
+                
+                areaAdicional_pixels += larguraMedia * distPropagacaoMedia;
+            }
+        }
+        
+        frentesIncendio.push(novaFrente);
+
+        const areaAdicional_m2 = areaAdicional_pixels * (escala * escala);
+        areaArdiaTotal += areaAdicional_m2;
+        
+        desenharBase();
+
+        const areaPorHora = (areaArdiaTotal / tempoSimulado) * 60 || 0;
+        const resultadoHTML = `
+            <h3>Resultados da Simulação</h3>
+            <ul>
+                <li><strong>Tempo Simulado:</strong> ${tempoSimulado} minutos</li>
+                <li><strong>Área Total Ardida:</strong> ${areaArdiaTotal.toFixed(2)} m²</li>
+                <li><strong>Taxa Média:</strong> ${areaPorHora.toFixed(2)} m²/hora</li>
+            </ul>
+        `;
+        document.getElementById('resultado').innerHTML = resultadoHTML;
+    }
+
+    // Desenha uma semirreta a partir de ponto {x,y} na direção anguloRad (radianos).
+    function desenharSemireta(ponto, anguloRad) {
+        // vetor unitário da direção
+        const ux = Math.cos(anguloRad);
+        const uy = Math.sin(anguloRad);
+        const x0 = ponto.x;
+        const y0 = ponto.y;
+
+        // calcular parâmetros t das interseções com os quatro lados do canvas
+        const candidates = [];
+
+        if (Math.abs(ux) > 1e-9) {
+            // intersecao com x = 0
+            let t = (0 - x0) / ux;
+            if (t > 0) {
+                const y = y0 + t * uy;
+                if (y >= 0 && y <= canvas.height) candidates.push({t, x:0, y});
+            }
+            // intersecao com x = canvas.width
+            t = (canvas.width - x0) / ux;
+            if (t > 0) {
+                const y = y0 + t * uy;
+                if (y >= 0 && y <= canvas.height) candidates.push({t, x:canvas.width, y});
+            }
+        }
+
+        if (Math.abs(uy) > 1e-9) {
+            // intersecao com y = 0
+            let t = (0 - y0) / uy;
+            if (t > 0) {
+                const x = x0 + t * ux;
+                if (x >= 0 && x <= canvas.width) candidates.push({t, x, y:0});
+            }
+            // intersecao com y = canvas.height
+            t = (canvas.height - y0) / uy;
+            if (t > 0) {
+                const x = x0 + t * ux;
+                if (x >= 0 && x <= canvas.width) candidates.push({t, x, y:canvas.height});
+            }
+        }
+
+        if (candidates.length === 0) return; // sem intersecção positiva (improvável)
+
+        // escolhe a interseção com menor t positivo (mais perto)
+        candidates.sort((a,b) => a.t - b.t);
+        const end = candidates[0];
+
+        // desenhar semireta
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        ctx.lineTo(end.x, end.y);
+        ctx.strokeStyle = 'rgba(0,150,255,0.9)';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([8,6]);
+        ctx.stroke();
+        ctx.setLineDash([]); // reset dash
+        // desenhar ponta/triângulo pequeno na extremidade para enfatizar direção
+        const headLen = 10;
+        const angle = Math.atan2(end.y - y0, end.x - x0);
+        ctx.beginPath();
+        ctx.moveTo(end.x, end.y);
+        ctx.lineTo(end.x - headLen * Math.cos(angle - Math.PI/6), end.y - headLen * Math.sin(angle - Math.PI/6));
+        ctx.lineTo(end.x - headLen * Math.cos(angle + Math.PI/6), end.y - headLen * Math.sin(angle + Math.PI/6));
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(0,150,255,0.9)';
+        ctx.fill();
+    }
+
+</script>
+</body>
+</html>
