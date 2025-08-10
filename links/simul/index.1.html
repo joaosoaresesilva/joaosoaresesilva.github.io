@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<title>Frente de Incêndio com Normal de Ponto Fixo</title>
+<style>
+  body { background: #eee; }
+  canvas { background: white; display: block; margin: auto; border: 1px solid black; }
+</style>
+</head>
+<body>
+<canvas id="mapa" width="600" height="400"></canvas>
+<script>
+const canvas = document.getElementById('mapa');
+const ctx = canvas.getContext('2d');
+
+// Frente
+let origemInicial = { x: 100, y: 200 };
+const anguloFrente = Math.PI / 6; // 30°
+const comprimentoFrente = 300;
+const velocidadeFrente = 1.0; // px/frame
+
+// Ponto fixo no espaço
+const pontoFixo = { x: 400, y: 150 };
+
+function desenhar(frame) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Vetores da frente
+  const dxFrente = Math.cos(anguloFrente);
+  const dyFrente = Math.sin(anguloFrente);
+
+  // Origem atual da frente
+  const origem = {
+    x: origemInicial.x + dxFrente * velocidadeFrente * frame,
+    y: origemInicial.y + dyFrente * velocidadeFrente * frame
+  };
+
+  // Desenhar frente (vermelha)
+  ctx.beginPath();
+  ctx.moveTo(origem.x, origem.y);
+  ctx.lineTo(origem.x + dxFrente * comprimentoFrente, origem.y + dyFrente * comprimentoFrente);
+  ctx.strokeStyle = "red";
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // Calcular projeção ortogonal do ponto fixo na frente
+  const vx = pontoFixo.x - origem.x;
+  const vy = pontoFixo.y - origem.y;
+  const t = vx * dxFrente + vy * dyFrente; // projeção escalar ao longo da frente
+
+  const projecao = {
+    x: origem.x + dxFrente * t,
+    y: origem.y + dyFrente * t
+  };
+
+  // Direção perpendicular (normal)
+  const dxNormal = pontoFixo.x - projecao.x;
+  const dyNormal = pontoFixo.y - projecao.y;
+
+  // Desenhar normal (azul) partindo da projeção
+  ctx.beginPath();
+  ctx.moveTo(projecao.x, projecao.y);
+  ctx.lineTo(projecao.x + dxNormal * 3, projecao.y + dyNormal * 3); // multiplicador para alongar
+  ctx.strokeStyle = "blue";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Desenhar ponto fixo (preto)
+  ctx.beginPath();
+  ctx.arc(pontoFixo.x, pontoFixo.y, 4, 0, Math.PI * 2);
+  ctx.fillStyle = "black";
+  ctx.fill();
+}
+
+let frame = 0;
+setInterval(() => {
+  desenhar(frame);
+  frame++;
+}, 50);
+</script>
+</body>
+</html>
