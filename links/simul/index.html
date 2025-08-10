@@ -70,7 +70,7 @@
     <label>Litros de água por m²:
       <input type="number" id="litrosPorM2" min="1" step="1" value="10" onchange="desenharBase()">
     </label>
-    <label>Capacidade do carro de bombeiro (litros):
+    <label>Capacidade do autotanque (litros):
       <input type="number" id="capacidadeCarro" min="1000" step="100" value="5000" onchange="desenharBase()">
     </label>
     <button onclick="ativarMedicaoEscala()">Ativar Medição da Escala</button>
@@ -480,8 +480,8 @@
         ctx.rotate(anguloPerpendicular);
         ctx.textAlign = 'center';
         ctx.textBaseline = 'bottom';
-        ctx.fillStyle = 'red';
-        ctx.font = '10px Arial';
+        ctx.fillStyle = 'orange';
+        ctx.font = '12px Arial';
         ctx.strokeStyle = 'black';
         ctx.lineWidth = 2;
         ctx.strokeText(text, 0, -textOffset);
