@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt">
 <head>
@@ -9,7 +8,7 @@
     body {
         font-family: Arial, sans-serif;
         margin: 20px;
-        max-width: 1000px;
+        max-width: 1200px;
         margin-left: auto;
         margin-right: auto;
     }
@@ -65,13 +64,41 @@
         height: 100px;
         border: 1px solid black;
         cursor: pointer;
-        touch-action: none; /* Previne a rolagem na canvas de direção do vento */
+        touch-action: none;
+    }
+    
+    /* --- Alterações para o layout --- */
+    .main-content {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        align-items: flex-start; /* Alinha os itens no topo */
+    }
+
+    .main-content > canvas {
+        flex: 2; /* O canvas ocupa 2/3 do espaço */
+        max-width: 65%; /* Limita a largura do canvas */
+    }
+
+    .main-content > .info {
+        flex: 1; /* A área de resultados ocupa 1/3 do espaço */
+        margin-top: 20px; /* Mantém o alinhamento com o canvas */
+    }
+
+    @media (max-width: 768px) {
+      .main-content {
+          flex-direction: column;
+      }
+      .main-content > canvas, .main-content > .info {
+          max-width: 100%;
+      }
     }
   </style>
 </head>
 <body>
   <h1>Simulador de Propagação e Combate</h1>
   <p><strong>Objetivo:</strong> Simular a propagação de uma frente de incêndio com base na velocidade/direção do vento e considerando a escala da imagem.</p>
+
   <div class="form-section">
     <h3>Parâmetros do Incêndio</h3>
     <label>Velocidade do Vento (km/h):
@@ -87,12 +114,14 @@
       <output id="taxaPropagacaoOutput">50</output> m/h
     </label>
   </div>
+
   <div class="form-section controls">
     <button type="button" onclick="iniciarSimulacao()">Iniciar / Reiniciar Simulação</button>
     <button type="button" onclick="pararSimulacao()">Parar Simulação</button>
     <label><input type="checkbox" id="mostrarSemireta" checked onchange="desenharBase()"> Mostrar semiretas na frente do incêndio</label>
     <label><input type="checkbox" id="mostrarGrelha" checked onchange="desenharBase()"> Mostrar Grelha</label>
   </div>
+
   <div class="escala-section">
     <h3>Medição de Escala</h3>
     <p><em>(Opcional) Clique nos dois extremos da barra de escala em baixo no mapa para calibração.</em></p>
@@ -106,12 +135,17 @@
       <input type="number" id="capacidadeCarro" min="1000" step="100" value="5000" onchange="desenharBase()">
     </label>
     <button onclick="ativarMedicaoEscala()">Ativar Medição da Escala</button>
+    <button onclick="cancelarMedicaoEscala()">Cancelar Medição da Escala</button>
     <div id="escalaInfo" style="margin-top:10px;"></div>
   </div>
-  <canvas id="canvas"></canvas>
-  <div class="info" id="resultado">
-    <p><em>Clique no mapa para definir o ponto onde houve suposta ignição do incêndio.</em></p>
+
+  <div class="main-content">
+    <canvas id="canvas"></canvas>
+    <div class="info" id="resultado">
+      <p><em>Clique no mapa para definir o ponto onde houve suposta ignição do incêndio.</em></p>
+    </div>
   </div>
+  
   <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
@@ -148,7 +182,7 @@
         canvas.height = newHeight;
         desenharBase();
     }
-    imagem.src = '../aerea1.jpg';
+    imagem.src = '../aerea1.jpg'; // Verifique se o caminho para a imagem está correto
 
     canvasDirecaoVento.width = 100;
     canvasDirecaoVento.height = 100;
@@ -238,12 +272,12 @@
         const headLen = 6;
         ctxDirecaoVento.moveTo(arrowX, arrowY);
         ctxDirecaoVento.lineTo(arrowX - headLen * Math.cos(angleRad - Math.PI/6), arrowY - headLen * Math.sin(angleRad - Math.PI/6));
-        ctxDirecaoVento.lineTo(arrowX - headLen * Math.cos(angleRad + Math.PI/6), arrowY - headLen * Math.sin(angleRad + Math.PI/6));
+        ctxDirecaoVento.lineTo(arrowX - headLen * Math.cos(angle + Math.PI/6), arrowY - headLen * Math.sin(angle + Math.PI/6));
         ctxDirecaoVento.closePath();
         ctxDirecaoVento.fillStyle = '#c00';
         ctxDirecaoVento.fill();
     }
-    
+
     function desenharBase() {
         ctx.clearRect(0,0,canvas.width,canvas.height);
         ctx.drawImage(imagem, 0, 0, canvas.width, canvas.height);
@@ -287,15 +321,6 @@
                 ctx.stroke();
             });
         }
-        localizacoesCarros.forEach(carro => {
-            ctx.fillStyle = 'red';
-            ctx.strokeStyle = 'white';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.arc(carro.x, carro.y, 6, 0, 2 * Math.PI);
-            ctx.fill();
-            ctx.stroke();
-        });
         if (document.getElementById('mostrarSemireta').checked && frentesIncendio.length > 0) {
             const ultima = frentesIncendio[frentesIncendio.length - 1];
             const anguloRad = ((direcaoVento - 90 + 360) % 360) * Math.PI / 180;
@@ -303,7 +328,7 @@
         }
         atualizarResultado();
     }
-    
+
     function getCanvasCoordinates(event) {
         const rectCanvas = canvas.getBoundingClientRect();
         let clientX, clientY;
@@ -319,14 +344,13 @@
         return { x: (clientX - rectCanvas.left) * scaleX, y: (clientY - rectCanvas.top) * scaleY };
     }
 
-    // Eventos para Desktop
     canvas.addEventListener('click', handleCanvasClick);
-    
-    // Eventos para Touch
     canvas.addEventListener('touchstart', handleCanvasClick);
 
     function handleCanvasClick(e) {
         e.preventDefault();
+        console.log("Clique no mapa detectado. Medir escala:", medirEscala, "Intervalo de simulação:", simulationInterval);
+
         if (simulationInterval) {
             alert("Pare a simulação atual antes de definir um novo ponto de ignição.");
             return;
@@ -375,12 +399,24 @@
     }
 
     document.getElementById('mostrarGrelha').addEventListener('change', desenharBase);
+
     function ativarMedicaoEscala() {
         pararSimulacao();
         medirEscala = true;
         escalaPonto1 = null;
-        document.getElementById('escalaInfo').innerText = 'Clique no primeiro ponto da escala...';
+        document.getElementById('escalaInfo').innerText = 'Modo de medição de escala ativo. Clique no primeiro ponto da escala...';
+        document.getElementById('resultado').innerHTML = '<p><em>A medir a escala. Clique no mapa para começar.</em></p>';
+        desenharBase();
     }
+    
+    function cancelarMedicaoEscala() {
+        medirEscala = false;
+        escalaPonto1 = null;
+        document.getElementById('escalaInfo').innerText = '';
+        document.getElementById('resultado').innerHTML = '<p><em>Modo de medição de escala cancelado. Clique no mapa para definir o ponto de ignição.</em></p>';
+        desenharBase();
+    }
+
     function pararSimulacao() {
         if (!simulationInterval) return;
         clearInterval(simulationInterval);
@@ -469,12 +505,15 @@
         `;
         document.getElementById('resultado').innerHTML = resultadoHTML;
     }
+
     function desenharSemiretas(center, p1, p2, anguloRad) {
+        // --- Semirreta Azul (Direção do Vento) ---
         const ux = Math.cos(anguloRad);
         const uy = Math.sin(anguloRad);
         const x0 = center.x;
         const y0 = center.y;
         const end = getCanvasIntersection(x0, y0, ux, uy);
+
         if (end) {
             ctx.beginPath();
             ctx.moveTo(x0, y0);
@@ -483,6 +522,7 @@
             ctx.lineWidth = 3;
             ctx.setLineDash([8,6]);
             ctx.stroke();
+
             const headLen = 10;
             const angle = Math.atan2(end.y - y0, end.x - x0);
             ctx.beginPath();
@@ -492,8 +532,10 @@
             ctx.closePath();
             ctx.fillStyle = 'rgba(0,150,255,0.9)';
             ctx.fill();
+
             const tempo_horas = (tempoSimulado / 60).toFixed(1);
             const tempoText = `Tempo: ${tempo_horas} h`;
+
             ctx.save();
             ctx.translate(end.x, end.y);
             ctx.rotate(angle);
@@ -507,22 +549,56 @@
             ctx.fillText(tempoText, -15, 0);
             ctx.restore();
         }
+
+        // --- Desenhar os marcadores dos carros ao lado da linha azul ---
+        const distanciaCarrosDaLinha = 15;
+        const ux_perp = Math.cos(anguloRad + Math.PI / 2);
+        const uy_perp = Math.sin(anguloRad + Math.PI / 2);
+
+        localizacoesCarros.forEach((carro, index) => {
+            const deslocamentoX = ux_perp * distanciaCarrosDaLinha * (index % 2 === 0 ? 1 : -1);
+            const deslocamentoY = uy_perp * distanciaCarrosDaLinha * (index % 2 === 0 ? 1 : -1);
+
+            const carroX = carro.x + deslocamentoX;
+            const carroY = carro.y + deslocamentoY;
+
+            ctx.fillStyle = 'red';
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(carroX, carroY, 6, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = 'white';
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 2;
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.strokeText(`${index + 1}`, carroX, carroY);
+            ctx.fillText(`${index + 1}`, carroX, carroY);
+        });
+
+        // --- Semirreta Branca (Perpendicular e Centrada) ---
         const frontCenter = {
             x: (p1.x + p2.x) / 2,
             y: (p1.y + p2.y) / 2
         };
         const anguloPerpendicular = anguloRad + Math.PI / 2;
-        const ux_perp = Math.cos(anguloPerpendicular);
-        const uy_perp = Math.sin(anguloPerpendicular);
+        const ux_perp_line = Math.cos(anguloPerpendicular);
+        const uy_perp_line = Math.sin(anguloPerpendicular);
+
         const comprimentoPixels = 200;
         const end_perp_pos = {
-            x: frontCenter.x + ux_perp * comprimentoPixels / 2,
-            y: frontCenter.y + uy_perp * comprimentoPixels / 2
+            x: frontCenter.x + ux_perp_line * comprimentoPixels / 2,
+            y: frontCenter.y + uy_perp_line * comprimentoPixels / 2
         };
         const end_perp_neg = {
-            x: frontCenter.x - ux_perp * comprimentoPixels / 2,
-            y: frontCenter.y - uy_perp * comprimentoPixels / 2
+            x: frontCenter.x - ux_perp_line * comprimentoPixels / 2,
+            y: frontCenter.y - uy_perp_line * comprimentoPixels / 2
         };
+
         ctx.beginPath();
         ctx.moveTo(end_perp_neg.x, end_perp_neg.y);
         ctx.lineTo(end_perp_pos.x, end_perp_pos.y);
@@ -531,12 +607,15 @@
         ctx.setLineDash([8,6]);
         ctx.stroke();
         ctx.setLineDash([]);
+
+        // --- Adicionar o texto na ponta da semirreta branca ---
         const litrosPorM2 = parseFloat(document.getElementById('litrosPorM2').value);
         const capacidadeCarro = parseFloat(document.getElementById('capacidadeCarro').value);
         const litrosNecessarios = areaArdiaTotal * litrosPorM2;
         const carrosNecessarios = Math.ceil(litrosNecessarios / capacidadeCarro) || 0;
         const text = `Carros: ${carrosNecessarios} | Litros: ${litrosNecessarios.toFixed(0)} L`;
         const textOffset = 10;
+
         ctx.save();
         ctx.translate(end_perp_pos.x, end_perp_pos.y);
         ctx.rotate(anguloPerpendicular);
@@ -549,11 +628,14 @@
         ctx.strokeText(text, 0, -textOffset);
         ctx.fillText(text, 0, -textOffset);
         ctx.restore();
+
+        // --- Adicionar as linhas vermelhas do feixe de propagação ---
         const ux_prop = Math.cos(anguloRad);
         const uy_prop = Math.sin(anguloRad);
         const propagacao_pixels_total = Math.sqrt(Math.pow(end.x - x0, 2) + Math.pow(end.y - y0, 2));
         const p1_prop = { x: p1.x + ux_prop * (propagacao_pixels_total * 0.95), y: p1.y + uy_prop * (propagacao_pixels_total * 0.95) };
         const p2_prop = { x: p2.x + ux_prop * (propagacao_pixels_total * 0.95), y: p2.y + uy_prop * (propagacao_pixels_total * 0.95) };
+
         ctx.beginPath();
         ctx.moveTo(p1.x, p1.y);
         ctx.lineTo(p1_prop.x, p1_prop.y);
@@ -561,6 +643,7 @@
         ctx.lineWidth = 2;
         ctx.setLineDash([4, 4]);
         ctx.stroke();
+
         ctx.beginPath();
         ctx.moveTo(p2.x, p2.y);
         ctx.lineTo(p2_prop.x, p2_prop.y);
@@ -569,6 +652,7 @@
         ctx.stroke();
         ctx.setLineDash([]);
     }
+
     function getCanvasIntersection(x0, y0, ux, uy) {
         const candidates = [];
         if (Math.abs(ux) > 1e-9) {
@@ -599,6 +683,7 @@
         candidates.sort((a,b) => a.t - b.t);
         return candidates[0];
     }
+    
     function desenharGrelha() {
         const escala_m_por_pixel = parseFloat(document.getElementById('escala').value);
         if (isNaN(escala_m_por_pixel) || escala_m_por_pixel <= 0) return;
