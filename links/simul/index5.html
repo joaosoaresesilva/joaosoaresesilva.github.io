@@ -33,7 +33,7 @@
   <p><strong>Objetivo:</strong> Ferramenta de Estudo: Como o Vento Afeta a Propagação com base na velocidade/direção do vento e considerando a escala da imagem.</p>
   
   <div class="info" id="resultado">
-    <p><em>Clique no mapa para definir o ponto onde houve suposta ignição do incêndio.</em></p>
+    <p><em>Clique no mapa para definir o(s) ponto(s) onde houve suposta ignição do incêndio.</em></p>
   </div>
   
   <div class="form-section">
@@ -92,7 +92,7 @@
     let simulationInterval = null;
     let tempoSimulado = 0;
     let areaArdiaTotal = 0;
-    let frentesIncendio = [];
+    let frentesIncendio = []; // Array de arrays, um para cada ponto de ignição
     let direcaoVento = 45; 
     
     imagem.onload = function() {
@@ -185,7 +185,6 @@
             desenharGrelha();
         }
         
-        // Desenha todos os pontos de ignição
         pontosIgnicao.forEach(ponto => {
             ctx.fillStyle = 'red';
             ctx.beginPath();
@@ -197,39 +196,33 @@
         });
         
         if (frentesIncendio.length > 0) {
-            ctx.beginPath();
-            ctx.moveTo(frentesIncendio[0].p1.x, frentesIncendio[0].p1.y);
-            for(let i = 1; i < frentesIncendio.length; i++){
-                ctx.lineTo(frentesIncendio[i].p1.x, frentesIncendio[i].p1.y);
-            }
-            for(let i = frentesIncendio.length - 1; i >= 0; i--){
-                ctx.lineTo(frentesIncendio[i].p2.x, frentesIncendio[i].p2.y);
-            }
-            ctx.closePath();
-            ctx.fillStyle = "rgba(100, 40, 0, 0.4)";
-            ctx.fill();
-            
-            const corBase = [255, 255, 0];
-            const corFinal = [139, 0, 0];
-            frentesIncendio.forEach((frente, index) => {
-                const progresso = Math.min(index / 24, 1);
-                const r = corBase[0] + (corFinal[0] - corBase[0]) * progresso;
-                const g = corBase[1] + (corFinal[1] - corBase[1]) * progresso;
-                const b = corBase[2] + (corFinal[2] - corBase[2]) * progresso;
-                
-                ctx.beginPath();
-                ctx.moveTo(frente.p1.x, frente.p1.y);
-                ctx.lineTo(frente.p2.x, frente.p2.y);
-                ctx.strokeStyle = `rgb(${r},${g},${b})`;
-                ctx.lineWidth = 2;
-                ctx.stroke();
+            frentesIncendio.forEach(frenteSimulacao => {
+                const corBase = [255, 255, 0];
+                const corFinal = [139, 0, 0];
+                frenteSimulacao.forEach((frente, index) => {
+                    const progresso = Math.min(index / 24, 1);
+                    const r = corBase[0] + (corFinal[0] - corBase[0]) * progresso;
+                    const g = corBase[1] + (corFinal[1] - corBase[1]) * progresso;
+                    const b = corBase[2] + (corFinal[2] - corBase[2]) * progresso;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(frente.p1.x, frente.p1.y);
+                    ctx.lineTo(frente.p2.x, frente.p2.y);
+                    ctx.strokeStyle = `rgb(${r},${g},${b})`;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                });
             });
         }
         
         if (document.getElementById('mostrarSemireta').checked && frentesIncendio.length > 0) {
-            const ultima = frentesIncendio[frentesIncendio.length - 1];
-            const anguloRad = ((direcaoVento - 90 + 360) % 360) * Math.PI / 180;
-            desenharSemiretas(ultima.center, ultima.p1, ultima.p2, anguloRad);
+            frentesIncendio.forEach(frenteSimulacao => {
+                if(frenteSimulacao.length > 0) {
+                    const ultima = frenteSimulacao[frenteSimulacao.length - 1];
+                    const anguloRad = ((direcaoVento - 90 + 360) % 360) * Math.PI / 180;
+                    desenharSemiretas(ultima.center, ultima.p1, ultima.p2, anguloRad);
+                }
+            });
         }
         
         atualizarResultado();
@@ -253,14 +246,14 @@
     canvas.addEventListener('click', function(e) {
         if (medirEscala) {
             if (!escalaPonto1) {
-                escalaPonto1 = { x, y };
+                escalaPonto1 = { x, y } = getCanvasCoordinates(e);
                 document.getElementById('escalaInfo').innerText = 'Selecione o segundo ponto da escala...';
                 ctx.fillStyle = 'blue';
                 ctx.beginPath();
                 ctx.arc(x, y, 5, 0, 2 * Math.PI);
                 ctx.fill();
             } else {
-                const escalaPonto2 = { x, y };
+                const escalaPonto2 = { x, y } = getCanvasCoordinates(e);
                 const distanciaPixels = Math.sqrt(Math.pow(escalaPonto2.x - escalaPonto1.x, 2) + Math.pow(escalaPonto2.y - escalaPonto1.y, 2));
                 const metros = prompt("Introduza a distância real em metros entre os pontos:");
                 if (metros && !isNaN(metros)) {
@@ -276,7 +269,7 @@
         } else {
             const { x, y } = getCanvasCoordinates(e);
             pontosIgnicao.push({ x, y });
-            document.getElementById('resultado').innerHTML = `<p>${pontosIgnicao.length} pontos de ignição definidos. Clique em "Iniciar / Reiniciar Simulação" ou adicione mais pontos.</p>`;
+            document.getElementById('resultado').innerHTML = `<p>${pontosIgnicao.length} ponto(s) de ignição definido(s). Clique em "Iniciar / Reiniciar Simulação" ou adicione mais pontos.</p>`;
             desenharBase();
         }
     });
@@ -312,12 +305,11 @@
         tempoSimulado = 0;
         areaArdiaTotal = 0;
         
-        // Inicia uma frente de incêndio para cada ponto de ignição
-        frentesIncendio = pontosIgnicao.map(ponto => ({
+        frentesIncendio = pontosIgnicao.map(ponto => ([{
             p1: { x: ponto.x - 1, y: ponto.y },
             p2: { x: ponto.x + 1, y: ponto.y },
             center: { x: ponto.x, y: ponto.y },
-        }));
+        }]));
         
         simulationInterval = setInterval(atualizarSimulacao, 1000);
     }
@@ -344,29 +336,29 @@
         const dy = Math.sin(anguloRad) * propagacao_pixels_5min;
         const dx_lat = -Math.sin(anguloRad) * propagacaoLateral_pixels_5min;
         const dy_lat = Math.cos(anguloRad) * propagacaoLateral_pixels_5min;
-        
-        // Atualiza todas as frentes de incêndio
-        const novasFrentes = frentesIncendio.map(frente => {
+
+        frentesIncendio = frentesIncendio.map(frenteSimulacao => {
+            const ultimaFrente = frenteSimulacao[frenteSimulacao.length - 1];
+            
             const novaFrente = {
-                p1: { x: frente.p1.x + dx - dx_lat, y: frente.p1.y + dy - dy_lat },
-                p2: { x: frente.p2.x + dx + dx_lat, y: frente.p2.y + dy + dy_lat },
-                center: { x: frente.center.x + dx, y: frente.center.y + dy }
+                p1: { x: ultimaFrente.p1.x + dx - dx_lat, y: ultimaFrente.p1.y + dy - dy_lat },
+                p2: { x: ultimaFrente.p2.x + dx + dx_lat, y: ultimaFrente.p2.y + dy + dy_lat },
+                center: { x: ultimaFrente.center.x + dx, y: ultimaFrente.center.y + dy }
             };
             
-            const dist_p1 = Math.sqrt(Math.pow(novaFrente.p1.x - frente.p1.x, 2) + Math.pow(novaFrente.p1.y - frente.p1.y, 2));
-            const dist_p2 = Math.sqrt(Math.pow(novaFrente.p2.x - frente.p2.x, 2) + Math.pow(novaFrente.p2.y - frente.p2.y, 2));
+            const dist_p1 = Math.sqrt(Math.pow(novaFrente.p1.x - ultimaFrente.p1.x, 2) + Math.pow(novaFrente.p1.y - ultimaFrente.p1.y, 2));
+            const dist_p2 = Math.sqrt(Math.pow(novaFrente.p2.x - ultimaFrente.p2.x, 2) + Math.pow(novaFrente.p2.y - ultimaFrente.p2.y, 2));
             const distMedia_pixels = (dist_p1 + dist_p2) / 2;
             
-            const larguraFrente_pixels = Math.sqrt(Math.pow(frente.p1.x - frente.p2.x, 2) + Math.pow(frente.p1.y - frente.p2.y, 2));
+            const larguraFrente_pixels = Math.sqrt(Math.pow(ultimaFrente.p1.x - ultimaFrente.p2.x, 2) + Math.pow(ultimaFrente.p1.y - ultimaFrente.p2.y, 2));
             const areaAdicional_pixels = larguraFrente_pixels * distMedia_pixels;
             const areaAdicional_m2 = areaAdicional_pixels * (escala * escala);
             areaArdiaTotal += areaAdicional_m2;
-            
-            return novaFrente;
+
+            frenteSimulacao.push(novaFrente);
+            return frenteSimulacao;
         });
-        
-        frentesIncendio = novasFrentes;
-        
+
         desenharBase();
     }
     
