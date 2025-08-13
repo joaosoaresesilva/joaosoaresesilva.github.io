@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador de Propagação de Incêndio - Ajuda ao Combate</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .form-section { margin-bottom: 20px; padding: 10px; background-color: #fcecec; border-left: 4px solid #c00; }
+    label { display: block; margin-bottom: 8px; }
+    input[type="range"], input[type="number"] { width: 100%; max-width: 300px; }
+    canvas { margin-top: 20px; border: 2px solid #000; max-width: 100%; height: auto; cursor: crosshair; display: block; touch-action: none; }
+    .info {
+        background-color: rgba(244, 244, 244, 0.9); /* Adicionado transparência para o mapa ser visível */
+        padding: 10px;
+        border-left: 4px solid #1f77b4;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        
+        /* Posição fixa no canto superior direito */
+        position: absolute; /* Usamos absolute para ser relativo ao body */
+        top: 20px;
+        right: 20px;
+        max-width: 300px;
+        z-index: 10; /* Garante que fique por cima do canvas */
+    }
+    .escala-section { margin-top: 20px; background-color: #d0f0d0; padding: 10px; border-left: 4px solid #4CAF50; }
+    .controls button { margin-right: 10px; padding: 8px 12px; }
+    .controls label { display:inline-block; margin-left:10px; }
+    #canvasDirecaoVento { width: 100px; height: 100px; border: 1px solid black; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Simulador de Propagação e Combate</h1>
+  <p><strong>Objetivo:</strong> Simular a propagação de uma frente de incêndio com base na velocidade/direção do vento e considerando a escala da imagem.</p>
+
+  <div class="info" id="resultado">
+    <p><em>Clique no mapa para definir o ponto onde houve suposta ignição do incêndio.</em></p>
+  </div>
+
+  <div class="form-section">
+    <h3>Parâmetros do Incêndio</h3>
+    <label>Velocidade do Vento (km/h):
+      <input type="range" id="velocidadeVento" min="0" max="150" value="10" oninput="velocidadeVentoOutput.value = this.value; desenharBase();">
+      <output id="velocidadeVentoOutput">10</output> km/h
+    </label>
+        
+    <label>Direção do Vento (0° = Norte):
+      <canvas id="canvasDirecaoVento"></canvas>
+      <output id="direcaoVentoOutput">45</output> °
+    </label>
+        
+    <label>Taxa de Propagação Base (sem vento):
+      <input type="range" id="taxaPropagacao" min="10" max="200" step="10" value="50" oninput="taxaPropagacaoOutput.value = this.value; desenharBase();">
+      <output id="taxaPropag
