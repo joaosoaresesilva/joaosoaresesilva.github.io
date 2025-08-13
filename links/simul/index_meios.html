@@ -58,7 +58,6 @@
   <div class="form-section controls">
     <button type="button" onclick="iniciarSimulacao()">Iniciar / Reiniciar Simulação</button>
     <button type="button" onclick="pararSimulacao()">Parar Simulação</button>
-    <button type="button" onclick="continuarSimulacao()" id="btnContinuar">Continuar Simulação</button>
     <label><input type="checkbox" id="mostrarSemireta" checked onchange="desenharBase()"> Mostrar semiretas na frente do incêndio</label>
     <label><input type="checkbox" id="mostrarGrelha" checked onchange="desenharBase()"> Mostrar Grelha</label>
   </div>
@@ -94,13 +93,8 @@
     let simulationInterval = null;
     let tempoSimulado = 0;
     let areaArdiaTotal = 0;
-    let frentesIncendio = []; // Array de arrays, um para cada ponto de ignição
+    let frentesIncendio = []; 
     let direcaoVento = 45; 
-    
-    // Novas variáveis para a funcionalidade de carros de bombeiros
-    let modoAdicionarCarro = false;
-    let carrosDeBombeiros = [];
-    let tempoUltimaParagem = 0;
     
     imagem.onload = function() {
       const maxWidth = canvas.parentElement.offsetWidth;
@@ -232,7 +226,6 @@
             });
         }
         
-        desenharCarros();
         atualizarResultado();
     }
     
@@ -275,11 +268,7 @@
                 escalaPonto1 = null;
                 desenharBase();
             }
-        } else if (modoAdicionarCarro) {
-            carrosDeBombeiros.push({ x, y });
-            desenharBase();
-            document.getElementById('resultado').innerHTML += `<p>Carro de bombeiros adicionado em (${x.toFixed(0)}, ${y.toFixed(0)}).</p>`;
-        } else {
+        } else if (!simulationInterval) {
             pontosIgnicao.push({ x, y });
             document.getElementById('resultado').innerHTML = `<p>${pontosIgnicao.length} ponto(s) de ignição definido(s). Clique em "Iniciar / Reiniciar Simulação" ou adicione mais pontos.</p>`;
             desenharBase();
@@ -299,8 +288,6 @@
         if (!simulationInterval) return;
         clearInterval(simulationInterval);
         simulationInterval = null;
-        modoAdicionarCarro = false;
-        document.getElementById('btnContinuar').style.display = 'none';
         
         const finalResult = document.getElementById('resultado').innerHTML;
         document.getElementById('resultado').innerHTML = '<h3>Simulação Parada</h3>' + finalResult + '<p><em>Para recomeçar, clique em "Iniciar / Reiniciar Simulação". Para uma nova simulação, clique noutro ponto do mapa.</em></p>';
@@ -315,39 +302,22 @@
             pararSimulacao();
         }
         
-        desenharBase();
-        tempoSimulado = 0;
-        areaArdiaTotal = 0;
-        
         frentesIncendio = pontosIgnicao.map(ponto => ([{
             p1: { x: ponto.x - 1, y: ponto.y },
             p2: { x: ponto.x + 1, y: ponto.y },
             center: { x: ponto.x, y: ponto.y },
+            area: 0
         }]));
         
-        simulationInterval = setInterval(atualizarSimulacao, 1000);
-        tempoUltimaParagem = 0;
-    }
-    
-    function continuarSimulacao() {
-        modoAdicionarCarro = false;
-        document.getElementById('btnContinuar').style.display = 'none';
-        document.getElementById('resultado').innerHTML += '<p><em>Simulação a continuar...</em></p>';
+        desenharBase();
+        tempoSimulado = 0;
+        areaArdiaTotal = 0;
+        
         simulationInterval = setInterval(atualizarSimulacao, 1000);
     }
     
     function atualizarSimulacao() {
         tempoSimulado += 5;
-        
-        // Parar a simulação a cada 60 minutos para adicionar carros
-        if ((tempoSimulado % 60 === 0) && (tempoSimulado > tempoUltimaParagem)) {
-            pararSimulacao();
-            modoAdicionarCarro = true;
-            document.getElementById('btnContinuar').style.display = 'inline-block';
-            document.getElementById('resultado').innerHTML = `<h3>Simulação Pausada</h3><p>Tempo de simulação: ${tempoSimulado} minutos (${(tempoSimulado / 60).toFixed(1)} h).<br>Clique no mapa para adicionar carros de bombeiros. Depois, clique em 'Continuar Simulação'.</p>`;
-            tempoUltimaParagem = tempoSimulado;
-            return;
-        }
         
         const velocidadeVento_kmh = parseFloat(document.getElementById('velocidadeVento').value);
         const taxaBase_mh = parseFloat(document.getElementById('taxaPropagacao').value);
@@ -386,31 +356,14 @@
             const areaAdicional_pixels = larguraFrente_pixels * distMedia_pixels;
             const areaAdicional_m2 = areaAdicional_pixels * (escala * escala);
             areaArdiaTotal += areaAdicional_m2;
-
+            
+            novaFrente.area = ultimaFrente.area + areaAdicional_m2;
             frenteSimulacao.push(novaFrente);
             return frenteSimulacao;
         });
-
         desenharBase();
     }
     
-    function desenharCarros() {
-        carrosDeBombeiros.forEach(carro => {
-            ctx.fillStyle = 'blue';
-            ctx.strokeStyle = 'white';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.rect(carro.x - 10, carro.y - 10, 20, 20); // Desenha um quadrado para simular o carro
-            ctx.fill();
-            ctx.stroke();
-            ctx.fillStyle = 'white';
-            ctx.font = '12px Arial';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('B', carro.x, carro.y);
-        });
-    }
-
     function atualizarResultado() {
         const areaPorHora = (areaArdiaTotal / tempoSimulado) * 60 || 0;
         const litrosPorM2 = parseFloat(document.getElementById('litrosPorM2').value);
@@ -427,7 +380,6 @@
                 <li><strong>Área Total Ardida:</strong> ${areaArdiaTotal.toFixed(2)} m²</li>
                 <li><strong>Litros de Água Necessários:</strong> ${litrosNecessarios.toFixed(0)} L</li>
                 <li><strong>Carros de Bombeiros Necessários:</strong> ${carrosNecessarios}</li>
-                <li><strong>Carros posicionados:</strong> ${carrosDeBombeiros.length}</li>
                 <li><strong>Taxa Média:</strong> ${areaPorHora.toFixed(2)} m²/hora</li>
             </ul>
         `;
@@ -478,72 +430,43 @@
             ctx.restore();
         }
         
-        const frontCenter = {
-            x: (p1.x + p2.x) / 2,
-            y: (p1.y + p2.y) / 2
-        };
-        const anguloPerpendicular = anguloRad + Math.PI / 2;
-        const ux_perp = Math.cos(anguloPerpendicular);
-        const uy_perp = Math.sin(anguloPerpendicular);
-        const comprimentoPixels = 200;
-        const end_perp_pos = {
-            x: frontCenter.x + ux_perp * comprimentoPixels / 2,
-            y: frontCenter.y + uy_perp * comprimentoPixels / 2
-        };
-        const end_perp_neg = {
-            x: frontCenter.x - ux_perp * comprimentoPixels / 2,
-            y: frontCenter.y - uy_perp * comprimentoPixels / 2
-        };
-        
-        ctx.beginPath();
-        ctx.moveTo(end_perp_neg.x, end_perp_neg.y);
-        ctx.lineTo(end_perp_pos.x, end_perp_pos.y);
-        ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-        ctx.lineWidth = 3;
-        ctx.setLineDash([8,6]);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        
+        // Novo código para desenhar os carros a cada hora
+        const escala = parseFloat(document.getElementById('escala').value);
         const litrosPorM2 = parseFloat(document.getElementById('litrosPorM2').value);
         const capacidadeCarro = parseFloat(document.getElementById('capacidadeCarro').value);
-        const litrosNecessarios = areaArdiaTotal * litrosPorM2;
-        const carrosNecessarios = Math.ceil(litrosNecessarios / capacidadeCarro) || 0;
-        const text = `Carros: ${carrosNecessarios} | Litros: ${litrosNecessarios.toFixed(0)} L`;
-        const textOffset = 10;
         
-        ctx.save();
-        ctx.translate(end_perp_pos.x, end_perp_pos.y);
-        ctx.rotate(anguloPerpendicular);
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'bottom';
-        ctx.fillStyle = 'white';
-        ctx.font = '14px Arial';
-        ctx.strokeStyle = 'black';
-        ctx.lineWidth = 2;
-        ctx.strokeText(text, 0, -textOffset);
-        ctx.fillText(text, 0, -textOffset);
-        ctx.restore();
+        for (let i = 60; i <= tempoSimulado; i += 60) {
+            const frenteAnterior = frentesIncendio[0].find(f => (f.area * (escala*escala)) >= ((i - 60) * litrosPorM2));
+            const frenteAtual = frentesIncendio[0].find(f => (f.area * (escala*escala)) >= (i * litrosPorM2));
+            
+            if (frenteAnterior && frenteAtual) {
+                const areaPeriodo = frenteAtual.area - frenteAnterior.area;
+                const litrosNecessarios = areaPeriodo * litrosPorM2;
+                const carrosNecessarios = Math.ceil(litrosNecessarios / capacidadeCarro) || 0;
+                
+                const centro = {
+                    x: (frenteAnterior.center.x + frenteAtual.center.x) / 2,
+                    y: (frenteAnterior.center.y + frenteAtual.center.y) / 2
+                };
+                
+                const text = `🚒 ${carrosNecessarios} | ${litrosNecessarios.toFixed(0)}L`;
+                
+                ctx.save();
+                ctx.translate(centro.x, centro.y);
+                const angleRad = ((direcaoVento - 90 + 360) % 360) * Math.PI / 180;
+                ctx.rotate(angleRad + Math.PI / 2);
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = 'blue';
+                ctx.font = 'bold 16px Arial';
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 4;
+                ctx.strokeText(text, 0, -20);
+                ctx.fillText(text, 0, -20);
+                ctx.restore();
+            }
+        }
         
-        const ux_prop = Math.cos(anguloRad);
-        const uy_prop = Math.sin(anguloRad);
-        const propagacao_pixels_total = Math.sqrt(Math.pow(end.x - x0, 2) + Math.pow(end.y - y0, 2));
-        const p1_prop = { x: p1.x + ux_prop * (propagacao_pixels_total * 0.95), y: p1.y + uy_prop * (propagacao_pixels_total * 0.95) };
-        const p2_prop = { x: p2.x + ux_prop * (propagacao_pixels_total * 0.95), y: p2.y + uy_prop * (propagacao_pixels_total * 0.95) };
-        
-        ctx.beginPath();
-        ctx.moveTo(p1.x, p1.y);
-        ctx.lineTo(p1_prop.x, p1_prop.y);
-        ctx.strokeStyle = 'red';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([4, 4]);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(p2.x, p2.y);
-        ctx.lineTo(p2_prop.x, p2_prop.y);
-        ctx.strokeStyle = 'red';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        ctx.setLineDash([]);
     }
     
     function getCanvasIntersection(x0, y0, ux, uy) {
