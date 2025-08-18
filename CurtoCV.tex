@@ -3,21 +3,24 @@
 \usepackage[portuges]{babel}
 \usepackage[T1]{fontenc}
 \usepackage{mathpazo} % Enables Palatino font
-\usepackage{lmodern}    % Pacote para habilitar a fonte Latin Modern, uma variante de alta qualidade da %Computer Modern
+\usepackage{lmodern}% Pacote para habilitar a fonte Latin Modern, uma variante de alta qualidade da Computer Modern
 \renewcommand{\rmdefault}{cmr}
 \usepackage{xcolor}
+\usepackage{url}
 \usepackage{hyperref}
 \usepackage{geometry}
 \usepackage{fontspec}
 \usepackage{mathpazo} % Fonte Palatino
 \usepackage{newtxtext} % Fonte Times
-\usepackage{fancyhdr} % Pacote para personalizar cabeçalhos e rodapés  Configuração das margens
+\usepackage{fancyhdr} % Pacote para personalizar cabeçalhos e rodapés
+\usepackage{enumitem}
+% Configuração das margens
 \geometry{a4paper, left=20mm, right=10mm, top=26mm, bottom=10mm}
 
 % Configuração para links em azul
 \hypersetup{
 	colorlinks=true,   % Habilita cores nos links
-	linkcolor=blue,    % Cor dos links internos (ex: sumário)
+	linkcolor=steelblue,    % Cor dos links internos (ex: sumário)
 	urlcolor= blue    % SteelBlueCor de URLs
 }
 
@@ -97,65 +100,86 @@
 
 	\end{itemize}
 	
-	\vspace{5mm}
+		\vspace{5mm}	
 	
-		% Seção Formação online
-	\textbf{\hspace{\textindent}Cursos de Aperfeiçoamento Profissional}
-	\begin{itemize}
-	
-	\item[\hspace{\datewidth}\scriptsize 25-3-2025] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Introdução às Comunicações Sem Fios}, \url{https://matlabacademy.mathworks.com/progress/share/report.html?id=036bdd51-7650-4b40-9ca9-dda5f0cfd9a0&}}
-	
-					
-\item[\hspace{\datewidth}\scriptsize 29-9-2024] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Ambiente de Trabalho MATLAB e Scripts de Resolução de Problemas}, \url{https://matlabacademy.mathworks.com/progress/share/certificate.html?id=ae2e7096-91ff-4827-8c07-6885827ff584&}}
-
-\item[\hspace{\datewidth}\scriptsize 9-6-2024] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Introdução ao Processamento de Imagens}, \url{https://matlabacademy.mathworks.com/progress/share/report.html?id=c9b24992-b614-48d2-a06f-0546c9d9d412&}}
-	
-\item[\hspace{\datewidth}\scriptsize 5-6-2024] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Introdução à Programação Orientada por Objetos}, \url{https://matlabacademy.mathworks.com/progress/share/certificate.html?id=5cce993d-1378-4817-a016-cfdc909eef1f&}}
-		
-\item[\hspace{\datewidth}\scriptsize 15-9-2023] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{IIntrodução Deep Learning }, \url{https://matlabacademy.mathworks.com/progress/share/report.html?id=a773357e-1315-4d27-8bdc-ff2af04983a1&}}
-
-\item[\hspace{\datewidth}\scriptsize 21-9-2023] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Introdução à Criação de Aplicações}, \url{https://matlabacademy.mathworks.com/progress/share/report.html?id=8db10b82-5beb-4543-87c7-c8e13c5f7ccf&}}
-
-
-
-\item[\hspace{\datewidth}\scriptsize 24-5-2022] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Introdução à Simulação de Circuítos}, \url{https://matlabacademy.mathworks.com/progress/share/report.html?id=8e8b78c7-bd81-496c-b869-37bb71db1a39&}}
-
-
-\item[\hspace{\datewidth}\scriptsize 24-5-2022] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Simulink}, \url{https://matlabacademy.mathworks.com/progress/share/report.html?id=9a64293c-a2bd-48b0-b613-dc2d2b0ed99d&}}
-
-	\end{itemize}
-	
-	\vspace{5mm}
 	
 	% Seção Informática
-	\textbf{\hspace{\textindent}Outras Competências Técnicas}	\begin{itemize}
-%%		\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{Inglês (Fluente), Português (Nativo), Espanhol (Intermédio)}
-%		\begin{itemize}
-			%    \item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{Idiomas: Inglês (Fluente), Português (Nativo), Espanhol (Intermédio)}
-			\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{•  Ferramentas de Redes e Segurança: Wireshark, Nessus, Nmap, Tcpdump, Snort, Kali Linux}
-			\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{•  Programação: Python, Java, C/C++, PHP, Tec front-end (HTML5, CSS, JavaScript), SQL,Shell scripting}
-			\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{•  Bases de Dados: MySQL, PostgreSQL, MariaDB, SQL Server}
-			\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{•  Visualização e Análise de Dados: Matlab, Octave, RStudio, Excel, Google Sheets, ggplot}
-			
-			\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{•  Frameworks e Bibliotecas: tidyverse, Ollama (LLMs)}	
-				
-			\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{•  Ferramentas de Controle de Versão: Git, GitHub}
-			\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{•  Ambientes de Desenvolvimento e Testes : VirtualBox,Visual Studio Code, Eclipse, NetBeans}
-			\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{•  Softwares de Simulação e Projeto: LTspice, PROTEL,DIALux}
-			\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{•  Sistemas Operativos: Linux/Unix, Windows}
-		\end{itemize}
-%	\end{itemize}
+	\textbf{\hspace{\textindent}Outras Competências Técnicas}	
+	%\begin{itemize}
+	%%		\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{Inglês (Fluente), Português (Nativo), Espanhol (Intermédio)}
+	\begin{itemize}
+%		\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{Idiomas: Inglês (Fluente), Português (Nativo), Espanhol (Intermédio)}
+		\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{•  Ferramentas de Redes e Segurança: Wireshark, Nessus, Nmap, Tcpdump, Snort, Kali Linux}
+		\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{•  Programação: Python, Java, C/C++, PHP, Tec front-end (HTML5, CSS, JavaScript), SQL,Shell scripting}
+		\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{•  Bases de Dados: MySQL, PostgreSQL, MariaDB, SQL Server}
+		\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{•  Visualização e Análise de Dados: Matlab, Octave, RStudio, Excel, Google Sheets, ggplot}
+		
+		\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{•  Frameworks e Bibliotecas: tidyverse, Ollama (LLMs)}	
+		
+		\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{•  Ferramentas de Controle de Versão: Git, GitHub}
+		\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{•  Ambientes de Desenvolvimento e Testes : VirtualBox,Visual Studio Code, Eclipse, NetBeans}
+		\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{•  Softwares de Simulação e Projeto: LTspice, PROTEL,DIALux}
+		\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{•  Sistemas Operativos: Linux/Unix, Windows}
+	\end{itemize}
+	%\end{itemize}
 	
-%		\vspace{5mm}
-%		
-%		% Seção Outros Interesses
-%	\textbf{\hspace{\textindent}Outros Interesses}
+	\vspace{5mm}
+	
+%		% Seção Formação online
+%	\textbf{\hspace{\textindent}Cursos de Aperfeiçoamento Profissional}
+%
 %	\begin{itemize}
+%\sloppy		
+%\item[\hspace{\datewidth}\scriptsize 25-3-2025] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Introdução às Comunicações Sem Fios}, \url{https://matlabacademy.mathworks.com/progress/share/report.html?id=036bdd51-7650-4b40-9ca9-dda5f0cfd9a0&}}
+%					
+%\item[\hspace{\datewidth}\scriptsize 29-9-2024] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Ambiente de Trabalho MATLAB e Scripts de Resolução de Problemas}, \url{https://matlabacademy.mathworks.com/progress/share/certificate.html?id=ae2e7096-91ff-4827-8c07-6885827ff584&}}
+%
+%\item[\hspace{\datewidth}\scriptsize 9-6-2024] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Introdução ao Processamento de Imagens}, \url{https://matlabacademy.mathworks.com/progress/share/report.html?id=c9b24992-b614-48d2-a06f-0546c9d9d412&}}
+%	
+%\item[\hspace{\datewidth}\scriptsize 5-6-2024] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Introdução à Programação Orientada por Objetos}, \url{https://matlabacademy.mathworks.com/progress/share/certificate.html?id=5cce993d-1378-4817-a016-cfdc909eef1f&}}
+%		
+%\item[\hspace{\datewidth}\scriptsize 15-9-2023] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{IIntrodução Deep Learning }, \url{https://matlabacademy.mathworks.com/progress/share/report.html?id=a773357e-1315-4d27-8bdc-ff2af04983a1&}}
+%
+%\item[\hspace{\datewidth}\scriptsize 21-9-2023] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Introdução à Criação de Aplicações}, \url{https://matlabacademy.mathworks.com/progress/share/report.html?id=8db10b82-5beb-4543-87c7-c8e13c5f7ccf&}}
+%
+%\item[\hspace{\datewidth}\scriptsize 24-5-2022] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Introdução à Simulação de Circuítos}, \url{https://matlabacademy.mathworks.com/progress/share/report.html?id=8e8b78c7-bd81-496c-b869-37bb71db1a39&}}
+%
+%\item[\hspace{\datewidth}\scriptsize 24-5-2022] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Simulink}, \url{https://matlabacademy.mathworks.com/progress/share/report.html?id=9a64293c-a2bd-48b0-b613-dc2d2b0ed99d&}}
+%
+%	\end{itemize}
+%	
+%	\vspace{5mm}
+
+	% Seção Formação online
+	\textbf{\hspace{\textindent}Cursos de Aperfeiçoamento Profissional}
+	\begin{itemize}
+\sloppy		
+\item[\hspace{\datewidth}\scriptsize 9-6-2024] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Introdução ao Processamento de Imagens}, \href{https://matlabacademy.mathworks.com/progress/share/report.html?id=c9b24992-b614-48d2-a06f-0546c9d9d412&}{>}}
+   
+\item[\hspace{\datewidth}\scriptsize 5-6-2024] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Introdução à Programação Orientada por Objetos}, \href{https://matlabacademy.mathworks.com/progress/share/certificate.html?id=5cce993d-1378-4817-a016-cfdc909eef1f&}{>}}
+       
+\item[\hspace{\datewidth}\scriptsize 15-9-2023] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Introdução Deep Learning }, \href{https://matlabacademy.mathworks.com/progress/share/report.html?id=a773357e-1315-4d27-8bdc-ff2af04983a1&}{>}}
+
+\item[\hspace{\datewidth}\scriptsize 21-9-2023] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Introdução à Criação de Aplicações}, \href{https://matlabacademy.mathworks.com/progress/share/report.html?id=8db10b82-5beb-4543-87c7-c8e13c5f7ccf&}{>}}
+
+\item[\hspace{\datewidth}\scriptsize 24-5-2022] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Introdução à Simulação de Circuítos}, \href{https://matlabacademy.mathworks.com/progress/share/report.html?id=8e8b78c7-bd81-496c-b869-37bb71db1a39&}{>}}
+
+\item[\hspace{\datewidth}\scriptsize 24-5-2022] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Simulink}, \href{https://matlabacademy.mathworks.com/progress/share/report.html?id=9a64293c-a2bd-48b0-b613-dc2d2b0ed99d&}{>}}
+    
+\end{itemize}
+
+\vspace{5mm}
+%		
+%Seção Outros Interesses
+\textbf{\hspace{\textindent}Outros Interesses}
+\begin{itemize}
 %		\item[\hspace{\datewidth}\scriptsize  ] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textit{Aluno Piloto }:Curso Piloto Particular de Aeroplanos, Aeroclube da Beira}
 %		\item[\hspace{\datewidth}\scriptsize ] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textit{Pintura em Aguarela}, Exposições Casa Museu Bissaya Barreto, Coimbra}
 %		\item[\hspace{\datewidth}\scriptsize ] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textit{Atleta de Remo }: Associação Académica de Coimbra}
-%		
-%	\end{itemize}
+%	
+\item[\hspace{\datewidth}\scriptsize  ] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textit{Pintura em Aguarela, Remo}}
+		
+\end{itemize}
 	
 	\vspace{2cm}
 	
@@ -164,7 +188,3 @@
 	\end{center}
 	
 \end{document}
-
-
-
-
