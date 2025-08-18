@@ -27,6 +27,8 @@
     .controls label { display:inline-block; margin-left:10px; }
     #canvasDirecaoVento { width: 100px; height: 100px; border: 1px solid black; cursor: pointer; }
     #btnReplay { display: none; }
+    .inline-controls { margin-top: 10px; }
+    .inline-controls button { display: block; width: 100%; margin-top: 5px; }
   </style>
 </head>
 <body>
@@ -35,6 +37,19 @@
   
   <div class="info" id="resultado">
     <p><em>Clique no mapa para definir o(s) ponto(s) onde houve suposta ignição do incêndio.</em></p>
+    
+    <hr>
+    <h3>Controlo da Simulação</h3>
+    <div class="inline-controls">
+        <button type="button" onclick="iniciarSimulacao()">Iniciar / Reiniciar Simulação</button>
+        <button type="button" onclick="pararSimulacao()">Parar Simulação</button>
+        <button type="button" onclick="iniciarReplay()" id="btnReplay">Replay Simulação</button>
+    </div>
+    <hr>
+    
+    <label><input type="checkbox" id="mostrarSemireta" checked onchange="desenharBase()"> Mostrar semiretas na frente do incêndio</label>
+    <label><input type="checkbox" id="mostrarGrelha" checked onchange="desenharBase()"> Mostrar Grelha</label>
+    
   </div>
   
   <div class="form-section">
@@ -53,14 +68,6 @@
       <input type="range" id="taxaPropagacao" min="10" max="200" step="10" value="50" oninput="taxaPropagacaoOutput.value = this.value; desenharBase();">
       <output id="taxaPropagacaoOutput">50</output> m/h
     </label>
-  </div>
-  
-  <div class="form-section controls">
-    <button type="button" onclick="iniciarSimulacao()">Iniciar / Reiniciar Simulação</button>
-    <button type="button" onclick="pararSimulacao()">Parar Simulação</button>
-    <button type="button" onclick="iniciarReplay()" id="btnReplay">Replay Simulação</button>
-    <label><input type="checkbox" id="mostrarSemireta" checked onchange="desenharBase()"> Mostrar semiretas na frente do incêndio</label>
-    <label><input type="checkbox" id="mostrarGrelha" checked onchange="desenharBase()"> Mostrar Grelha</label>
   </div>
   
   <div class="escala-section">
@@ -176,7 +183,7 @@
       const headLen = 6;
       ctxDirecaoVento.moveTo(arrowX, arrowY);
       ctxDirecaoVento.lineTo(arrowX - headLen * Math.cos(angleRad - Math.PI/6), arrowY - headLen * Math.sin(angleRad - Math.PI/6));
-      ctxDirecaoVento.lineTo(arrowX - headLen * Math.cos(angleRad + Math.PI/6), arrowY - headLen * Math.sin(angleRad + Math.PI/6));
+      ctxDirecaoVento.lineTo(arrowX - headLen * Math.cos(angle + Math.PI/6), arrowY - headLen * Math.sin(angle + Math.PI/6));
       ctxDirecaoVento.closePath();
       ctxDirecaoVento.fillStyle = '#c00';
       ctxDirecaoVento.fill();
@@ -473,7 +480,6 @@
             ctx.restore();
         }
         
-        // Novo código para mostrar os carros APENAS no próximo período
         const litrosPorM2 = parseFloat(document.getElementById('litrosPorM2').value);
         const capacidadeCarro = parseFloat(document.getElementById('capacidadeCarro').value);
 

@@ -368,6 +368,7 @@
             return frenteSimulacao;
         });
 
+        // A área total é recalculada com base na última frente, para evitar acumulação de erros
         areaArdiaTotal = frentesIncendio.reduce((total, frenteSim) => {
             if (frenteSim.length > 0) {
                 return total + frenteSim[frenteSim.length - 1].area;
@@ -408,12 +409,12 @@
     }
     
     function atualizarResultado() {
+        const areaPorHora = (areaArdiaTotal / tempoSimulado) * 60 || 0;
         const litrosPorM2 = parseFloat(document.getElementById('litrosPorM2').value);
         const capacidadeCarro = parseFloat(document.getElementById('capacidadeCarro').value);
-        const litrosNecessariosTotal = areaArdiaTotal * litrosPorM2;
-        const carrosNecessariosTotal = Math.ceil(litrosNecessariosTotal / capacidadeCarro) || 0;
-
-        const areaPorHora = (areaArdiaTotal / tempoSimulado) * 60 || 0;
+        const litrosNecessarios = areaArdiaTotal * litrosPorM2;
+        const carrosNecessarios = Math.ceil(litrosNecessarios / capacidadeCarro) || 0;
+        
         const tempo_horas_dec = (tempoSimulado / 60).toFixed(1);
     
         const resultadoHTML = `
@@ -421,8 +422,8 @@
             <ul>
                 <li><strong>Tempo Simulado:</strong> ${tempoSimulado} minutos (${tempo_horas_dec} h)</li>
                 <li><strong>Área Total Ardida:</strong> ${areaArdiaTotal.toFixed(2)} m²</li>
-                <li><strong>Litros de Água Necessários:</strong> ${litrosNecessariosTotal.toFixed(0)} L</li>
-                <li><strong>Carros de Bombeiros Necessários:</strong> ${carrosNecessariosTotal}</li>
+                <li><strong>Litros de Água Necessários:</strong> ${litrosNecessarios.toFixed(0)} L</li>
+                <li><strong>Carros de Bombeiros Necessários:</strong> ${carrosNecessarios}</li>
                 <li><strong>Taxa Média:</strong> ${areaPorHora.toFixed(2)} m²/hora</li>
             </ul>
         `;
@@ -473,43 +474,44 @@
             ctx.restore();
         }
         
-        // Novo código para mostrar os carros APENAS no próximo período
+        const escala = parseFloat(document.getElementById('escala').value);
         const litrosPorM2 = parseFloat(document.getElementById('litrosPorM2').value);
         const capacidadeCarro = parseFloat(document.getElementById('capacidadeCarro').value);
-
-        if (replayData && replayData.length > 0 && tempoSimulado >= 60) {
-            const ultimoFrameTempo = Math.floor(tempoSimulado / 60) * 60;
-            const frameAtual = replayData.find(frame => frame.tempo === ultimoFrameTempo);
-            const frameAnterior = replayData.find(frame => frame.tempo === ultimoFrameTempo - 60);
-
-            if (frameAtual && frameAnterior) {
-                const frenteAtual = frameAtual.frentes[0][frameAtual.frentes[0].length - 1];
-                const frenteAnterior = frameAnterior.frentes[0][frameAnterior.frentes[0].length - 1];
-
-                const areaPeriodo_m2 = frenteAtual.area - frenteAnterior.area;
-                const litrosNecessarios = areaPeriodo_m2 * litrosPorM2;
-                const carrosNecessarios = Math.ceil(litrosNecessarios / capacidadeCarro) || 0;
+        
+        if (replayData && replayData.length > 0) {
+            for (let i = 60; i <= tempoSimulado; i += 60) {
+                const frameAtual = replayData.find(frame => frame.tempo === i);
+                const frameAnterior = replayData.find(frame => frame.tempo === i - 60);
                 
-                const centro = {
-                    x: (frenteAnterior.center.x + frenteAtual.center.x) / 2,
-                    y: (frenteAnterior.center.y + frenteAtual.center.y) / 2
-                };
-                
-                const text = `🚒 ${carrosNecessarios} | ${litrosNecessarios.toFixed(0)}L`;
-                
-                ctx.save();
-                ctx.translate(centro.x, centro.y);
-                const angleRad = ((direcaoVento - 90 + 360) % 360) * Math.PI / 180;
-                ctx.rotate(angleRad + Math.PI / 2);
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillStyle = 'blue';
-                ctx.font = 'bold 16px Arial';
-                ctx.strokeStyle = 'white';
-                ctx.lineWidth = 4;
-                ctx.strokeText(text, 0, -20);
-                ctx.fillText(text, 0, -20);
-                ctx.restore();
+                if (frameAtual && frameAnterior) {
+                    const frenteAtual = frameAtual.frentes[0][frameAtual.frentes[0].length - 1];
+                    const frenteAnterior = frameAnterior.frentes[0][frameAnterior.frentes[0].length - 1];
+
+                    const areaPeriodo_m2 = frenteAtual.area - frenteAnterior.area;
+                    const litrosNecessarios = areaPeriodo_m2 * litrosPorM2;
+                    const carrosNecessarios = Math.ceil(litrosNecessarios / capacidadeCarro) || 0;
+                    
+                    const centro = {
+                        x: (frenteAnterior.center.x + frenteAtual.center.x) / 2,
+                        y: (frenteAnterior.center.y + frenteAtual.center.y) / 2
+                    };
+                    
+                    const text = `🚒 ${carrosNecessarios} | ${litrosNecessarios.toFixed(0)}L`;
+                    
+                    ctx.save();
+                    ctx.translate(centro.x, centro.y);
+                    const angleRad = ((direcaoVento - 90 + 360) % 360) * Math.PI / 180;
+                    ctx.rotate(angleRad + Math.PI / 2);
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillStyle = 'blue';
+                    ctx.font = 'bold 16px Arial';
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = 4;
+                    ctx.strokeText(text, 0, -20);
+                    ctx.fillText(text, 0, -20);
+                    ctx.restore();
+                }
             }
         }
         
