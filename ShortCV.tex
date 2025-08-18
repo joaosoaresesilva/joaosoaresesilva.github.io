@@ -1,0 +1,173 @@
+\documentclass[10pt,a4paper,oneside]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[portuges]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{mathpazo} % Enables Palatino font
+\usepackage{lmodern}    % Pacote para habilitar a fonte Latin Modern, uma variante de alta qualidade da Computer Modern
+\renewcommand{\rmdefault}{cmr}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{fontspec}
+\usepackage{mathpazo} % Fonte Palatino
+\usepackage{newtxtext} % Fonte Times
+\usepackage{fancyhdr} % Pacote para personalizar cabeçalhos e rodapés
+
+
+% Configuração das margens
+\geometry{a4paper, left=20mm, right=10mm, top=26mm, bottom=10mm}
+
+% Configuração para links em azul
+\hypersetup{
+	colorlinks=true,   % Habilita cores nos links
+	linkcolor=steelblue,    % Cor dos links internos (ex: sumário)
+	urlcolor= blue    % SteelBlueCor de URLs
+}
+
+\newlength{\datewidth}
+\setlength{\datewidth}{10mm} % Espaço para as datas (aproximadamente 1 cm da margem esquerda)
+
+\newlength{\textindent}
+\setlength{\textindent}{4mm} % Recuo para textos e títulos (4 cm da margem esquerda)
+
+% Configuração do fancyhdr
+\pagestyle{fancy}
+\fancyfoot{} % Limpa rodapés padrão
+\fancyhf{} % Limpa cabeçalhos e rodapés
+
+\AtEndDocument{%
+	\fancyfoot[C]{Última atualização: \today} % Coloca a data no centro do rodapé
+}
+\renewcommand{\headrulewidth}{0pt} % Remove a linha do cabeçalho
+\renewcommand{\footrulewidth}{0pt} % Remove a linha do rodapé
+\begin{document}
+	
+	% Título principal
+	\hspace{\textindent}{{\LARGE João Silva}}
+	
+	\vspace{5mm}
+	
+	% Seção Dados Pessoais
+	\begin{itemize}
+		\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{Email: \href{mailto:garridos@alumni.deec.uc.pt}{garridos@alumni.deec.uc.pt}}
+		\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{URL: \url{https://joaosoaresesilva.github.io/}}
+		\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{LinkedIn: \url{https://www.linkedin.com/in/joao-soares-e-silva/}}
+	\end{itemize}
+
+	\vspace{5mm}
+	% Seção Experiência Profissional
+	\textbf{\hspace{\textindent}Atividade Profissional}
+	\begin{itemize}
+		%    \item[\hspace{\datewidth}\scriptsize 2024-2025] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{Formador Profissional (independente)}
+		\item[\hspace{\datewidth}\scriptsize 2022-2023] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textit{Formador no Curso Técnico/a de Informática - Instalação e Gestão de Redes}, Talentus, Coimbra. \textbf{\textit{Unidades }}: (0838 - Linux - administração,  0839 - Linux - serviços de rede, 0840 - Servidores web, 0841 - Servidores Web e Acesso à Internet).
+		}
+		\item[\hspace{\datewidth}\scriptsize 2021-2022] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textit{Formador do módulo Corrente Alternada, e-Learning, I.E.F.P.}}
+		\item[\hspace{\datewidth}\scriptsize 2018-2020] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textit{Professor do Curso Técnico Profissional de Eletricidade, Automação e Computadores}, Instituto Tecnológico e Profissional da Figueira da Foz.\textbf{\textit{Unidades}}: (4564 - Gestão da manutenção-introdução, 6008 - Análise de circuitos em corrente continua, 6009 - Magnetismo e eletromagnetismo, 6010 - Corrente alternada,  6011 - Semicondutores, 6012 - Transístor bipolar,  6025 - Circuitos combinatórios,  6075 - Instalações elétricas generalidades, 6040 - Higiene e segurança no trabalho).
+		}
+		\item[\hspace{\datewidth}\scriptsize 2004-2005] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textit{Gestor Comercial},  PT Comunicações, Coimbra}
+		\item[\hspace{\datewidth}\scriptsize 1987] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textit{Técnico Médio em Sistemas Elétricos },  Eletricidade de Moçambique, Beira. \textbf{\textit{Projeto}}:  Rede Elétrica e Sistema de Iluminação , Parque  Mouzinho de Albuquerque.\textbf{\textit{Orientação:}} eng. Piére Menárd.}
+	\end{itemize}
+	
+	\vspace{5mm}	
+	% Seção Formação Académica
+	\textbf{\hspace{\textindent}Formação Académica}
+	\begin{itemize}
+\item[\hspace{\datewidth}\scriptsize 2010] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{MSc em Engenharia Eletrotécnica e de Computadores em Telecomunicações} ,Universidade de Coimbra: \textbf{Tese}:\textit{Ensaios de Aquecimento em Cabos Elétricos}.\textbf{Orientadores}: \textit{Prof. Dr.Carlos Fernando Lemos Antunes, Prof,  Dr. António Paulo Mendes Breda Dias de  Coimbra}.}		
+
+		
+%		\item[\hspace{\datewidth}\scriptsize 2010] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{MSc em Engenharia Eletrotécnica e de Computadores em Telecomunicações} ,Universidade de Coimbra: \textbf{Tese}:\textit{Ensaios de Aquecimento em Cabos Elétricos}.\textbf{Orientadores}: \textit{Prof. Dr.Carlos Fernando Lemos Antunes, Prof,  Dr. António Paulo Mendes Breda Dias de  Coimbra}.\textbf{Discip}: \textit{(Antenas, Microondas, Aplicações Informáticas para Engenharia, Automação Industrial, Comunicação de Áudio e Vídeo, Comunicações Móveis, Controlo, Criação e Gestão de Empresas, Eletrónica I e II, Eletrónica para Telecomunicações, Fundamentos de Sistemas de Comunicação,Eletrotecnia Aplicada, Laboratório de Sistemas Digitais, Matemática Computacional, Materiais  Elétricos e Termodinâmica, Mecânica e Ondas, Ondas e Propagação, Processamento de Sinal, Redes de Computadores, Redes e Instalações Elétricas, Redes e Sistemas de Telecomunicações, Sinais e Sistemas, Sistemas de Microprocessadores, Sistemas de Comunicação Digital, Sistemas de Teletráfego, Sistemas de Transmissão Óticos, Sistemas Operativos, Técnicas de Planeamento e Gestão, Teoria da Informação e Codificação, outras  )}}
+		\item[\hspace{\datewidth}\scriptsize 1987] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Técnico Médio em Sistemas Elétricos Industriais }, Instituto Industrial e Comercial da Beira, Moçambique}
+	\end{itemize}
+	
+	\vspace{5mm}
+	
+	% Seção Formação Profissional
+	\textbf{\hspace{\textindent}Formação Extracurricular}
+	\begin{itemize}
+		\item[\hspace{\datewidth}\scriptsize 2021] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Especialização no Ensino à Distância (e-Formador)}}
+		\item[\hspace{\datewidth}\scriptsize 2018] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Certificação em Competências Pedagógicas}, Conclusão, Coimbra}
+		\item[\hspace{\datewidth}\scriptsize 2004] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Administração de Sistemas Operativos e Redes }, Rumos Informática, Coimbra}
+	\end{itemize}
+	
+	\vspace{5mm}
+	
+	% Seção Formação Profissional
+	\textbf{\hspace{\textindent}Formação Modular}
+	\begin{itemize}
+		\item[\hspace{\datewidth}\scriptsize 2021] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Teletrabalho}, Instituto do Emprego e Formação Profissional}
+		\item[\hspace{\datewidth}\scriptsize 2019] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Excel Avançado}, Instituto do Emprego e Formação Profissional}
+		\item[\hspace{\datewidth}\scriptsize 2019] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Coaching}, Instituto do Emprego e Formação Profissional}
+
+	\end{itemize}
+	
+	\vspace{5mm}
+	
+		% Seção Formação online
+	\textbf{\hspace{\textindent}Cursos de Aperfeiçoamento Profissional}
+	\begin{itemize}
+	
+	\item[\hspace{\datewidth}\scriptsize 25-3-2025] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Introdução às Comunicações Sem Fios}, \url{https://matlabacademy.mathworks.com/progress/share/report.html?id=036bdd51-7650-4b40-9ca9-dda5f0cfd9a0&}}
+	
+					
+\item[\hspace{\datewidth}\scriptsize 29-9-2024] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Ambiente de Trabalho MATLAB e Scripts de Resolução de Problemas}, \url{https://matlabacademy.mathworks.com/progress/share/certificate.html?id=ae2e7096-91ff-4827-8c07-6885827ff584&}}
+
+\item[\hspace{\datewidth}\scriptsize 9-6-2024] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Introdução ao Processamento de Imagens}, \url{https://matlabacademy.mathworks.com/progress/share/report.html?id=c9b24992-b614-48d2-a06f-0546c9d9d412&}}
+	
+\item[\hspace{\datewidth}\scriptsize 5-6-2024] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Introdução à Programação Orientada por Objetos}, \url{https://matlabacademy.mathworks.com/progress/share/certificate.html?id=5cce993d-1378-4817-a016-cfdc909eef1f&}}
+		
+\item[\hspace{\datewidth}\scriptsize 15-9-2023] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{IIntrodução Deep Learning }, \url{https://matlabacademy.mathworks.com/progress/share/report.html?id=a773357e-1315-4d27-8bdc-ff2af04983a1&}}
+
+\item[\hspace{\datewidth}\scriptsize 21-9-2023] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Introdução à Criação de Aplicações}, \url{https://matlabacademy.mathworks.com/progress/share/report.html?id=8db10b82-5beb-4543-87c7-c8e13c5f7ccf&}}
+
+
+
+\item[\hspace{\datewidth}\scriptsize 24-5-2022] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Introdução à Simulação de Circuítos}, \url{https://matlabacademy.mathworks.com/progress/share/report.html?id=8e8b78c7-bd81-496c-b869-37bb71db1a39&}}
+
+
+\item[\hspace{\datewidth}\scriptsize 24-5-2022] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textsc{Simulink}, \url{https://matlabacademy.mathworks.com/progress/share/report.html?id=9a64293c-a2bd-48b0-b613-dc2d2b0ed99d&}}
+
+	\end{itemize}
+	
+	\vspace{5mm}
+	
+	% Seção Informática
+	\textbf{\hspace{\textindent}Outras Competências Técnicas}	\begin{itemize}
+%%		\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{Inglês (Fluente), Português (Nativo), Espanhol (Intermédio)}
+%		\begin{itemize}
+			%    \item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{Idiomas: Inglês (Fluente), Português (Nativo), Espanhol (Intermédio)}
+			\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{•  Ferramentas de Redes e Segurança: Wireshark, Nessus, Nmap, Tcpdump, Snort, Kali Linux}
+			\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{•  Programação: Python, Java, C/C++, PHP, Tec front-end (HTML5, CSS, JavaScript), SQL,Shell scripting}
+			\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{•  Bases de Dados: MySQL, PostgreSQL, MariaDB, SQL Server}
+			\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{•  Visualização e Análise de Dados: Matlab, Octave, RStudio, Excel, Google Sheets, ggplot}
+			
+			\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{•  Frameworks e Bibliotecas: tidyverse, Ollama (LLMs)}	
+				
+			\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{•  Ferramentas de Controle de Versão: Git, GitHub}
+			\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{•  Ambientes de Desenvolvimento e Testes : VirtualBox,Visual Studio Code, Eclipse, NetBeans}
+			\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{•  Softwares de Simulação e Projeto: LTspice, PROTEL,DIALux}
+			\item[\hspace{\datewidth}] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{•  Sistemas Operativos: Linux/Unix, Windows}
+		\end{itemize}
+%	\end{itemize}
+	
+%		\vspace{5mm}
+%		
+%		% Seção Outros Interesses
+%	\textbf{\hspace{\textindent}Outros Interesses}
+%	\begin{itemize}
+%		\item[\hspace{\datewidth}\scriptsize  ] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textit{Aluno Piloto }:Curso Piloto Particular de Aeroplanos, Aeroclube da Beira}
+%		\item[\hspace{\datewidth}\scriptsize ] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textit{Pintura em Aguarela}, Exposições Casa Museu Bissaya Barreto, Coimbra}
+%		\item[\hspace{\datewidth}\scriptsize ] \parbox[t]{\dimexpr\linewidth-\datewidth-\textindent}{\textit{Atleta de Remo }: Associação Académica de Coimbra}
+%		
+%	\end{itemize}
+	
+	\vspace{2cm}
+	
+	\begin{center}
+		(João C. Soares e Silva)
+	\end{center}
+	
+\end{document}
+
+
+
+
