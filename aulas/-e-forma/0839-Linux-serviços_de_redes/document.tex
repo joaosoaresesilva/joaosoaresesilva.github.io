@@ -1,0 +1,647 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[portuguese]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amsfonts, amssymb}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{geometry}
+\usepackage{hyperref}
+
+% --- Pacotes Adicionais para Melhorias
+\usepackage{xcolor} % Para cores personalizadas
+\usepackage{fancyhdr} % Para cabeçalhos e rodapés
+\usepackage{multicol} % Para layout em múltiplas colunas
+\usepackage{listings} % Para blocos de código com destaque de sintaxe
+\usepackage{subcaption} % Para sub-legendas de imagens
+\usepackage[most]{tcolorbox} % Para caixas de texto coloridas
+
+% --- Configuração de Cores
+\definecolor{darkblue}{rgb}{0.0, 0.0, 0.55}
+\definecolor{lightgray}{rgb}{0.9, 0.9, 0.9}
+\definecolor{darkgreen}{rgb}{0.0, 0.5, 0.0}
+
+% --- Configuração de Títulos (titlesec)
+\titleformat{\section}[block]{\bfseries\Large\raggedright}{}{0em}{\guia[Guia do Formador]{}}
+\titlespacing{\section}{0pt}{1.5em}{1em}
+\titleformat{\subsection}[block]{\bfseries\large\raggedright}{}{0em}{}
+\titlespacing{\subsection}{0pt}{1em}{0.5em}
+
+% --- Configuração de Geometria e Layout
+\geometry{a4paper, left=1.2in, right=1.2in, top=1.2in, bottom=1.2in, headheight=14pt}
+
+% --- Configuração de Cabeçalho e Rodapé (fancyhdr)
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\bfseries Plano de Formação: Linux - Serviços de Redes}
+\fancyhead[R]{\bfseries Formador: [Seu Nome]}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+% --- Definição de Novos Comandos
+\newcommand{\guia}[1]{%
+	\begin{tcolorbox}[
+		colback=lightgray,
+		colframe=darkblue,
+		boxrule=1pt,
+		arc=4mm,
+		title=\textbf{Guia do Formador},
+		fonttitle=\bfseries,
+		coltitle=darkblue,
+		boxsep=5pt,
+		left=5mm, right=5mm, top=3mm, bottom=3mm
+		]
+		#1
+	\end{tcolorbox}
+}
+
+% --- Configuração do Destaque de Código (listings)
+\lstset{
+	language=bash,
+	backgroundcolor=\color{lightgray},
+	basicstyle=\ttfamily\small,
+	keywordstyle=\color{darkblue},
+	stringstyle=\color{darkgreen},
+	commentstyle=\color{red},
+	showstringspaces=false,
+	numberstyle=\tiny\color{gray},
+	numbers=left,
+	stepnumber=1,
+	numbersep=5pt,
+	frame=single,
+	framerule=1pt,
+	captionpos=b,
+	breaklines=true,
+	breakatwhitespace=true,
+	title=\lstname,
+	columns=fixed
+}
+
+\begin{document}
+	
+	\begin{titlepage}
+		\centering
+		\vspace*{2cm}
+		{\Huge\bfseries Plano de Formação}\\[1.5cm]
+		{\Huge\bfseries Linux - Serviços de Redes}\\[2cm]
+		{\Large\bfseries Formador: [Seu Nome]}\\[1cm]
+		{\large Data de Elaboração: [Data]}\\[4cm]
+		\vfill
+		{\em Gerado com \LaTeX{}}
+	\end{titlepage}
+	
+	\clearpage
+	
+	\tableofcontents
+	\thispagestyle{empty}
+	
+	\clearpage
+	\section*{Conteúdos}
+	\addcontentsline{toc}{section}{Conteúdos}
+	
+	% --- Módulo 0: Fundamentos de Redes
+	\guia{
+		\textbf{Objetivos:} O aluno será capaz de identificar e configurar endereços IP e sub-redes, e utilizar ferramentas de diagnóstico de rede.
+		\textbf{Pré-requisitos:} Conhecimentos básicos de linha de comando Linux.
+		\textbf{Material de Apoio:} Diagrama de endereçamento IPv4 e IPv6, slides explicativos sobre máscaras de rede.
+		
+		\textbf{Visão Geral:} Esta secção é o alicerce do curso. Sem a compreensão básica de endereços IP e como os computadores se comunicam, os alunos terão dificuldade em entender os serviços de rede. O objetivo é desmistificar o networking com analogias simples e ferramentas práticas.
+		
+		\textbf{Analogia para o Aluno:} "Pensem na internet como uma grande cidade. Os endereços IP são como os endereços de rua das casas. Sem eles, as encomendas (dados) não saberiam para onde ir. A máscara de rede é o código postal, que define a 'vizinhança' (a sub-rede)."
+		
+		\textbf{Roteiro da Aula:}
+		- Comece com a analogia da cidade.
+		- Apresente a estrutura do endereço IPv4 (quatro octetos) e IPv6 (formato mais complexo).
+		- Explique a máscara de rede em binário para mostrar como a rede e o host são separados (exemplo: 192.168.1.10 com 255.255.255.0).
+		- Apresente `ping` como um teste de conectividade simples.
+		- Apresente `traceroute` como uma forma de ver os "saltos" (routers) no caminho.
+		- Mostre a saída do `ifconfig` ou `ip addr` para que os alunos identifiquem o seu próprio endereço.
+		- No exercício, peça-lhes para `ping` o router local e depois um site externo.
+	}
+	\subsection*{0. Introdução a Fundamentos de Redes (10 horas)}
+	\vspace{-1em}
+	\paragraph{}
+	Antes de explorarmos os serviços de rede, é fundamental entender a base: os endereços IP e a comunicação na rede.
+	
+	\begin{itemize}
+		\item \textbf{Endereços IP e Máscaras de Rede} (4 horas)
+		\subparagraph{O que é um Endereço IP?} Um endereço de Protocolo de Internet (IP) é um rótulo numérico atribuído a cada dispositivo conectado a uma rede de computadores que usa o Protocolo de Internet para comunicação. Funciona de forma análoga a um endereço postal, permitindo que os dados sejam enviados para o destino correto. Existem duas versões principais em uso:
+		\begin{itemize}
+			\item \textbf{IPv4}: Utiliza um formato de 32 bits, geralmente representado por quatro octetos (números de 0 a 255) separados por pontos, como \texttt{192.168.1.1}. Cada octeto é um grupo de 8 bits. Este formato está a esgotar-se devido ao número limitado de combinações (aproximadamente 4.3 mil milhões).
+			\item \textbf{IPv6}: Utiliza um formato de 128 bits, representado por oito grupos de quatro dígitos hexadecimais, como \texttt{2001:0db8:85a3:0000:0000:8a2e:0370:7334}. Foi criado para fornecer um número vastamente maior de endereços ($2^{128}$) e inclui características de autoconfiguração.
+		\end{itemize}
+		\subparagraph{O Papel da Máscara de Rede} A máscara de rede é um valor de 32 bits que, juntamente com o endereço IP, define a sub-rede. A sua função é separar a porção de **rede** da porção de **host** de um endereço IP. A máscara de rede é composta por uma série de uns (1) binários contíguos, seguidos por uma série de zeros (0).
+		\begin{itemize}
+			\item Os bits que correspondem a '1' na máscara de rede definem a porção de rede do endereço IP. Todos os dispositivos na mesma sub-rede devem ter a mesma porção de rede.
+			\item Os bits que correspondem a '0' na máscara de rede definem a porção de host, que é única para cada dispositivo dentro dessa sub-rede.
+		\end{itemize}
+		A notação **CIDR (Classless Inter-Domain Routing)**, como `/24`, é uma forma compacta de representar a máscara de rede. O número após a barra indica a quantidade de bits que compõem a porção de rede do endereço. Por exemplo, `/24` significa que os primeiros 24 bits são a parte da rede, e os restantes 8 bits são para os hosts.
+		
+		\begin{lstlisting}[language=, caption=Exemplo de IP e Máscara]
+			Endereço IP: 192.168.1.50
+			Máscara de Rede: 255.255.255.0  (ou /24)
+		\end{lstlisting}
+		
+		\item \textbf{Ferramentas de Diagnóstico de Rede} (3 horas)
+		\subparagraph{Ping} O comando `ping` é uma ferramenta fundamental para testar a conectividade entre dois hosts. Ele envia pacotes de requisição de eco **ICMP (Internet Control Message Protocol)** para um destino. Se o destino estiver ativo e acessível, ele responderá com um pacote de resposta de eco. O `ping` mede o tempo de ida e volta dos pacotes (`RTT - Round-Trip Time`) e a percentagem de perda de pacotes, sendo uma forma rápida de diagnosticar problemas básicos de rede.
+		\subparagraph{Traceroute} O `traceroute` mostra o caminho completo que um pacote de dados percorre para chegar ao seu destino. Ele utiliza a mesma técnica do `ping` mas com um valor de **TTL (Time To Live)** crescente para cada pacote. O TTL é um contador de "saltos" (hops), ou seja, routers que o pacote pode atravessar antes de ser descartado. Ao enviar pacotes com TTLs de 1, 2, 3, etc., o `traceroute` recebe uma mensagem de erro de cada router no caminho, permitindo-lhe mapear a rota completa.
+		\subparagraph{ifconfig / ip addr} Estes comandos são essenciais para ver a configuração das interfaces de rede do seu próprio computador. Eles mostram o seu endereço IP, a máscara de rede, o endereço MAC e o estado da interface (se está ativa ou inativa). O `ip addr` é a ferramenta moderna recomendada para substituição do `ifconfig`, que se tornou obsoleto em muitas distribuições Linux. O `ip` é mais abrangente, permitindo gerir e visualizar todas as aspetos da configuração de rede.
+		
+		\begin{lstlisting}[caption=Comandos de Diagnóstico de Rede]
+			ping google.com       # Testar a conectividade com um host
+			traceroute google.com   # Seguir o caminho até um destino
+			ifconfig / ip addr       # Ver os detalhes das interfaces de rede
+		\end{lstlisting}
+		
+		\item \textbf{Exercício de Consolidação} (3 horas)
+		\begin{enumerate}
+			\item Abra o terminal e use `ifconfig` ou `ip addr` para encontrar o endereço IP da sua máquina.
+			\item Use o comando `ping` para testar a conectividade com o router da rede (geralmente 192.168.1.1 ou 10.0.0.1).
+			\item Use o `traceroute` para seguir o caminho até um site conhecido e explique o que vê em cada "salto".
+		\end{enumerate}
+	\end{itemize}
+	
+	---
+	
+	% --- Módulo 1: Serviços de Rede (systemd)
+	\guia{
+		\textbf{Objetivos:} O aluno será capaz de gerir serviços de rede usando `systemd` e `systemctl`, e entender a diferença entre gestão de estado e de arranque.
+		\textbf{Pré-requisitos:} Conhecimento da secção anterior.
+		\textbf{Material de Apoio:} Guia de referência rápida para `systemctl`, exemplos de ficheiros de serviço (`.service`).
+		
+		\textbf{Visão Geral:} O `systemd` é o coração dos sistemas Linux modernos. O professor deve focar-se na diferença entre o estado do serviço (ligado/desligado) e o estado de arranque (habilitado/desabilitado).
+		
+		\textbf{Analogia para o Aluno:} "O `systemd` é o maestro de uma orquestra. Ele garante que cada músico (serviço) entre na altura certa. O `systemctl` é o 'comando de voz' do maestro. Com ele, pedimos ao serviço para 'começar a tocar' (`start`) ou 'calar-se' (`stop`). O `enable` é como dizer ao músico: 'Quando a orquestra começar a tocar no próximo concerto, entra também!'. O `disable` é o oposto."
+		
+		\textbf{Roteiro da Aula:}
+		- Explique o papel do `systemd` como o `PID 1`.
+		- Demonstre `systemctl status <serviço>` e mostre o que significa `active (running)`, `inactive` e `enabled`.
+		- Execute `systemctl start sshd` e depois `systemctl status sshd` para mostrar a transição de estado.
+		- Explique a diferença crucial entre `start/stop` (gestão do momento) e `enable/disable` (gestão do arranque).
+		- Introduza os conceitos de `Timers` e `Sockets` como alternativas inteligentes para `cron` e `xinetd`.
+		- No exercício, guie os alunos na criação de um `.service` e um `.timer` para reforçar a matéria.
+	}
+	\subsection*{1. Serviços de rede (15 horas)}
+	\vspace{-1em}
+	\paragraph{}
+	Nesta secção, vamos explorar como os serviços de rede são geridos no Linux, desde o seu início até ao encerramento, e os principais ficheiros e diretórios envolvidos neste processo.
+	
+	\begin{itemize}
+		\item \textbf{O Gestor de Tarefas: O Papel do \texttt{systemd}} (3 horas)
+		\subparagraph{O que é o \texttt{systemd}?} O \texttt{systemd} é um sistema de inicialização e gestor de serviços para sistemas operativos Linux. Ele é o primeiro processo a ser iniciado pelo kernel (com o **PID 1**) e é responsável por gerir todo o ciclo de vida dos outros processos, incluindo serviços de rede. Ao contrário de sistemas de inicialização mais antigos (como o SysVinit), o `systemd` utiliza uma abordagem paralela, o que resulta num arranque de sistema mais rápido.
+		
+		A filosofia do `systemd` baseia-se em "unidades" (`units`), que são ficheiros de configuração simples que descrevem recursos do sistema e como devem ser geridos. Estas unidades incluem:
+		\begin{itemize}
+			\item \texttt{.service}: Para daemons e serviços de rede.
+			\item \texttt{.timer}: Para agendar a execução de tarefas.
+			\item \texttt{.socket}: Para ativar serviços "on-demand".
+			\item \texttt{.target}: Para agrupar várias unidades, como o `multi-user.target`.
+		\end{itemize}
+		
+		\item \textbf{Controlar Serviços com \texttt{systemctl}} (5 horas)
+		\subparagraph{Gerir o estado do serviço} O comando `systemctl` é a principal ferramenta para interagir com o `systemd`. A gestão de um serviço envolve a compreensão de duas dimensões de estado:
+		\begin{itemize}
+			\item \textbf{Estado do momento (`runtime`):} O serviço pode estar \textbf{ativo} (`active (running)`) ou \textbf{inativo} (`inactive`). Os comandos `systemctl start`, `stop`, `restart` e `status` gerem e mostram este estado.
+			\item \textbf{Estado de arranque (`boot time`):} O serviço pode estar \textbf{habilitado} (`enabled`) ou \textbf{desabilitado} (`disabled`). Um serviço habilitado é configurado para ser iniciado automaticamente durante o arranque do sistema. Os comandos `systemctl enable` e `disable` modificam esta configuração, criando ou removendo um `symlink` (ligação simbólica) nos diretórios de arranque do sistema.
+		\end{itemize}
+		
+		\begin{lstlisting}[caption=Comandos de gestão de serviços]
+			# Ver o estado de um serviço (Exemplo: SSH)
+			systemctl status sshd
+			
+			# Ligar, desligar e reiniciar um serviço
+			systemctl start sshd
+			systemctl stop sshd
+			systemctl restart sshd
+		\end{lstlisting}
+		
+		\item \textbf{Tarefas Programadas e Serviços On-Demand} (5 horas)
+		\subparagraph{Systemd Timers (`.timer`)} São a alternativa moderna e recomendada ao `cron` para agendar a execução de tarefas. A sua principal vantagem é a robustez: um `timer` pode ser configurado para ser executado no próximo arranque, mesmo que o sistema tenha estado desligado durante a sua hora de execução. A configuração é feita em dois ficheiros: um `.service` que define a tarefa a ser executada e um `.timer` que define o agendamento.
+		\subparagraph{Systemd Sockets (`.socket`)} Os `sockets` permitem a ativação de serviços "on-demand". O `systemd` pode "escutar" numa porta de rede e, em vez de iniciar o serviço imediatamente, ele aguarda por uma ligação. Apenas quando uma ligação é recebida é que o serviço é iniciado e a ligação é passada para o daemon. Isto é ideal para serviços que não são usados com frequência, pois poupa recursos do sistema ao não os manter em execução constante.
+		
+		\item \textbf{Exercício de Consolidação} (2 horas)
+		\begin{enumerate}
+			\item Crie uma unidade de serviço (`.service`) e uma unidade de temporizador (`.timer`) para um script simples que escreve a data e hora num ficheiro a cada minuto.
+			\item Verifique o estado do temporizador e do serviço com \texttt{systemctl list-timers}.
+		\end{enumerate}
+	\end{itemize}
+	
+	---
+	
+	% --- Módulo 2: XINET.d
+	\guia{
+		\textbf{Objetivos:} O aluno será capaz de configurar e gerir serviços "on-demand" usando `xinetd`.
+		\textbf{Pré-requisitos:} Conhecimento da secção sobre `systemd`.
+		\textbf{Material de Apoio:} Ficheiro de configuração de exemplo `/etc/xinet.d/ftp`.
+		
+		\textbf{Visão Geral:} O `xinetd` é um "super-servidor de internet estendido". A sua principal função é poupar recursos ao gerir serviços que não precisam de estar sempre em execução. É um conceito mais antigo, mas ainda importante para entender.
+		
+		\textbf{Analogia para o Aluno:} "O `xinetd` é um rececionista. Ele fica na entrada do escritório à espera de clientes. Em vez de ter o funcionário do serviço de FTP a trabalhar o dia todo e a gastar energia, o rececionista (`xinetd`) fica de guarda. Quando um cliente chega e pede FTP, o rececionista acorda o funcionário do FTP para o atender. Assim que a tarefa termina, o funcionário volta a 'dormir'. É uma forma de poupar recursos."
+		
+		\textbf{Roteiro da Aula:}
+		- Explique a diferença entre um serviço standalone (sempre ativo) e um gerido pelo `xinetd` (ativado por pedido).
+		- Mostre que os ficheiros de configuração estão em `/etc/xinet.d/`.
+		- Abra o ficheiro de configuração de um serviço (como o `ftp`) e explique as diretivas mais comuns (`server`, `port`, `disable`).
+		- Para o exercício, altere a diretiva `disable` de `yes` para `no` para ativar o serviço e reinicie o `xinetd`.
+	}
+	\subsection*{2. XINET.d (5 horas)}
+	\vspace{-1em}
+	\paragraph{}
+	O \texttt{xinetd} é como um "rececionista" que só acorda um funcionário (serviço) quando alguém aparece para o ver.
+	
+	\begin{itemize}
+		\item \textbf{Configuração e Gestão} (3 horas)
+		\subparagraph{O que é o `xinetd`?} O `xinetd` (Extended Internet Daemon) é um super-servidor que gere serviços de rede que não necessitam de estar permanentemente em execução. Ele "escuta" em portas de rede específicas. Quando uma ligação chega a uma dessas portas, o `xinetd` **avalia as regras de segurança** e, se a ligação for permitida, ele inicia o serviço correspondente e encaminha a ligação para o mesmo. Após a conclusão do serviço, este é terminado, libertando os recursos que estava a consumir. Esta abordagem é particularmente útil para serviços que não têm uma alta frequência de uso, como o `telnet` ou o `tftp`.
+		
+		\subparagraph{Ficheiros de Configuração} A configuração do `xinetd` é modular e baseia-se em ficheiros de configuração individuais para cada serviço, localizados no diretório \texttt{/etc/xinet.d/}. Cada ficheiro define um serviço e contém as seguintes diretivas importantes:
+		\begin{itemize}
+			\item \texttt{service <nome\_serviço>}: Define o início de uma nova configuração de serviço.
+			\item \texttt{server}: O caminho completo para o executável do servidor (ex: `/usr/sbin/in.tftpd`).
+			\item \texttt{port}: O número da porta de rede que o `xinetd` vai escutar para este serviço.
+			\item \texttt{type}: Especifica o tipo de socket (`stream`, `dgram`).
+			\item \texttt{protocol}: O protocolo de transporte (`tcp`, `udp`).
+			\item \texttt{disable}: A diretiva de ativação/desativação. O valor `yes` desativa o serviço.
+		\end{itemize}
+		
+		\item \textbf{Exercício de Consolidação} (2 horas)
+		\begin{enumerate}
+			\item Encontre o ficheiro de configuração do serviço \texttt{ftp} no diretório \texttt{/etc/xinet.d/}.
+			\item Altere o valor da opção \texttt{disable} para habilitá-lo e reinicie o serviço `xinetd`.
+			\item (Opcional) Crie uma nova configuração para um serviço simples.
+		\end{enumerate}
+	\end{itemize}
+	
+	---
+	
+	% --- Módulo 3: TCPWrappers
+	\guia{
+		\textbf{Objetivos:} O aluno será capaz de configurar `TCPWrappers` para controlar o acesso a serviços de rede com base no endereço IP.
+		\textbf{Pré-requisitos:} Compreensão de endereços IP.
+		\textbf{Material de Apoio:} Diagrama do fluxo de processamento dos ficheiros `hosts.allow` e `hosts.deny`.
+		
+		\textbf{Visão Geral:} Os `TCPWrappers` oferecem um controlo de acesso simples, mas poderoso, para serviços de rede. A regra de ouro é: os ficheiros de permissão (`hosts.allow`) são lidos antes dos ficheiros de negação (`hosts.deny`).
+		
+		\textbf{Analogia para o Aluno:} "Pensem nos `TCPWrappers` como os seguranças à porta de um clube. Eles têm duas listas: a dos 'convidados VIP' (`hosts.allow`) e a 'lista negra' (`hosts.deny`). Quando alguém tenta entrar, o segurança primeiro olha para a lista de convidados. Se estiver lá, a pessoa entra imediatamente. Só se não estiver na primeira lista é que o segurança olha para a 'lista negra' para ver se a pessoa deve ser barrada. Por isso, a ordem é tão importante!"
+		
+		\textbf{Roteiro da Aula:}
+		- Explique a função de `hosts.allow` e `hosts.deny` e a ordem de processamento.
+		- Mostre a sintaxe das regras: `serviço: hosts`.
+		- Apresente exemplos práticos com `ALL`, `EXCEPT` e sub-redes (`192.168.1.0/24`).
+		- No exercício, comece por negar o acesso a todos (`ALL: ALL`) em `hosts.deny`.
+		- Depois, mostre como reverter a negação para um IP específico (`sshd: 192.168.1.100`) no `hosts.allow`.
+	}
+	\subsection*{3. TCPWrappers (5 horas)}
+	\vspace{-1em}
+	\paragraph{}
+	Pense nos \texttt{TCPWrappers} como um porteiro. Ele decide quem pode entrar (permitir) e quem não pode (negar) num serviço, com base no endereço IP.
+	
+	\begin{itemize}
+		\item \textbf{As Duas Listas: `hosts.allow` e `hosts.deny`} (2 horas)
+		\subparagraph{O que são os `TCPWrappers`?} Os `TCPWrappers` (também conhecidos como `libwrap`) são uma camada de segurança adicional para serviços de rede. Eles fornecem um controlo de acesso simples, mas eficaz, a nível de host, antes que o daemon do serviço seja executado. Um serviço que é compilado com suporte a `libwrap` verifica automaticamente os ficheiros \texttt{/etc/hosts.allow} e \texttt{/etc/hosts.deny} para determinar se um pedido de conexão deve ser permitido ou negado.
+		
+		\subparagraph{Fluxo de Processamento} A ordem de leitura dos ficheiros é o aspeto mais importante dos `TCPWrappers`:
+		\begin{enumerate}
+			\item O serviço consulta o ficheiro **`/etc/hosts.allow`**.
+			\item Se uma regra que **permite** o acesso for encontrada, a ligação é estabelecida e a verificação termina.
+			\item Se nenhuma regra que permita o acesso for encontrada, o serviço consulta o ficheiro **`/etc/hosts.deny`**.
+			\item Se uma regra que **nega** o acesso for encontrada, a ligação é rejeitada.
+			\item Se nenhuma regra for encontrada em nenhum dos ficheiros, a ligação é **permitida** por padrão.
+		\end{enumerate}
+		Isto significa que uma regra em `hosts.allow` tem precedência sobre uma regra em `hosts.deny`.
+		
+		\item \textbf{Sintaxe e Exemplos Avançados} (2 horas)
+		\subparagraph{Sintaxe das Regras} A sintaxe das regras é: \texttt{serviços: hosts}.
+		\begin{itemize}
+			\item \texttt{serviços}: Uma lista separada por vírgulas de nomes de daemons. Pode-se usar a palavra-chave `ALL` para todos os serviços.
+			\item \texttt{hosts}: Uma lista de endereços IP, nomes de host, sub-redes (em formato `x.y.z.w/mask`) ou as palavras-chave `ALL` ou `LOCAL`.
+		\end{itemize}
+		\subparagraph{Exemplos Práticos}
+		\begin{itemize}
+			\item `sshd, vsftpd: 192.168.1.0/24`: Permite acesso SSH e FTP para toda a sub-rede `192.168.1.x`.
+			\item `ALL: ALL`: Uma regra muito comum em `hosts.deny` para negar o acesso a todos os serviços, a partir de qualquer host.
+			\item `sshd: 192.168.1.10 EXCEPT 192.168.1.100`: Permite acesso SSH a toda a rede `192.168.1.x` exceto para o host `192.168.1.100`. Esta regra não funciona diretamente no `hosts.allow`, pois a palavra-chave `EXCEPT` é interpretada de forma diferente em cada ficheiro. A melhor prática é usar regras separadas.
+		\end{itemize}
+		\begin{lstlisting}[language=, caption=Exemplo de configuração]
+			# No ficheiro /etc/hosts.allow
+			sshd: 192.168.1.100 EXCEPT 192.168.1.101
+		\end{lstlisting}
+		
+		\item \textbf{Exercício de Consolidação} (1 hora)
+		\begin{enumerate}
+			\item Configure o seu ficheiro \texttt{hosts.deny} para negar o acesso SSH a todos.
+			\item No ficheiro \texttt{hosts.allow}, adicione o IP do seu computador para poder aceder.
+		\end{enumerate}
+	\end{itemize}
+	
+	---
+	
+	% --- Módulo 4: NIS
+	\guia{
+		\textbf{Objetivos:} O aluno será capaz de instalar e configurar um ambiente NIS (`ypserv` e `ypbind`) para centralizar a gestão de utilizadores.
+		\textbf{Pré-requisitos:} Conhecimentos sobre ficheiros de utilizador (`/etc/passwd`, `/etc/group`).
+		\textbf{Material de Apoio:} Diagrama de arquitetura NIS (mestre-cliente).
+		
+		\textbf{Visão Geral:} O NIS (Network Information Service) é um dos primeiros serviços de diretório, usado para centralizar contas de utilizador e grupos. É um sistema cliente-servidor.
+		
+		\textbf{Analogia para o Aluno:} "O NIS é como um cartão de estudante que funciona em toda a escola. Em vez de ter um cartão diferente para a biblioteca, para o refeitório e para o laboratório, vocês têm um só cartão que é gerido por um escritório central. O servidor NIS é o escritório central e os clientes são as máquinas onde usam o vosso cartão."
+		
+		\textbf{Roteiro da Aula:}
+		- Explique a arquitetura mestre-cliente.
+		- Mostre os ficheiros que o NIS centraliza (`/etc/passwd`, `/etc/group`).
+		- Explique os comandos `ypserv` (servidor) e `ypbind` (cliente).
+		- No exercício, os alunos devem: 1. Configurar um servidor `ypserv`. 2. Ligar as máquinas clientes a ele. 3. Usar `ypcat` para ver as contas de utilizador a partir do cliente.
+	}
+	\subsection*{4. NIS (10 horas)}
+	\vspace{-1em}
+	\paragraph{}
+	O NIS é como ter uma única "identidade" para toda uma rede de computadores. Em vez de ter uma conta de utilizador em cada máquina, você tem uma conta num servidor central que funciona em todas as máquinas NIS.
+	
+	\begin{itemize}
+		\item \textbf{Arquitetura NIS (Servidor Mestre e Cliente)} (3 horas)
+		\subparagraph{O que é o NIS?} O NIS (anteriormente conhecido como Yellow Pages, daí o prefixo `yp`) é um protocolo de cliente-servidor para distribuição de dados de configuração do sistema, como nomes de utilizador, senhas e grupos, através de uma rede. Ele centraliza informações que normalmente seriam armazenadas localmente em ficheiros como `/etc/passwd` e `/etc/group`. A sua arquitetura é baseada num modelo de **domínio**, onde um servidor mestre gere os "mapas" de dados e os distribui para os clientes ou para servidores subordinados.
+		\subparagraph{Mecanismo de funcionamento} O NIS opera através da partilha de "mapas", que são bases de dados `dbm` (formato de base de dados de Berkeley) geradas a partir de ficheiros de texto do sistema. O servidor NIS mantém estes mapas atualizados e os clientes NIS solicitam as informações sempre que precisam. Este sistema simplifica a gestão de identidades em redes pequenas e médias. O cliente NIS utiliza o serviço **`ypbind`** para encontrar o servidor NIS mestre (ou subordinado) e se ligar a ele, enquanto o servidor NIS executa o daemon **`ypserv`**.
+		
+		\item \textbf{Configuração de um Servidor NIS Mestre} (5 horas)
+		A configuração de um servidor NIS envolve os seguintes passos, que devem ser seguidos de forma rigorosa para evitar falhas de autenticação:
+		\begin{enumerate}
+			\item Instalar os pacotes necessários: `ypserv` (servidor), `ypbind` (cliente) e `yp-tools`.
+			\item Definir o nome do domínio NIS no servidor, que deve ser único.
+			\item Editar o ficheiro de configuração do `ypserv` (`/etc/ypserv.conf`) para definir quais hosts têm permissão para aceder aos mapas.
+			\item Executar o comando `ypinit -m` para criar os mapas iniciais do NIS a partir dos ficheiros do sistema.
+			\item Iniciar e habilitar o serviço `ypserv` com `systemctl enable ypserv && systemctl start ypserv`.
+		\end{enumerate}
+		
+		\item \textbf{Exercício de Consolidação} (2 horas)
+		\begin{enumerate}
+			\item Numa máquina cliente, use o comando \texttt{ypwhich} para ver qual é o servidor NIS.
+			\item Use \texttt{ypcat passwd} para listar as contas de utilizador.
+			\item Crie uma nova conta no servidor NIS e verifique se consegue iniciar sessão com essa conta a partir do computador cliente.
+		\end{enumerate}
+	\end{itemize}
+	
+	---
+	
+	% --- Módulo 5: DHCP
+	\guia{
+		\textbf{Objetivos:} O aluno será capaz de configurar um servidor DHCP para atribuir endereços IP de forma dinâmica e estática.
+		\textbf{Pré-requisitos:} Sólidos conhecimentos sobre endereçamento de rede (IP e máscaras).
+		\textbf{Material de Apoio:} Diagrama do processo DORA, exemplos de ficheiro `dhcpd.conf`.
+		
+		\textbf{Visão Geral:} O DHCP (Dynamic Host Configuration Protocol) é um protocolo essencial para a gestão automática de endereços IP. Destaque a diferença entre atribuição dinâmica (para novos dispositivos) e estática (para servidores).
+		
+		\textbf{Analogia para o Aluno:} "O DHCP é como um rececionista de hotel. Quando um novo hóspede (dispositivo) chega, ele não precisa de procurar um quarto. O rececionista (servidor DHCP) atribui-lhe um quarto disponível (endereço IP). O processo DORA é a conversa passo a passo: o cliente `D`iscover (descobre) o servidor, o servidor `O`ffer (oferece) um IP, o cliente `R`equest (pede) esse IP, e o servidor `A`cknowledge (confirma)."
+		
+		\textbf{Roteiro da Aula:}
+		- Apresente o processo DORA e o seu significado.
+		- Mostre o ficheiro de configuração `dhcpd.conf` e explique as diretivas: `subnet`, `range`, `option routers`, `host` e `hardware ethernet`.
+		- Explique a lógica por trás da atribuição de IP: 1. Endereços estáticos. 2. Endereços dinâmicos da `range`.
+		- Apresente o conceito de `DHCP Relay Agent`.
+		- No exercício, os alunos devem criar uma configuração DHCP para uma sub-rede e uma atribuição estática para um dispositivo específico usando o seu MAC address.
+	}
+	\subsection*{5. DHCP (15 horas)}
+	\vspace{-1em}
+	\paragraph{}
+	O DHCP é um protocolo que automaticamente dá um "endereço de rua" (o endereço IP) a cada dispositivo que se liga à sua rede.
+	
+	\begin{itemize}
+		\item \textbf{O Processo DORA: Como funciona?} (4 horas)
+		\subparagraph{O que é o DHCP?} O Protocolo de Configuração Dinâmica de Host (DHCP) é um protocolo de rede que permite a um servidor atribuir automaticamente um endereço IP e outras configurações de rede (como a máscara de sub-rede, gateway padrão e DNS) a um cliente. Isto elimina a necessidade de configurar manualmente cada dispositivo na rede, simplificando a gestão. O DHCP utiliza o protocolo de transporte **UDP (User Datagram Protocol)**, nas portas `67` (servidor) e `68` (cliente).
+		\subparagraph{O Processo DORA} O processo de atribuição de um endereço IP via DHCP é conhecido como **DORA**, um acrónimo para os quatro passos de troca de mensagens. As mensagens são transmitidas em \textit{broadcast} na fase inicial para que o cliente possa encontrar o servidor, independentemente de ter um endereço IP pré-atribuído.
+		\begin{enumerate}
+			\item **D**iscover (\textbf{Descoberta}): O cliente envia uma mensagem de transmissão (`DHCPDISCOVER`) na rede para encontrar servidores DHCP.
+			\item **O**ffer (\textbf{Oferta}): Um ou mais servidores DHCP respondem com uma mensagem de oferta (`DHCPOFFER`), propondo um endereço IP disponível.
+			\item **R**equest (\textbf{Pedido}): O cliente escolhe uma das ofertas e envia uma mensagem de pedido (`DHCPREQUEST`) para o servidor selecionado, formalizando a sua intenção de usar o endereço IP oferecido.
+			\item **A**cknowledge (\textbf{Confirmação}): O servidor confirma a atribuição do endereço IP com uma mensagem de confirmação (`DHCPACK`). É neste momento que a concessão (lease) do IP é ativada.
+		\end{enumerate}
+		
+		\item \textbf{Configuração e Atribuição de Endereços} (7 horas)
+		A configuração do servidor DHCP é feita no ficheiro de configuração principal, geralmente localizado em \texttt{/etc/dhcp/dhcpd.conf}. Os blocos de configuração mais importantes são:
+		\begin{itemize}
+			\item \textbf{Subnet}: O bloco `subnet` define as configurações de rede para uma sub-rede específica, incluindo o endereço da sub-rede e a máscara.
+			\item \textbf{Range}: A diretiva `range` define o conjunto de endereços IP que o servidor pode atribuir dinamicamente. É importante que este intervalo não inclua endereços já em uso estaticamente.
+			\item \textbf{Options}: As diretivas `option` fornecem configurações adicionais ao cliente, como o endereço do router (`option routers`), o servidor DNS (`option domain-name-servers`) e o nome do domínio (`option domain-name`).
+			\item \textbf{Static Leases}: A diretiva `host` é utilizada para atribuir um endereço IP fixo a um dispositivo específico com base no seu endereço MAC (`hardware ethernet`). Isto é crucial para servidores ou impressoras, que necessitam de um IP consistente.
+		\end{itemize}
+		
+		\item \textbf{Conceitos Avançados: DHCP Relay Agent} (2 horas)
+		\subparagraph{DHCP Relay Agent} Em redes complexas com várias sub-redes separadas por routers, um cliente numa sub-rede pode não conseguir ver as mensagens de `broadcast` de um servidor DHCP noutra sub-rede. Nesses casos, um **DHCP Relay Agent** (agente de retransmissão DHCP) é configurado num router. O agente de retransmissão recebe as mensagens de `DHCPDISCOVER` de `broadcast` e as encaminha como mensagens de `unicast` diretamente para o servidor DHCP, permitindo que um único servidor sirva múltiplos segmentos de rede.
+		
+		\item \textbf{Exercício de Consolidação} (2 horas)
+		\begin{enumerate}
+			\item Configure um servidor DHCP para a sua rede de treino com um `range` de IPs dinâmicos.
+			\item Adicione uma entrada estática para o computador do instrutor.
+			\item Configure um cliente Linux para obter o IP do servidor e verifique se as configurações (IP, gateway, DNS) estão corretas.
+		\end{enumerate}
+	\end{itemize}
+	
+	---
+	
+	% --- Módulo 6: DNS
+	\guia{
+		\textbf{Objetivos:} O aluno será capaz de configurar um servidor DNS primário (autoritativo) usando BIND, incluindo zonas de pesquisa direta e inversa.
+		\textbf{Pré-requisitos:} Sólidos conhecimentos sobre endereçamento de rede e portas de serviços.
+		\textbf{Material de Apoio:} Diagrama de hierarquia DNS, exemplos de ficheiros de zona.
+		
+		\textbf{Visão Geral:} O DNS é um dos serviços mais importantes da internet. O professor deve dominar a hierarquia e o processo de consulta recursiva. A prática deve focar-se na configuração de zonas de pesquisa direta (`A`, `CNAME`) e inversa (`PTR`) no BIND.
+		
+		\textbf{Analogia para o Aluno:} "O DNS é a 'lista telefónica' da internet. Em vez de decorar números de telefone (endereços IP), nós só precisamos de saber os nomes das pessoas (nomes de sites). A hierarquia de DNS é como se tivéssemos várias listas telefónicas: uma para nomes de família (`.com`), outra para nomes próprios (`google`), e um 'livro de contactos' pessoal."
+		
+		\textbf{Roteiro da Aula:}
+		- Explique a hierarquia de DNS: Raiz, TLD (.com, .org), e servidores autoritativos.
+		- Descreva o processo de consulta recursiva: cliente -> servidor local -> servidores de hierarquia.
+		- Detalhe os tipos de registos mais comuns (`A`, `AAAA`, `CNAME`, `MX`, `PTR`) com exemplos práticos.
+		- No laboratório, guie a configuração do BIND: `named.conf`, ficheiro de zona `forward` (`db.exemplo.com`) e `reverse` (`db.1.168.192`).
+		- Enfatize a sintaxe dos ficheiros de zona (o ponto final, `$TTL`).
+		- Use o comando `dig` para testar as configurações e ver o resultado.
+	}
+	\subsection*{6. DNS (20 horas)}
+	\vspace{-1em}
+	\paragraph{}
+	O DNS é como a "lista telefónica" da internet. Ele traduz nomes fáceis de lembrar (como `google.com`) em endereços IP que os computadores entendem.
+	
+	\begin{itemize}
+		\item \textbf{Como a Lista Telefónica Funciona: A Hierarquia} (6 horas)
+		\subparagraph{Hierarquia e Consulta} O Sistema de Nomes de Domínio (DNS) é uma base de dados hierárquica e descentralizada, distribuída por milhares de servidores no mundo. A sua hierarquia funciona de forma invertida, com o **domínio raiz** (`.`) no topo. Abaixo da raiz, estão os **TLDs (Top-Level Domains)**, como `.com` ou `.org`. Por baixo dos TLDs, estão os domínios de segundo nível, como `google.com`.
+		\subparagraph{Processo de Consulta Recursiva} Quando um utilizador digita um URL, o seu computador executa uma consulta DNS. Se o servidor DNS local não tiver a resposta em cache, ele inicia um processo de consulta recursiva:
+		\begin{enumerate}
+			\item O cliente envia uma consulta para o seu servidor DNS local.
+			\item O servidor local, se não souber a resposta, contacta um servidor de raiz para obter o endereço do servidor TLD (`.com`).
+			\item O servidor TLD aponta para o servidor autoritativo de `google.com`.
+			\item O servidor autoritativo fornece o endereço IP final.
+			\item O servidor DNS local armazena a resposta em cache e a envia de volta ao cliente.
+		\end{enumerate}
+		
+		\item \textbf{Tipos de Registos DNS (A, AAAA, CNAME, MX, PTR)} (4 horas)
+		\subparagraph{Registos de Recurso (RRs)} Os registos de recurso são entradas na base de dados DNS. Cada registo tem um tipo, um tempo de vida (`TTL`), uma classe e dados específicos. Os tipos mais importantes são:
+		\begin{itemize}
+			\item \texttt{A}: Mapeia um nome de domínio para um endereço **IPv4**. Essencial para a navegação web.
+			\item \texttt{AAAA}: Mapeia um nome de domínio para um endereço **IPv6**.
+			\item \texttt{CNAME}: Cria um "apelido" para um nome de domínio canónico. Permite que vários nomes de host (ex: `www.exemplo.com`, `ftp.exemplo.com`) apontem para o mesmo host (`exemplo.com`).
+			\item \texttt{MX}: Especifica o servidor de correio para um domínio.
+			\item \texttt{PTR}: Usado para pesquisa **inversa**, traduzindo um endereço IP para um nome de domínio. Essencial para serviços de correio eletrónico e segurança.
+		\end{itemize}
+		
+		\item \textbf{Configuração de um Servidor DNS com BIND} (8 horas)
+		\subparagraph{BIND (Berkeley Internet Name Domain)} BIND é o servidor DNS mais utilizado no mundo. A sua configuração principal reside no ficheiro \texttt{/etc/named.conf} (ou `named.conf.local`). Para se tornar um servidor DNS autoritativo para um domínio, é necessário configurar zonas.
+		\begin{itemize}
+			\item **Zonas de `forward lookup`**: Contêm os registos que traduzem nomes para IPs (`A`, `CNAME`, etc.). A diretiva `$ORIGIN` define o nome de domínio base da zona. O ponto final (`.`) no final de um nome de domínio indica que é um nome completamente qualificado (`FQDN - Fully Qualified Domain Name`).
+			\item **Zonas de `reverse lookup`**: Contêm os registos `PTR` que traduzem IPs para nomes. A sintaxe de nomeação da zona inversa é o endereço de rede em ordem inversa, seguido por `in-addr.arpa`.
+		\end{itemize}
+		
+		\item \textbf{Exercício de Consolidação} (2 horas)
+		\begin{enumerate}
+			\item Crie um servidor DNS com o BIND e configure-o para ser autoritativo para um domínio fictício (`meu-curso.com`).
+			\item Adicione vários registos (A, CNAME) para máquinas na sua rede.
+			\item Configure uma máquina cliente para usar este novo servidor DNS e use o `dig` para testar se as consultas estão a funcionar.
+		\end{enumerate}
+	\end{itemize}
+	
+	---
+	
+	% --- Módulo 7: SSH
+	\guia{
+		\textbf{Objetivos:} O aluno será capaz de estabelecer ligações seguras via SSH, gerir utilizadores e permissões, e configurar a autenticação por chave pública.
+		\textbf{Pré-requisitos:} Conhecimento sobre a linha de comandos e gestão básica de utilizadores.
+		\textbf{Material de Apoio:} Diagrama do processo de autenticação por chave SSH.
+		
+		\textbf{Visão Geral:} O SSH (Secure Shell) é a espinha dorsal da administração remota de sistemas Linux. O professor deve focar-se na segurança e na eficiência do uso de chaves.
+		
+		\textbf{Analogia para o Aluno:} "O SSH é como uma porta de entrada super-segura para o seu servidor. Em vez de uma chave simples (palavra-passe), que pode ser copiada, usamos uma 'chave' digital muito mais robusta. O par de chaves, pública e privada, é como ter uma fechadura única na porta do servidor (chave pública) e a sua chave pessoal na sua mão (chave privada). Ninguém mais pode abrir a porta."
+		
+		\textbf{Roteiro da Aula:}
+		- Explique a função do SSH e a diferença entre o cliente (`ssh`) e o servidor (`sshd`).
+		- Demonstre o acesso remoto básico com `ssh user@host`.
+		- Apresente o conceito de autenticação por chave pública, mostrando o processo de criação de chaves (`ssh-keygen`) e de cópia para o servidor (`ssh-copy-id`).
+		- Explique as configurações de segurança mais comuns no ficheiro `sshd_config`, como a desativação do login por palavra-passe.
+		- Demonstre como usar o `scp` para copiar ficheiros de forma segura.
+	}
+	\subsection*{7. SSH (Secure Shell) (10 horas)}
+	\vspace{-1em}
+	\paragraph{}
+	O SSH é a ferramenta mais usada para aceder e gerir servidores Linux de forma remota e segura.
+	
+	\begin{itemize}
+		\item \textbf{Conceitos Fundamentais} (3 horas)
+		\subparagraph{O que é o SSH?} O Secure Shell (SSH) é um protocolo de rede criptografado utilizado para ligar e gerir um computador de forma segura através de uma rede insegura. Funciona na porta **TCP 22** por padrão. O SSH fornece um canal de comunicação seguro, onde todos os dados, incluindo a autenticação e os comandos, são criptografados.
+		\subparagraph{Componentes e Sessões} O SSH tem uma arquitetura cliente-servidor:
+		\begin{itemize}
+			\item **Servidor SSH (`sshd`)**: O daemon que corre no servidor e aceita ligações. Ele é configurado no ficheiro \texttt{/etc/ssh/sshd\_config}.
+			\item **Cliente SSH (`ssh`)**: O programa que o utilizador usa para se ligar ao servidor.
+			\item **Canal SSH**: O canal de comunicação criptografado é criado após a autenticação do utilizador e a troca de chaves.
+		\end{itemize}
+		Para além de sessões de terminal, o SSH permite o **encaminhamento de portas (`port forwarding`)** e a transferência de ficheiros segura através de `scp` e `sftp`.
+		
+		\item \textbf{Autenticação por Chave Pública} (5 horas)
+		\subparagraph{Criptografia de Chave Pública} A autenticação por chave pública é o método de segurança recomendado para o SSH. É baseada na criptografia assimétrica, que envolve um par de chaves criptográficas: uma chave **privada** (mantida em segredo pelo utilizador) e uma chave **pública** (que pode ser partilhada). O processo de autenticação é o seguinte:
+		\begin{enumerate}
+			\item O utilizador gera um par de chaves usando o comando `ssh-keygen`.
+			\item O utilizador copia a chave pública para o servidor remoto, adicionando-a ao ficheiro `~/.ssh/authorized_keys`.
+			\item Quando o cliente tenta ligar-se, o servidor envia um desafio criptográfico.
+			\item O cliente usa a sua chave privada para assinar o desafio e envia a resposta de volta.
+			\item O servidor usa a chave pública armazenada para verificar a assinatura. Se for válida, a autenticação é bem-sucedida.
+		\end{enumerate}
+		
+		\begin{lstlisting}[caption=Geração e uso de Chaves SSH]
+			# Criar um par de chaves (pública e privada)
+			ssh-keygen -t rsa
+			
+			# Copiar a chave pública para o servidor
+			ssh-copy-id user@servidor
+			
+			# Aceder ao servidor sem palavra-passe
+			ssh user@servidor
+		\end{lstlisting}
+		
+		\item \textbf{Exercício de Consolidação} (2 horas)
+		\begin{enumerate}
+			\item Geração de chaves SSH numa máquina cliente.
+			\item Copie a chave pública para a máquina do instrutor.
+			\item Configure o servidor SSH para desativar a autenticação por palavra-passe.
+		\end{enumerate}
+	\end{itemize}
+	
+	---
+	
+	% --- Módulo 8: Firewall
+	\guia{
+		\textbf{Objetivos:} O aluno será capaz de configurar regras de firewall para controlar o tráfego de rede e proteger serviços.
+		\textbf{Pré-requisitos:} Conhecimentos sobre endereçamento de rede e portas de serviços.
+		\textbf{Material de Apoio:} Diagrama de fluxo de pacotes do `iptables`, exemplos de regras comuns.
+		
+		\textbf{Visão Geral:} A firewall é a primeira linha de defesa de um servidor. O professor deve apresentar o `iptables` como a ferramenta de baixo nível e o `ufw` como uma interface simplificada, mais acessível para iniciantes.
+		
+		\textbf{Analogia para o Aluno:} "A firewall é como o 'guarda da alfândega' do seu servidor. Ela inspeciona todos os 'carros' (pacotes de dados) que chegam e saem. A firewall pode decidir quais carros podem entrar ou sair, e por qual 'porta' (porta de serviço). O `iptables` é o livro de regras complexo que o guarda usa, enquanto o `ufw` é uma versão simplificada e fácil de entender desse livro."
+		
+		\textbf{Roteiro da Aula:}
+		- Explique o papel de uma firewall e a diferença entre políticas padrão (`ACCEPT` e `DROP`).
+		- Apresente o `iptables` e a sua sintaxe base (`-A`, `-I`, `-D`, `-P`). Demonstre regras para permitir ou bloquear tráfego para portas específicas.
+		- Apresente o `ufw` (Uncomplicated Firewall) como uma alternativa mais simples. Mostre comandos como `ufw allow 80/tcp` e `ufw status`.
+		- Compare os dois para que o aluno perceba quando usar um ou outro.
+	}
+	\subsection*{8. Firewall (iptables/ufw) (10 horas)}
+	\vspace{-1em}
+	\paragraph{}
+	A firewall é um sistema que controla o tráfego de rede para proteger o seu computador.
+	
+	\begin{itemize}
+		\item \textbf{Conceitos de Firewall} (3 horas)
+		\subparagraph{O que é uma Firewall?} Uma firewall é um sistema de segurança de rede que monitoriza e controla o tráfego de rede de entrada e saída com base num conjunto de regras de segurança. O seu principal objetivo é proteger redes privadas de ataques externos e não autorizados. No Linux, a firewall é implementada no kernel e as regras são geridas por ferramentas como o `iptables`.
+		
+		\subparagraph{Fluxo de Pacotes e Cadeias (`Chains`)} O `iptables` gere regras de filtro para pacotes. A sua operação baseia-se em tabelas, que contêm cadeias. As cadeias mais importantes são:
+		\begin{itemize}
+			\item **`INPUT`**: Cadeia para pacotes que entram no sistema e são destinados a ele.
+			\item **`OUTPUT`**: Cadeia para pacotes que saem do sistema, originados por ele.
+			\item **`FORWARD`**: Cadeia para pacotes que estão a ser encaminhados através do sistema (que age como um router).
+		\end{itemize}
+		As regras são lidas de cima para baixo. A primeira regra que corresponde ao pacote determina a sua ação. Se nenhuma regra corresponder, a **política padrão** da cadeia é aplicada. As políticas padrão mais comuns são `ACCEPT` (tudo é permitido por padrão) e `DROP` (tudo é negado por padrão, exceto o que for explicitamente permitido).
+		
+		\item \textbf{iptables: A Ferramenta de Poder} (4 horas)
+		\subparagraph{Sintaxe de Regras} A sintaxe do `iptables` pode ser complexa. As opções principais são:
+		\begin{itemize}
+			\item `-A <CHAIN>`: Anexa a regra ao final da cadeia.
+			\item `-I <CHAIN>`: Insere a regra no início da cadeia.
+			\item `-D <CHAIN>`: Deleta uma regra.
+			\item `-P <CHAIN>`: Define a política padrão da cadeia.
+			\item `-p <protocolo>`: Especifica o protocolo (`tcp`, `udp`, `icmp`).
+			\item `--dport <porta>`: Especifica a porta de destino.
+			\item `-s <IP>`: Especifica o IP de origem.
+			\item `-j <TARGET>`: O que fazer com o pacote. `ACCEPT`, `DROP` e `REJECT` são alvos comuns.
+		\end{itemize}
+		É crucial guardar as regras com `iptables-save` para que persistam após o reinício.
+		
+		\begin{lstlisting}[caption=Exemplo de regras com iptables]
+			# Listar regras
+			sudo iptables -L
+			
+			# Permitir tráfego SSH (porta 22)
+			sudo iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+			
+			# Bloquear todo o restante tráfego
+			sudo iptables -P INPUT DROP
+		\end{lstlisting}
+		
+		\item \textbf{ufw: O Guia Simplificado} (3 horas)
+		\subparagraph{O que é `ufw`?} `ufw` (Uncomplicated Firewall) é uma interface simplificada para o `iptables` que foi projetada para tornar a configuração da firewall mais fácil. Em vez de lidar com regras complexas, o `ufw` utiliza comandos mais intuitivos, como `ufw allow <serviço>`. Por baixo, o `ufw` traduz estes comandos para as regras correspondentes do `iptables`. O `ufw` é ideal para a maioria das necessidades de firewall e é mais fácil de auditar e manter.
+		
+		\begin{lstlisting}[caption=Exemplo de regras com ufw]
+			# Habilitar a firewall
+			sudo ufw enable
+			
+			# Permitir acesso à porta 80 (HTTP)
+			sudo ufw allow 80
+			
+			# Ver o estado
+			sudo ufw status verbose
+		\end{lstlisting}
+		
+		\item \textbf{Exercício de Consolidação} (2 horas)
+		\begin{enumerate}
+			\item Instale o `ufw`.
+			\item Configure o `ufw` para permitir apenas o tráfego SSH (porta 22).
+			\item Tente aceder de um cliente em outra porta (por exemplo, a 80) e verifique se a conexão é rejeitada.
+		\end{enumerate}
+	\end{itemize}
+	
+\end{document}

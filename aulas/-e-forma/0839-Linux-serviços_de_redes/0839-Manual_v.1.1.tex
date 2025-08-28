@@ -1,0 +1,238 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+\usepackage{hyperref} % Adicionar pacote hyperref para URLs
+\usepackage[portuguese]{babel} % O seu código estava a faltar este pacote, que é crucial para o idioma
+
+% Configurações de títulos para um visual mais limpo e profissional
+\titleformat{\section}[block]{\bfseries\Large\raggedright}{}{0em}{}
+\titlespacing{\section}{0pt}{1.5em}{1em}
+
+\title{Plano de Formação: Linux - Serviços de Redes}
+\author{Formador: [Seu Nome]} % Altere aqui para o seu nome
+\date{Data de Elaboração: [Data]} % Altere aqui a data
+
+
+\begin{document}
+	
+	\section*{Conteúdos}
+	
+	\subsection*{1. Serviços de rede}
+	\vspace{-1.2em}
+	\paragraph{}
+	Nesta secção, vamos explorar como os serviços de rede são geridos no Linux, desde o seu início até ao encerramento, e os principais ficheiros e diretórios envolvidos neste processo.
+	
+	\begin{itemize}
+		\item \textbf{Gestão de Serviços com \texttt{systemd}}: O \texttt{systemd} é o sistema de inicialização e gestor de serviços padrão na maioria das distribuições Linux modernas. Ele usa unidades para gerir os serviços de forma mais robusta e eficiente. Os comandos mais comuns são:
+		\begin{itemize}
+			\item \texttt{systemctl start [serviço]}: Inicia um serviço.
+			\item \texttt{systemctl stop [serviço]}: Para um serviço.
+			\item \texttt{systemctl status [serviço]}: Verifica o estado de um serviço.
+			\item \texttt{systemctl enable [serviço]}: Habilita um serviço para iniciar automaticamente no boot.
+		\end{itemize}
+		
+		\item \textbf{Ficheiro \texttt{/etc/services}}: Uma base de dados de mapeamento entre nomes de serviços e números de porta. É utilizada pelo sistema e pelas aplicações para identificar serviços de rede de forma legível.
+		\item \textbf{Lista de portas e serviços}: Usar o comando \texttt{ss} (socket statistics) é uma forma moderna e rápida de inspecionar as conexões e portas abertas.
+	\end{itemize}
+	
+	\paragraph{\bfseries Exemplo Prático: Gerir o Serviço SSH}
+	Vamos verificar o estado do serviço SSH. O SSH (Secure Shell) é um serviço que permite a conexão remota segura a um servidor.
+	
+	\begin{verbatim}
+		$ systemctl status sshd
+	\end{verbatim}
+	
+	A resposta típica mostra o estado do serviço (ativo ou inativo), o PID (Process ID) e a quantidade de tempo que está a correr.
+	
+	\paragraph{\bfseries Exercício Prático: Gerir o Serviço HTTP}
+	1. Verifique o estado do serviço de servidor web Apache (\texttt{httpd}).
+	2. Tente pará-lo usando o comando apropriado.
+	3. Verifique novamente o estado para confirmar que foi parado.
+	
+	\subsection*{2. XINET.d}
+	\vspace{-1.2em}
+	\paragraph{}
+	O \texttt{xinetd} (e o seu antecessor, o \texttt{inetd}) funciona como um "super-servidor" que gere a inicialização de serviços de rede que não precisam de estar ativos a todo o momento. Ele espera por pedidos de conexão numa porta específica e, quando um pedido chega, inicia o serviço correspondente.
+	
+	\begin{itemize}
+		\item \textbf{Arquivos de Configuração}:
+		\begin{itemize}
+			\item \texttt{/etc/xinetd.conf}: O ficheiro de configuração principal, que define o seu comportamento global.
+			\item \texttt{/etc/xinet.d/}: Este diretório contém ficheiros de configuração individuais para cada serviço gerido pelo \texttt{xinetd}.
+		\end{itemize}
+	\end{itemize}
+	
+	\paragraph{\bfseries Exemplo Prático: Configuração de um Serviço}
+	Um ficheiro de configuração em \texttt{/etc/xinet.d/} para o serviço \texttt{telnet} pode ter a seguinte aparência. Note a linha \texttt{disable = yes}, que evita que o serviço inicie.
+	
+	\begin{verbatim}
+		service telnet
+		{
+			disable = yes
+			id = telnet-ipv4
+			type = UNLISTED
+			...
+		}
+	\end{verbatim}
+	
+	\paragraph{\bfseries Exercício Prático: Habilitar um Serviço}
+	1. Encontre um serviço no diretório \texttt{/etc/xinet.d/} que esteja desabilitado.
+	2. Altere o ficheiro de configuração desse serviço para habilitá-lo, alterando o valor \texttt{disable = yes}.
+	3. Reinicie o serviço \texttt{xinetd} para aplicar a alteração.
+	
+	\subsection*{3. TCPWrappers}
+	\vspace{-1.2em}
+	\paragraph{}
+	Uma ferramenta de segurança simples mas eficaz para controlar o acesso a serviços de rede. O \texttt{TCPWrappers} permite a criação de regras de acesso (permitir/negar) baseadas em endereços IP, nomes de host e nomes de utilizador.
+	
+	\begin{itemize}
+		\item \textbf{\texttt{/etc/hosts.allow}}: Ficheiro que define as regras de "permitir".
+		\item \textbf{\texttt{/etc/hosts.deny}}: Ficheiro que define as regras de "negar".
+	\end{itemize}
+	
+	\paragraph{\bfseries Exemplo Prático: Regras de Acesso}
+	Vamos supor que queremos permitir que o serviço SSH seja acedido apenas a partir de um IP específico e negar todo o restante tráfego.
+	
+	\begin{verbatim}
+		Em /etc/hosts.allow:
+		sshd: 192.168.1.100
+		
+		Em /etc/hosts.deny:
+		sshd: ALL
+	\end{verbatim}
+	
+	\textit{Nota: As regras no hosts.allow são processadas primeiro. Se uma regra corresponder, a conexão é permitida e o hosts.deny é ignorado.}
+	
+	\paragraph{\bfseries Exercício Prático: Proteger o SSH}
+	1. Adicione uma regra ao \texttt{/etc/hosts.deny} para bloquear o acesso de qualquer IP ao serviço SSH.
+	2. Teste a sua configuração a partir de outra máquina.
+	
+	\subsection*{4. NIS}
+	\vspace{-1.2em}
+	\paragraph{}
+	O NIS (Network Information Service) é um sistema de diretório centralizado que permite que informações de contas de utilizadores e hosts sejam distribuídas por uma rede. É útil para ambientes de rede pequenos e uniformes.
+	
+	\begin{itemize}
+		\item \textbf{Configuração do Servidor e Cliente}: A configuração envolve a instalação dos pacotes necessários (\texttt{ypserv} para o servidor e \texttt{ypbind} para o cliente) e a definição de um domínio NIS.
+		\item \textbf{Ficheiro \texttt{/etc/yp.conf}}: Ficheiro de configuração do cliente que especifica o domínio e o servidor NIS a ser utilizado.
+	\end{itemize}
+	
+	\paragraph{\bfseries Exemplo Prático: Listar Utilizadores NIS}
+	Após a configuração do cliente, podemos listar os utilizadores do servidor NIS com o comando \texttt{ypcat}.
+	
+	\begin{verbatim}
+		$ ypcat passwd
+	\end{verbatim}
+	
+	Este comando mostra o conteúdo do mapa \texttt{passwd} do NIS, que é uma lista dos utilizadores e suas informações.
+	
+	\paragraph{\bfseries Exercício Prático: Verificar o Domínio}
+	1. Use um comando para verificar o domínio NIS da sua máquina.
+	2. Verifique se o serviço \texttt{ypbind} está a correr.
+	
+	\subsection*{5. DHCP}
+	\vspace{-1.2em}
+	\paragraph{}
+	O DHCP (Dynamic Host Configuration Protocol) é o protocolo padrão para atribuir configurações de rede (como endereços IP) a dispositivos de forma automática.
+	
+	\begin{itemize}
+		\item \textbf{Conceito}: A atribuição automática de IPs evita erros de configuração e torna a gestão da rede mais eficiente.
+		\item \textbf{Configuração}: Toda a configuração de DHCP é feita no ficheiro \texttt{/etc/dhcp/dhcpd.conf}.
+		\item \textbf{Parâmetros Chave}:
+		\begin{itemize}
+			\item \texttt{range}: A gama de IPs disponíveis para atribuição.
+			\item \texttt{routers}: O endereço do gateway padrão da rede.
+			\item \texttt{domain-name-servers}: Os endereços dos servidores DNS para os clientes.
+		\end{itemize}
+	\end{itemize}
+	
+	\paragraph{\bfseries Exemplo Prático: Configurar um Sub-rede}
+	Um exemplo de uma configuração simples para a sub-rede 192.168.1.0/24:
+	
+	\begin{verbatim}
+		subnet 192.168.1.0 netmask 255.255.255.0 {
+			range 192.168.1.100 192.168.1.200;
+			option routers 192.168.1.1;
+			option domain-name-servers 8.8.8.8, 8.8.4.4;
+			default-lease-time 600;
+			max-lease-time 7200;
+		}
+	\end{verbatim}
+	
+	
+	\paragraph{\bfseries Exercício Prático: Configuração Estática}
+	1. Crie uma entrada no seu ficheiro \texttt{dhcpd.conf} para atribuir um IP estático (por exemplo, 192.168.1.50) a uma máquina específica, usando o seu endereço MAC.
+	2. Após a alteração, reinicie o serviço DHCP.
+	
+	\subsection*{6. DNS}
+	\vspace{-1.2em}
+	\paragraph{}
+	O DNS (Domain Name System) é a base da internet, atuando como um "livro de endereços" que traduz nomes de domínio em endereços IP.
+	
+	\begin{itemize}
+		\item \textbf{Conceitos Fundamentais}: Entender termos como Zona, Domínio, e Servidores Matriz (\texttt{root servers}) é crucial.
+		\item \textbf{BIND (\texttt{named})}: O software de servidor DNS mais utilizado. A sua configuração principal é no ficheiro \texttt{/etc/named.conf}.
+		\item \textbf{Zonas}: As zonas são ficheiros de texto que contêm os registos para um domínio específico. Os tipos de registo mais comuns são:
+		\begin{itemize}
+			\item \textbf{A}: Mapeia um nome de host para um endereço IPv4.
+			\item \textbf{MX}: Define o servidor de e-mail para o domínio.
+			\item \textbf{CNAME}: Cria um alias para um nome de host existente.
+		\end{itemize}
+	\end{itemize}
+	
+	\paragraph{\bfseries Exemplo Prático: Ficheiro de Zona}
+	Conteúdo de um ficheiro de zona simples (\texttt{db.exemplo.com}):
+	
+	\begin{verbatim}
+		$TTL 86400
+		@ IN SOA ns1.exemplo.com. admin.exemplo.com. (
+		2023010101 ; Serial
+		3600       ; Refresh
+		1800       ; Retry
+		604800     ; Expire
+		86400      ; Minimum TTL
+		)
+		
+		@   IN  NS  ns1.exemplo.com.
+		@   IN  A   192.168.1.10
+		
+		www IN  A   192.168.1.11
+		mail IN A   192.168.1.12
+	\end{verbatim}
+	
+	\paragraph{\bfseries Exercício Prático: Adicionar um Registo}
+	1. No ficheiro de zona, adicione um novo registo \texttt{A} para um servidor de blog, com o nome \texttt{blog.exemplo.com} e o IP \texttt{192.168.1.20}.
+	2. Após a alteração, incremente o número de série (Serial) para que as alterações sejam propagadas.
+	3. Recarregue o serviço DNS para aplicar as alterações.
+	
+	\subsection*{7. LOGS}
+	\vspace{-1.2em}
+	\paragraph{}
+	Os logs são ficheiros de registo que fornecem informações sobre o que está a acontecer no sistema e nas aplicações. São cruciais para a monitorização e a resolução de problemas.
+	
+	\begin{itemize}
+		\item \textbf{Pasta \texttt{/var/log}}: O diretório padrão onde a maioria dos logs do sistema e de aplicações é armazenada.
+		\item \textbf{Ficheiro \texttt{messages}}: Contém mensagens gerais do sistema, do kernel e de serviços, sendo um dos primeiros lugares para procurar quando algo corre mal.
+		\item \textbf{Syslogd e o arquivo \texttt{syslog}}: O \texttt{syslogd} é o demónio responsável pela gestão de logs no sistema, e o ficheiro \texttt{syslog} é um dos seus principais registos.
+	\end{itemize}
+	
+	\paragraph{\bfseries Exemplo Prático: Analisar os Logs}
+	Pode usar comandos como \texttt{tail} para ver as últimas entradas de um ficheiro de log ou \texttt{grep} para procurar por mensagens específicas.
+	
+	\begin{verbatim}
+		$ tail -f /var/log/messages
+		$ grep "sshd" /var/log/auth.log
+	\end{verbatim}
+	
+	\paragraph{\bfseries Exercício Prático: Rastrear um Evento}
+	1. Force um erro (por exemplo, ao tentar iniciar um serviço com a sintaxe incorreta).
+	2. Use o comando \texttt{tail} ou \texttt{grep} para encontrar a mensagem de erro no ficheiro \texttt{/var/log/messages} ou \texttt{/var/log/syslog} e identifique o motivo do erro.
+	
+\end{document}

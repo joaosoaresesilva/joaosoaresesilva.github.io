@@ -1,0 +1,124 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\title{0839 - Linux - Serviços de redes}
+\author{João Soares e Silva}
+\begin{document}
+	\maketitle
+	
+		
+		% --- Conteúdos Programáticos (Conteúdo Expandido) ---
+		\section*{Conteúdos}
+		
+		\subsection*{1. Serviços de rede}
+		\vspace{-1.2em}
+		\paragraph{}
+		Nesta secção, vamos explorar como os serviços de rede são geridos no Linux, desde o seu início até ao encerramento, e os principais ficheiros e diretórios envolvidos neste processo.
+		
+		\begin{itemize}
+			\item \texttt{/etc/rc.d/init.d/}: Este diretório contém os scripts de inicialização SysV para os serviços. Cada script permite iniciar, parar, reiniciar ou verificar o estado de um serviço. Por exemplo, \texttt{service httpd start} inicia o serviço Apache (em sistemas mais antigos).
+			\item Iniciação e paragem dos serviços: Compreensão dos comandos \texttt{service} e \texttt{systemctl} (o padrão atual em distribuições como RHEL/CentOS e Ubuntu). O \texttt{systemctl} gerencia serviços de forma mais moderna, utilizando unidades.
+			\item Pasta \texttt{/etc/services}: Uma base de dados de mapeamento entre nomes de serviços e números de porta. É utilizada pelo sistema e pelas aplicações para identificar serviços de rede de forma legível.
+			\item Lista de portas e serviços no Linux: Aprender a usar comandos como \texttt{netstat} ou \texttt{ss} para listar as portas abertas e os serviços associados.
+			\item Encerramento de um serviço ou porta: Técnicas para parar um serviço de forma segura usando \texttt{systemctl stop} ou, em último caso, para matar um processo que esteja a correr numa porta específica.
+		\end{itemize}
+		
+		\subsection*{2. XINET.d}
+		\vspace{-1.2em}
+		\paragraph{}
+		O \texttt{xinetd} (e o seu antecessor, o \texttt{inetd}) funciona como um "super-servidor" que gere a inicialização de serviços de rede que não precisam de estar ativos a todo o momento. Ele espera por pedidos de conexão numa porta específica e, quando um pedido chega, inicia o serviço correspondente.
+		
+		\begin{itemize}
+			\item Arquivo \texttt{/etc/xinetd.conf}: O ficheiro de configuração principal do \texttt{xinetd}, que define o seu comportamento global.
+			\item Pasta \texttt{/etc/xinet.d/}: Este diretório contém ficheiros de configuração individuais para cada serviço gerido pelo \texttt{xinetd}. É uma abordagem modular que facilita a gestão.
+		\end{itemize}
+		
+		\subsection*{3. TCPWrappers}
+		\vspace{-1.2em}
+		\paragraph{}
+		Uma ferramenta de segurança simples mas eficaz para controlar o acesso a serviços de rede. O \texttt{TCPWrappers} permite a criação de regras de acesso (permitir/negar) baseadas em endereços IP, nomes de host e nomes de utilizador.
+		
+		\begin{itemize}
+			\item \texttt{/etc/hosts.allow}: Ficheiro que define as regras de "permitir". Se um pedido de conexão corresponder a uma regra neste ficheiro, a conexão é permitida e não é mais verificada.
+			\item \texttt{/etc/hosts.deny}: Ficheiro que define as regras de "negar". Se um pedido corresponder a uma regra neste ficheiro, a conexão é negada. Se um pedido não corresponder a nenhuma regra, a regra implícita é permitir.
+		\end{itemize}
+		
+		\subsection*{4. NIS}
+		\vspace{-1.2em}
+		\paragraph{}
+		O NIS (Network Information Service) é um sistema de diretório centralizado que permite que informações de contas de utilizadores, grupos e hosts sejam distribuídas por uma rede. É útil para ambientes de rede pequenos e uniformes, embora seja uma tecnologia mais antiga.
+		
+		\begin{itemize}
+			\item Configuração de um servidor NIS (Network Information Service): Instalação e configuração do \texttt{ypserv} e criação dos mapas de dados (\texttt{passwd}, \texttt{group}, etc.).
+			\item Criação de um domínio NIS: Definição de um nome de domínio NIS, que é o identificador para o serviço na rede.
+			\item Arquivo \texttt{/etc/yp.conf}: Ficheiro de configuração do cliente NIS que especifica o domínio e o servidor NIS a ser utilizado.
+			\item Configuração de um Cliente NIS: Instalação do \texttt{ypbind} e configuração para que o sistema saiba onde encontrar o servidor NIS.
+			\item Acesso a contas no NIS: Como os utilizadores podem iniciar sessão numa máquina cliente NIS usando as suas credenciais definidas centralmente no servidor.
+		\end{itemize}
+		
+		\subsection*{5. DHCP}
+		\vspace{-1.2em}
+		\paragraph{}
+		O DHCP (Dynamic Host Configuration Protocol) é o protocolo padrão para atribuir configurações de rede (como endereços IP) a dispositivos de forma automática.
+		
+		\begin{itemize}
+			\item Conceito: Entender como o DHCP elimina a necessidade de configurar IPs manualmente em cada máquina da rede.
+			\item Iniciação do servidor DHCP: O servidor \texttt{dhcpd} é o demónio responsável pelo serviço.
+			\item Descrição dos principais parâmetros:
+			\begin{itemize}
+				\item \texttt{lease-time}: O período de tempo em que um IP é emprestado a um cliente.
+				\item \texttt{range}: A gama de IPs disponíveis para atribuição.
+				\item \texttt{routers}: O endereço do gateway padrão da rede.
+				\item \texttt{domain-name}: O nome de domínio da rede.
+				\item \texttt{name-servers}: Os endereços dos servidores DNS para os clientes.
+			\end{itemize}
+			\item Arquivo \texttt{/var/lib/dhcp/dhcpd.leases}: Onde o servidor DHCP armazena um registo de todos os IPs que atribuiu e a quem.
+			\item Configuração do range de uma rede: Uso do ficheiro \texttt{/etc/dhcp/dhcpd.conf} para definir a gama de endereços.
+			\item Definição de IP para uma máquina específica: Como atribuir um IP estático a um cliente com base no seu endereço físico (MAC address).
+			\item Coexistência de mais de um servidor DHCP: Como gerir dois servidores DHCP na mesma rede para redundância (um como servidor principal e o outro como backup).
+			\item Configuração de um cliente para acesso à rede DHCP: O cliente executa um comando como \texttt{dhclient} para obter uma configuração.
+			\item Comando \texttt{pump} e DHCP do Linux: O \texttt{pump} é um cliente DHCP mais simples utilizado em algumas distribuições.
+		\end{itemize}
+		
+		\subsection*{6. DNS}
+		\vspace{-1.2em}
+		\paragraph{}
+		O DNS (Domain Name System) é a base da internet, atuando como um "livro de endereços" que traduz nomes de domínio (como www.google.com) em endereços IP (como 142.250.187.110).
+		
+		\begin{itemize}
+			\item Conceitos:
+			\begin{itemize}
+				\item Zona: Uma parte do espaço de nomes de domínio, como \texttt{exemplo.com}.
+				\item Domínios: O nome da zona.
+				\item Nós: Cada domínio ou subdomínio.
+				\item Servidores Matriz (\texttt{root servers}): Os 13 servidores que contêm informações sobre os domínios de topo (como \texttt{.com}, \texttt{.net}).
+			\end{itemize}
+			\item FAPESP e Internic: A FAPESP gere o domínio de topo do Brasil (\texttt{.br}), enquanto a ICANN (antiga Internic) é a organização responsável pela gestão global dos nomes de domínio.
+			\item BIND (\texttt{named}) - Berkeley Internet Name Domain: O software de servidor DNS mais utilizado.
+			\item Arquivo \texttt{/etc/named.conf}: O ficheiro de configuração principal do BIND, onde se definem as zonas.
+			\item Instruções \texttt{options} e \texttt{zone}: As principais instruções para configurar o BIND, definindo opções globais e as zonas de autoridade.
+			\item Arquivo \texttt{/var/named/named.ca}: Ficheiro que contém os endereços IP dos servidores raiz da Internet.
+			\item Configuração da replicação das zonas: Como configurar um servidor DNS Master e Slave para alta disponibilidade.
+			\item Iniciação do servidor DNS: O demónio \texttt{named} é o serviço responsável pelo DNS.
+			\item Papel do DNS e do \texttt{hosts}: O ficheiro \texttt{/etc/hosts} fornece uma forma de resolução local, que é consultada antes de um servidor DNS.
+			\item Configuração de um cliente: O ficheiro \texttt{/etc/resolv.conf} é usado para indicar ao cliente os endereços dos servidores DNS a serem consultados.
+			\item Máquinas a inserir no DNS: Como adicionar novos registos (A, CNAME, etc.) para máquinas na sua zona.
+		\end{itemize}
+		
+		\subsection*{7. LOGS}
+		\vspace{-1.2em}
+		\paragraph{}
+		Os logs são ficheiros de registo que fornecem informações sobre o que está a acontecer no sistema e nas aplicações. São cruciais para a monitorização e a resolução de problemas.
+		
+		\begin{itemize}
+			\item Arquivos de log do sistema: O sistema operacional Linux centraliza os seus logs para facilitar o rastreio de eventos.
+			\item Pasta \texttt{/var/log}: O diretório padrão onde a maioria dos logs do sistema e de aplicações é armazenada.
+			\item Arquivo \texttt{messages}: Contém mensagens gerais do sistema, do kernel e de serviços, sendo um dos primeiros lugares para procurar quando algo corre mal.
+			\item Syslogd e o arquivo \texttt{syslog}: O \texttt{syslogd} é o demónio responsável pela gestão de logs no sistema, e o ficheiro \texttt{syslog} é um dos seus principais registos.
+			\item Outros arquivos de log de aplicativos: As aplicações de rede têm os seus próprios ficheiros de log, geralmente localizados em \texttt{/var/log/}. Exemplos:
+			\begin{itemize}
+				\item \texttt{Apache}: Logs como \texttt{access.log} e \texttt{error.log} para monitorizar o tráfego e erros do servidor web.
+				\item \texttt{Sendmail}: Logs do serviço de e-mail.
+			\end{itemize}
+		\end{itemize}
+		
+	\end{document}

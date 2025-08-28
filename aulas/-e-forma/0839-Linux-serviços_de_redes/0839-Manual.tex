@@ -1,0 +1,149 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[portuguese]{babel}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{enumitem} % Para personalizar listas e dar mais controlo sobre o espaçamento
+\usepackage{titlesec} % Para personalizar títulos
+
+% Configurações de títulos para um visual mais limpo e profissional
+\titleformat{\section}[block]{\bfseries\Large\raggedright}{}{0em}{}
+\titlespacing{\section}{0pt}{1.5em}{1em}
+
+\title{Plano de Formação: Linux - Serviços de Redes}
+\author{Formador: [Seu Nome]} % Altere aqui para o seu nome
+\date{Data de Elaboração: [Data]} % Altere aqui a data
+
+\begin{document}
+	
+	% --- Cabeçalho do Documento ---
+	\begin{center}
+		\vspace*{2cm}
+		{\Huge\bfseries Plano de Formação} \\
+		\vspace{0.5cm}
+		{\Large\itshape Linux - Serviços de Redes}
+		\vspace{2cm}
+	\end{center}
+	
+	\begin{itemize}[leftmargin=*,labelsep=1cm]
+		\item \textbf{Designação da UFCD:} Linux - serviços de redes
+		\item \textbf{Código da UFCD:} 0839
+		\item \textbf{Carga Horária:} 50 horas
+		\item \textbf{Pontos de Crédito:} 4.5
+	\end{itemize}
+	
+	\vspace{1cm}
+	
+	% --- Objetivos de Formação ---
+	\section*{Objetivos}
+	\begin{itemize}
+		\item Instalar e configurar o linux server - serviços de redes.
+		\item Instalar e configurar o linux server - NIS.
+		\item Instalar e configurar o linux server - DHCP.
+		\item Instalar e configurar o linux server - DNS.
+		\item Instalar e configurar o linux server - LOGS.
+	\end{itemize}
+	
+	\newpage
+	
+	% --- Conteúdos Programáticos ---
+	\section*{Conteúdos}
+	
+	\subsection*{1. Serviços de rede}
+	\begin{itemize}
+		\item \texttt{/etc/rc.d/init.d/}
+		\item Iniciação e paragem dos serviços
+		\item Pasta \texttt{/etc/services}
+		\item Lista de portas e serviços no Linux
+		\item Encerramento de um serviço ou porta
+	\end{itemize}
+	
+	\subsection*{2. XINET.d}
+	\begin{itemize}
+		\item Arquivo \texttt{/etc/xinetd.conf}
+		\item Pasta \texttt{/etc/xinet.d/}
+	\end{itemize}
+	
+	\subsection*{3. TCPWrappers}
+	\begin{itemize}
+		\item \texttt{/etc/hosts.allow}
+		\item \texttt{/etc/hosts.deny}
+	\end{itemize}
+	
+	\subsection*{4. NIS}
+	\begin{itemize}
+		\item Configuração de um servidor NIS (Network Information Service)
+		\item Criação de um domínio NIS
+		\item Arquivo \texttt{/etc/yp.conf}
+		\item Configuração de um Cliente NIS
+		\item Acesso a contas no NIS
+	\end{itemize}
+	
+	\subsection*{5. DHCP}
+	\begin{itemize}
+		\item Conceito
+		\item Iniciação do servidor DHCP
+		\item Descrição dos principais parâmetros:
+		\begin{itemize}
+			\item lease time
+			\item range
+			\item mac address
+			\item routers
+			\item domain name
+			\item name servers
+		\end{itemize}
+		\item Arquivo \texttt{/var/lib/dhcp/dhcpd.leases}
+		\item Configuração do range de uma rede
+		\item Definição de informações para a rede TCP
+		\item Definição de IP e informações para uma máquina específica na rede através de seu endereço físico
+		\item Definição de IPs para todas as máquinas na rede através de seu endereço físico
+		\item Coexistência de mais de um servidor DHCP na rede
+		\item Configuração de um cliente para acesso à rede DHCP
+		\item Comando \texttt{pump}
+		\item DHCP do Linux
+	\end{itemize}
+	
+	\subsection*{6. DNS}
+	\begin{itemize}
+		\item Conceitos
+		\begin{itemize}
+			\item Zona
+			\item Domínios
+			\item Nós
+			\item Servidores Matriz (root servers)
+		\end{itemize}
+		\item FAPESP e Internic
+		\item DNS e replicação de zonas
+		\item BIND (\texttt{named}) - Berkeley Internet Name Domain
+		\item Arquivo \texttt{/etc/named.conf}
+		\item Instruções \texttt{options} e \texttt{zone}
+		\item Arquivo \texttt{/var/named/named.ca}
+		\item Criação e edição de zonas
+		\item Delegação de autorização para novas zonas
+		\item Configuração da replicação das zonas
+		\item Configuração de um servidor Master e Slave
+		\item Iniciação do servidor DNS
+		\item Papel do DNS e do \texttt{hosts}
+		\item Configuração de um cliente
+		\item Máquinas a inserir no DNS
+	\end{itemize}
+	
+	\subsection*{7. LOGS}
+	\begin{itemize}
+		\item Arquivos de log do sistema
+		\item Pasta \texttt{/var/log}
+		\item Arquivo \texttt{messages}
+		\item Syslogd
+		\item Arquivo \texttt{syslog}
+		\item Outros arquivos de log de aplicativos
+		\begin{itemize}
+			\item Apache
+			\item Sendmail
+		\end{itemize}
+	\end{itemize}
+	
+\end{document}

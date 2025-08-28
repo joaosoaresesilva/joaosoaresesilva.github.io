@@ -1,0 +1,396 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+\usepackage{hyperref}
+\usepackage[portuguese]{babel}
+\usepackage{xcolor} % Adicionado para cores
+\definecolor{darkblue}{rgb}{0.0, 0.0, 0.55} % Cor azul escura
+\newcommand{\guia}[1]{\textcolor{darkblue}{#1}} % Novo comando para o guia
+
+% Configurações de títulos para um visual mais limpo e profissional
+\titleformat{\section}[block]{\bfseries\Large\raggedright}{}{0em}{}
+\titlespacing{\section}{0pt}{1.5em}{1em}
+
+\title{Plano de Formação: Linux - Serviços de Redes}
+\author{Formador: [Seu Nome]}
+\date{Data de Elaboração: [Data]}
+
+
+\begin{document}
+	
+	\section*{Conteúdos}
+	
+	\guia{
+		% GUIA DO PROFESSOR: Introdução a Fundamentos de Redes
+		%
+		% Visão Geral (O que o professor precisa saber):
+		% Esta secção é o alicerce. Sem a compreensão básica de endereços IP e como os computadores se comunicam, os alunos terão dificuldade em entender os serviços de rede. O objetivo é desmistificar o networking com analogias simples e ferramentas práticas. Foque-se em:
+		% 1. Endereços IP: o que são e a diferença entre IPv4 e IPv6.
+		% 2. Máscaras de Rede: como definem o tamanho da rede.
+		% 3. Ferramentas de diagnóstico: `ping` e `traceroute` para ver a conectividade.
+		%
+		% Analogia e Explicação para os alunos:
+		% "Pensem na internet como uma grande cidade. Os endereços IP são como os endereços de rua das casas. Sem eles, as encomendas (dados) não saberiam para onde ir. A máscara de rede é o código postal, que define a 'vizinhança' (a sub-rede)."
+		%
+		% Roteiro da Aula (Passo a Passo):
+		% - Comece com a analogia da cidade.
+		% - Apresente a estrutura do endereço IPv4 (quatro octetos) e IPv6 (formato mais complexo).
+		% - Explique a máscara de rede em binário para mostrar como a rede e o host são separados (exemplo: 192.168.1.10 com 255.255.255.0).
+		% - Apresente `ping` como um teste de conectividade simples.
+		% - Apresente `traceroute` como uma forma de ver os "saltos" (routers) no caminho.
+		% - Mostre a saída do `ifconfig` ou `ip addr` para que os alunos identifiquem o seu próprio endereço.
+		% - No exercício, peça-lhes para `ping` o router local (geralmente .1) e depois um site externo.
+	}
+	\subsection*{0. Introdução a Fundamentos de Redes (10 horas)}
+	\vspace{-1.2em}
+	\paragraph{}
+	Antes de explorarmos os serviços de rede, é fundamental entender a base: os endereços IP e a comunicação na rede.
+	
+	\begin{itemize}
+		\item \textbf{Endereços IP e Máscaras de Rede} (4 horas) \\
+		Explicação dos endereços IPv4 (Classes A, B, C) e IPv6, e como as máscaras de rede definem a sub-rede.
+		\begin{verbatim}
+			# Exemplo de IP e máscara
+			Endereço IP: 192.168.1.50
+			Máscara de Rede: 255.255.255.0  (ou /24)
+		\end{verbatim}
+		
+		\item \textbf{Ferramentas de Diagnóstico de Rede} (3 horas) \\
+		Apresentar ferramentas essenciais para testar a conectividade.
+		\begin{verbatim}
+			ping google.com          # Testar a conectividade com um host
+			traceroute google.com    # Seguir o caminho até um destino
+			ifconfig / ip addr       # Ver os detalhes das interfaces de rede
+		\end{verbatim}
+		
+		\item \textbf{Exercício de Consolidação} (3 horas) \\
+		1. Abra o terminal e use `ifconfig` ou `ip addr` para encontrar o endereço IP da sua máquina.
+		2. Use o comando `ping` para testar a conectividade com o router da rede (geralmente 192.168.1.1 ou 10.0.0.1).
+		3. Use o `traceroute` para seguir o caminho até um site conhecido e explique o que vê em cada "salto".
+	\end{itemize}
+	
+	---
+	
+	\guia{
+		% GUIA DO PROFESSOR: Serviços de Rede (systemd)
+		%
+		% Visão Geral (O que o professor precisa saber):
+		% O `systemd` é o coração dos sistemas Linux modernos. É o gestor de inicialização e de serviços (daemons). A sua importância reside na capacidade de gerir o ciclo de vida dos serviços de forma eficiente. O professor deve focar-se na diferença entre o estado do serviço (ligado/desligado) e o estado de arranque (habilitado/desabilitado).
+		%
+		% Analogia e Explicação para os alunos:
+		% "O `systemd` é o maestro de uma orquestra. Ele garante que cada músico (serviço) entre na altura certa. O `systemctl` é o 'comando de voz' do maestro. Com ele, pedimos ao serviço para 'começar a tocar' (`start`) ou 'calar-se' (`stop`). O `enable` é como dizer ao músico: 'Quando a orquestra começar a tocar no próximo concerto, entra também!'. O `disable` é o oposto."
+		%
+		% Roteiro da Aula (Passo a Passo):
+		% - Explique o papel do `systemd` como o `PID 1`.
+		% - Demonstre `systemctl status <serviço>` e mostre o que significa `active (running)`, `inactive` e `enabled`.
+		% - Execute `systemctl start sshd` e depois `systemctl status sshd` para mostrar a transição de estado.
+		% - Explique a diferença crucial entre `start/stop` (gestão do momento) e `enable/disable` (gestão do arranque).
+		% - Introduza os conceitos de `Timers` e `Sockets` como alternativas inteligentes para `cron` e `xinetd`.
+		% - No exercício, guie os alunos na criação de um `.service` e um `.timer` para reforçar a matéria.
+	}
+	\subsection*{1. Serviços de rede (15 horas)}
+	\vspace{-1.2em}
+	\paragraph{}
+	Nesta secção, vamos explorar como os serviços de rede são geridos no Linux, desde o seu início até ao encerramento, e os principais ficheiros e diretórios envolvidos neste processo.
+	
+	\begin{itemize}
+		\item \textbf{O Gestor de Tarefas: O Papel do \texttt{systemd}} (3 horas) \\
+		Pense no \texttt{systemd} como o "gerente de todas as tarefas" do seu computador. Ele garante que tudo comece a funcionar na ordem certa quando o sistema é ligado.
+		
+		\item \textbf{Controlar Serviços com \texttt{systemctl}} (5 horas) \\
+		O comando \texttt{systemctl} é como a "lista de comandos" para o gestor de tarefas.
+		\begin{verbatim}
+			# Ver o estado de um serviço (Exemplo: SSH)
+			systemctl status sshd
+			
+			# Ligar, desligar e reiniciar um serviço
+			systemctl start sshd
+			systemctl stop sshd
+			systemctl restart sshd
+		\end{verbatim}
+		
+		\begin{figure}[h]
+			\centering
+			\includegraphics[width=0.8\textwidth]{img/systemctl_status.png}
+			\caption{Exemplo da saída do comando \texttt{systemctl status sshd}. \textit{Fonte: Imagem encontrada via Google Images.}}
+			\label{fig:systemctl_status}
+		\end{figure}
+		
+		\item \textbf{Tarefas Programadas e Serviços On-Demand} (5 horas) \\
+		Aprofundar o uso do \texttt{systemd} para além da gestão básica de serviços.
+		\begin{itemize}
+			\item \textbf{Systemd Timers}: Uma alternativa moderna ao `cron` para agendar tarefas.
+			\item \textbf{Systemd Sockets}: Iniciar serviços "on-demand" apenas quando há tráfego numa porta específica.
+		\end{itemize}
+		
+		\item \textbf{Exercício de Consolidação} (2 horas)
+		1. Crie uma unidade de serviço (`.service`) e uma unidade de temporizador (`.timer`) para um script simples que escreve a data e hora num ficheiro a cada minuto.
+		2. Verifique o estado do temporizador e do serviço com \texttt{systemctl list-timers}.
+	\end{itemize}
+	
+	---
+	
+	\guia{
+		% GUIA DO PROFESSOR: XINET.d
+		%
+		% Visão Geral (O que o professor precisa saber):
+		% O `xinetd` é um "super-servidor de internet estendido". A sua principal função é poupar recursos ao gerir serviços que não precisam de estar sempre em execução. Ele "escuta" as portas e só inicia o serviço correspondente quando há um pedido. É um conceito mais antigo, mas ainda importante para entender.
+		%
+		% Analogia e Explicação para os alunos:
+		% "O `xinetd` é um rececionista. Ele fica na entrada do escritório à espera de clientes. Em vez de ter o funcionário do serviço de FTP a trabalhar o dia todo e a gastar energia, o rececionista (`xinetd`) fica de guarda. Quando um cliente chega e pede FTP, o rececionista acorda o funcionário do FTP para o atender. Assim que a tarefa termina, o funcionário volta a 'dormir'. É uma forma de poupar recursos."
+		%
+		% Roteiro da Aula (Passo a Passo):
+		% - Explique a diferença entre um serviço standalone (sempre ativo) e um gerido pelo `xinetd` (ativado por pedido).
+		% - Mostre que os ficheiros de configuração estão em `/etc/xinet.d/`.
+		% - Abra o ficheiro de configuração de um serviço (como o `ftp`) e explique as diretivas mais comuns (`server`, `port`, `disable`).
+		% - Para o exercício, altere a diretiva `disable` de `yes` para `no` para ativar o serviço e reinicie o `xinetd`.
+	}
+	\subsection*{2. XINET.d (5 horas)}
+	\vspace{-1.2em}
+	\paragraph{}
+	O \texttt{xinetd} é como um "rececionista" que só acorda um funcionário (serviço) quando alguém aparece para o ver.
+	
+	\begin{itemize}
+		\item \textbf{Configuração e Gestão} (3 horas) \\
+		As configurações do \texttt{xinetd} estão nos ficheiros do diretório \texttt{/etc/xinet.d/}. Cada serviço tem o seu próprio "cartão de identificação" com opções como \texttt{server}, \texttt{port} e \texttt{disable}.
+		
+		\item \textbf{Exercício de Consolidação} (2 horas) \\
+		1. Encontre o ficheiro de configuração do serviço \texttt{ftp} no diretório \texttt{/etc/xinet.d/}.
+		2. Altere o valor da opção \texttt{disable} para habilitá-lo.
+		3. Crie uma nova configuração para um serviço simples, como um servidor de eco, e verifique o seu funcionamento.
+	\end{itemize}
+	
+	---
+	
+	\guia{
+		% GUIA DO PROFESSOR: TCPWrappers
+		%
+		% Visão Geral (O que o professor precisa saber):
+		% Os `TCPWrappers` oferecem um controlo de acesso simples, mas poderoso, para serviços de rede. É uma camada de segurança extra antes de a aplicação processar o pedido. A regra de ouro é: os ficheiros de permissão (`hosts.allow`) são lidos antes dos ficheiros de negação (`hosts.deny`). O professor deve enfatizar esta ordem.
+		%
+		% Analogia e Explicação para os alunos:
+		% "Pensem nos `TCPWrappers` como os seguranças à porta de um clube. Eles têm duas listas: a dos 'convidados VIP' (`hosts.allow`) e a 'lista negra' (`hosts.deny`). Quando alguém tenta entrar, o segurança primeiro olha para a lista de convidados. Se estiver lá, a pessoa entra imediatamente. Só se não estiver na primeira lista é que o segurança olha para a 'lista negra' para ver se a pessoa deve ser barrada. Por isso, a ordem é tão importante!"
+		%
+		% Roteiro da Aula (Passo a Passo):
+		% - Explique a função de `hosts.allow` e `hosts.deny` e a ordem de processamento.
+		% - Mostre a sintaxe das regras: `serviço: hosts`.
+		% - Apresente exemplos práticos com `ALL`, `EXCEPT` e sub-redes (`192.168.1.0/24`).
+		% - No exercício, comece por negar o acesso a todos (`ALL: ALL`) em `hosts.deny`.
+		% - Depois, mostre como reverter a negação para um IP específico (`sshd: 192.168.1.100`) no `hosts.allow`.
+	}
+	\subsection*{3. TCPWrappers (5 horas)}
+	\vspace{-1.2em}
+	\paragraph{}
+	Pense nos \texttt{TCPWrappers} como um porteiro. Ele decide quem pode entrar (permitir) e quem não pode (negar) num serviço, com base no endereço IP.
+	
+	\begin{itemize}
+		\item \textbf{As Duas Listas: `hosts.allow` e `hosts.deny`} (2 horas) \\
+		- \texttt{hosts.allow}: A "lista de convidados". Se alguém estiver aqui, entra.
+		- \texttt{hosts.deny}: A "lista negra". Se alguém não estiver na lista de convidados e estiver aqui, é barrado.
+		
+		\item \textbf{Sintaxe e Exemplos Avançados} (2 horas) \\
+		Pode usar `ALL` para todos e `EXCEPT` para criar exceções.
+		\begin{verbatim}
+			# No ficheiro /etc/hosts.allow
+			sshd: 192.168.1.100 EXCEPT 192.168.1.101
+		\end{verbatim}
+		
+		\item \textbf{Exercício de Consolidação} (1 hora) \\
+		1. Configure o seu ficheiro \texttt{hosts.deny} para negar o acesso SSH a todos.
+		2. No ficheiro \texttt{hosts.allow}, adicione o IP do seu computador para poder aceder.
+	\end{itemize}
+	
+	---
+	
+	\guia{
+		% GUIA DO PROFESSOR: NIS
+		%
+		% Visão Geral (O que o professor precisa saber):
+		% O NIS (Network Information Service) é um dos primeiros serviços de diretório, usado para centralizar contas de utilizador e grupos. É um sistema cliente-servidor, com um servidor mestre que distribui mapas (dados de utilizadores e grupos) para os clientes. Embora tenha sido em grande parte substituído pelo LDAP, o seu conceito é fundamental para entender a gestão centralizada de identidade.
+		%
+		% Analogia e Explicação para os alunos:
+		% "O NIS é como um cartão de estudante que funciona em toda a escola. Em vez de ter um cartão diferente para a biblioteca, para o refeitório e para o laboratório, vocês têm um só cartão que é gerido por um escritório central. O servidor NIS é o escritório central e os clientes são as máquinas onde usam o vosso cartão."
+		%
+		% Roteiro da Aula (Passo a Passo):
+		% - Explique a arquitetura mestre-cliente.
+		% - Mostre os ficheiros que o NIS centraliza (`/etc/passwd`, `/etc/group`).
+		% - Explique os comandos `ypserv` (servidor) e `ypbind` (cliente).
+		% - No exercício, os alunos devem: 1. Configurar um servidor `ypserv`. 2. Ligar as máquinas clientes a ele. 3. Usar `ypcat` para ver as contas de utilizador a partir do cliente.
+	}
+	\subsection*{4. NIS (10 horas)}
+	\vspace{-1.2em}
+	\paragraph{}
+	O NIS é como ter uma única "identidade" para toda uma rede de computadores. Em vez de ter uma conta de utilizador em cada máquina, você tem uma conta num servidor central que funciona em todas as máquinas NIS.
+	
+	\begin{itemize}
+		\item \textbf{Arquitetura NIS (Servidor Mestre e Cliente)} (3 horas) \\
+		- \textbf{Servidor Mestre}: Tem a lista principal de utilizadores e grupos.
+		- \textbf{Cliente NIS}: Pede ao servidor as informações de utilizadores. O `ypbind` é o serviço que o cliente usa para encontrar o servidor.
+		
+		\item \textbf{Configuração de um Servidor NIS Mestre} (5 horas) \\
+		Passos detalhados para instalar o `ypserv` e configurar os mapas NIS (`/etc/passwd`, `/etc/group`, etc.) e exportá-los para os clientes.
+		
+		\item \textbf{Exercício de Consolidação} (2 horas) \\
+		1. Numa máquina cliente, use o comando \texttt{ypwhich} para ver qual é o servidor NIS.
+		2. Use \texttt{ypcat passwd} para listar as contas de utilizador.
+		3. Crie uma nova conta no servidor NIS e verifique se consegue iniciar sessão com essa conta a partir do computador cliente.
+	\end{itemize}
+	
+	---
+	
+	\guia{
+		% GUIA DO PROFESSOR: DHCP
+		%
+		% Visão Geral (O que o professor precisa saber):
+		% O DHCP (Dynamic Host Configuration Protocol) é um protocolo essencial para a gestão automática de endereços IP. O professor deve conhecer o processo DORA e as principais diretivas de configuração. Destaque a diferença entre atribuição dinâmica (para novos dispositivos) e estática (para servidores).
+		%
+		% Analogia e Explicação para os alunos:
+		% "O DHCP é como um rececionista de hotel. Quando um novo hóspede (dispositivo) chega, ele não precisa de procurar um quarto. O rececionista (servidor DHCP) atribui-lhe um quarto disponível (endereço IP). O processo DORA é a conversa passo a passo: o cliente `D`iscover (descobre) o servidor, o servidor `O`ffer (oferece) um IP, o cliente `R`equest (pede) esse IP, e o servidor `A`cknowledge (confirma)."
+		%
+		% Roteiro da Aula (Passo a Passo):
+		% - Apresente o processo DORA e o seu significado.
+		% - Mostre o ficheiro de configuração `dhcpd.conf` e explique as diretivas: `subnet`, `range`, `option routers`, `host` e `hardware ethernet`.
+		% - Explique a lógica por trás da atribuição de IP: 1. Endereços estáticos. 2. Endereços dinâmicos da `range`.
+		% - Apresente o conceito de `DHCP Relay Agent` para redes com várias sub-redes sem um servidor DHCP em cada uma.
+		% - No exercício, os alunos devem criar uma configuração DHCP para uma sub-rede e uma atribuição estática para um dispositivo específico usando o seu MAC address.
+	}
+	\subsection*{5. DHCP (15 horas)}
+	\vspace{-1.2em}
+	\paragraph{}
+	O DHCP é um protocolo que automaticamente dá um "endereço de rua" (o endereço IP) a cada dispositivo que se liga à sua rede.
+	
+	\begin{itemize}
+		\item \textbf{O Processo DORA: Como funciona?} (4 horas) \\
+		Pense no processo DORA como uma conversa entre um novo dispositivo e o servidor DHCP:
+		\begin{enumerate}
+			\item **D**iscover: "Olá, estou aqui! Há algum servidor DHCP disponível?"
+			\item **O**ffer: "Sim, eu sou um servidor! Aqui está um endereço IP que pode usar."
+			\item **R**equest: "OK, obrigado! Quero usar este endereço."
+			\item **A**cknowledge: "Certo, é todo seu! Divirta-se na rede!"
+		\end{enumerate}
+		
+		\begin{figure}[h]
+			\centering
+			\includegraphics[width=0.8\textwidth]{img/dhcp_dora.png}
+			\caption{Diagrama do processo DORA. \textit{Fonte: Imagem encontrada via Google Images.}}
+			\label{fig:dhcp_dora}
+		\end{figure}
+		
+		\item \textbf{Configuração e Atribuição de Endereços} (7 horas) \\
+		Aprofundar a configuração do servidor DHCP no ficheiro \texttt{dhcpd.conf}.
+		- \texttt{subnet}: Define a rede que o servidor vai gerir.
+		- \texttt{range}: A lista de IPs que serão atribuídos dinamicamente.
+		- \texttt{option routers}: Define o endereço do router/gateway.
+		- \texttt{host}: Para dar um IP fixo a um computador específico (com base no endereço MAC).
+		
+		\item \textbf{Conceitos Avançados: DHCP Relay Agent} (2 horas) \\
+		Explicar como um **DHCP Relay Agent** pode ser usado para encaminhar pedidos de DHCP entre redes, eliminando a necessidade de ter um servidor DHCP em cada sub-rede.
+		
+		\item \textbf{Exercício de Consolidação} (2 horas) \\
+		1. Configure um servidor DHCP para a sua rede de treino com um `range` de IPs dinâmicos.
+		2. Adicione uma entrada estática para o computador do instrutor.
+		3. Configure um cliente Linux para obter o IP do servidor e verifique se as configurações (IP, gateway, DNS) estão corretas.
+	\end{itemize}
+	
+	---
+	
+	\guia{
+		% GUIA DO PROFESSOR: DNS
+		%
+		% Visão Geral (O que o professor precisa saber):
+		% O DNS é um dos serviços mais importantes da internet. O professor deve dominar a hierarquia e o processo de consulta recursiva. A prática deve focar-se na configuração de zonas de pesquisa direta (`A`, `CNAME`) e inversa (`PTR`) no BIND. Este é um tópico complexo e requer tempo.
+		%
+		% Analogia e Explicação para os alunos:
+		% "O DNS é a 'lista telefónica' da internet. Em vez de decorar números de telefone (endereços IP), nós só precisamos de saber os nomes das pessoas (nomes de sites). A hierarquia de DNS é como se tivéssemos várias listas telefónicas: uma para nomes de família (`.com`), outra para nomes próprios (`google`), e um 'livro de contactos' pessoal."
+		%
+		% Roteiro da Aula (Passo a Passo):
+		% - Explique a hierarquia de DNS: Raiz, TLD (.com, .org), e servidores autoritativos.
+		% - Descreva o processo de consulta recursiva: cliente -> servidor local -> servidores de hierarquia.
+		% - Detalhe os tipos de registos mais comuns (`A`, `AAAA`, `CNAME`, `MX`, `PTR`) com exemplos práticos.
+		% - No laboratório, guie a configuração do BIND: `named.conf`, ficheiro de zona `forward` (`db.exemplo.com`) e `reverse` (`db.1.168.192`).
+		% - Enfatize a sintaxe dos ficheiros de zona (o ponto final, `$TTL`).
+		% - Use o comando `dig` para testar as configurações e ver o resultado.
+	}
+	\subsection*{6. DNS (20 horas)}
+	\vspace{-1.2em}
+	\paragraph{}
+	O DNS é como a "lista telefónica" da internet. Ele traduz nomes fáceis de lembrar (como `google.com`) em endereços IP que os computadores entendem.
+	
+	\begin{itemize}
+		\item \textbf{Como a Lista Telefónica Funciona: A Hierarquia} (6 horas) \\
+		A consulta de DNS é um processo de "perguntas e respostas" entre o cliente, o servidor DNS local e a hierarquia de servidores de raiz, TLD e autoritativos.
+		
+		\begin{figure}[h]
+			\centering
+			\includegraphics[width=0.8\textwidth]{img/dns_lookup.png}
+			\caption{Fluxo de uma consulta DNS típica, mostrando a hierarquia de servidores. \textit{Fonte: Imagem encontrada via Google Images.}}
+			\label{fig:dns_lookup}
+		\end{figure}
+		
+		\item \textbf{Tipos de Registos DNS (A, AAAA, CNAME, MX, PTR)} (4 horas) \\
+		- \texttt{A}: Mapeia um nome de domínio para um endereço IPv4.
+		- \texttt{CNAME}: Cria um "apelido" para outro nome de domínio.
+		- \texttt{MX}: Especifica o servidor de correio para um domínio.
+		- \texttt{PTR}: Usado para a pesquisa inversa, mapeando um IP para um nome de domínio.
+		
+		\item \textbf{Configuração de um Servidor DNS com BIND} (8 horas) \\
+		Instalar o `BIND` (servidor DNS mais popular) e configurar um servidor DNS primário (autoritativo) para um domínio.
+		- Configurar o ficheiro de zona de **`forward lookup`** para traduzir nomes para IPs.
+		- Configurar o ficheiro de zona de **`reverse lookup`** para traduzir IPs para nomes.
+		
+		\item \textbf{Exercício de Consolidação} (2 horas) \\
+		1. Crie um servidor DNS com o BIND e configure-o para ser autoritativo para um domínio fictício (`meu-curso.com`).
+		2. Adicione vários registos (A, CNAME) para máquinas na sua rede.
+		3. Configure uma máquina cliente para usar este novo servidor DNS e use o `dig` para testar se as consultas estão a funcionar.
+	\end{itemize}
+	
+	---
+	
+	\guia{
+		% GUIA DO PROFESSOR: LOGS
+		%
+		% Visão Geral (O que o professor precisa saber):
+		% Os logs são essenciais para a resolução de problemas e a auditoria de segurança. O professor deve saber onde encontrar os logs, como lê-los de forma eficiente e como gerir o seu crescimento. Destaque a importância da filtragem e da monitorização em tempo real.
+		%
+		% Analogia e Explicação para os alunos:
+		% "Os logs são o 'diário de bordo' do servidor. Tudo o que acontece, todos os erros, todos os logins, fica registado aqui. Quando algo corre mal, a primeira coisa que um administrador faz é 'ler o diário' para ver o que aconteceu. O comando `tail -f` é como ler as últimas páginas do diário em tempo real, enquanto o `grep` é como um 'motor de pesquisa' que nos ajuda a encontrar uma palavra-chave."
+		%
+		% Roteiro da Aula (Passo a Passo):
+		% - Comece com a localização dos logs (`/var/log`).
+		% - Mostre os ficheiros mais importantes: `syslog` (geral), `auth.log` (autenticação).
+		% - Demonstre o uso de `tail -f` e mostre como as novas linhas aparecem quando um evento ocorre.
+		% - Demonstre como usar `grep` para filtrar o conteúdo do log e encontrar informações específicas.
+		% - Introduza o `logrotate` como uma solução para o problema do "diário gigante".
+		% - Explique o conceito de `logging centralizado` para redes maiores.
+	}
+	\subsection*{7. LOGS (10 horas)}
+	\vspace{-1.2em}
+	\paragraph{}
+	Os logs são como um "diário de bordo" do seu computador. Eles registam tudo o que acontece e são essenciais para encontrar erros e problemas.
+	
+	\begin{itemize}
+		\item \textbf{Onde Encontrar o Diário} (2 horas) \\
+		A maioria dos logs está em \texttt{/var/log}. Os ficheiros mais importantes são:
+		- \texttt{syslog} ou \texttt{messages}: Mensagens gerais do sistema.
+		- \texttt{auth.log}: Registos de login e autenticação.
+		
+		\item \textbf{Como Ler o Diário: Comandos Úteis} (3 horas) \\
+		- \texttt{tail -f /var/log/syslog}: Mostra as últimas linhas do ficheiro e acompanha as novas linhas em tempo real.
+		- \texttt{grep "erro" /var/log/syslog}: Procura por uma palavra-chave como "erro".
+		
+		\item \textbf{Gerir o Diário: Rotação de Logs (`logrotate`)} (3 horas) \\
+		Explicar o conceito de rotação de logs para evitar que os ficheiros fiquem demasiado grandes, e como configurar o `logrotate`.
+		
+		\item \textbf{Logging Centralizado} (2 horas) \\
+		Introdução ao conceito de enviar logs de várias máquinas para um servidor central, o que facilita a gestão e a monitorização de redes maiores, usando ferramentas como o `syslog-ng` ou `rsyslog`.
+		
+	\end{itemize}
+	
+\end{document}

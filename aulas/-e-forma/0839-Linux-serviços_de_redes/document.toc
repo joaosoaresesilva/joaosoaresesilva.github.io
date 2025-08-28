@@ -1,0 +1,42 @@
+\babel@toc {portuguese}{}\relax 
+\contentsline {section}{Conteúdos}{2}{Doc-Start}%
+\contentsline {paragraph}{}{2}{paragraph*.1}%
+\contentsline {subparagraph}{O que é um Endereço IP?}{2}{subparagraph*.2}%
+\contentsline {subparagraph}{O Papel da Máscara de Rede}{3}{subparagraph*.3}%
+\contentsline {subparagraph}{Ping}{3}{subparagraph*.4}%
+\contentsline {subparagraph}{Traceroute}{3}{subparagraph*.5}%
+\contentsline {subparagraph}{ifconfig / ip addr}{3}{subparagraph*.6}%
+\contentsline {paragraph}{}{4}{paragraph*.7}%
+\contentsline {subparagraph}{O que é o \texttt {systemd}?}{4}{subparagraph*.8}%
+\contentsline {subparagraph}{Gerir o estado do serviço}{4}{subparagraph*.9}%
+\contentsline {subparagraph}{Systemd Timers (`.timer`)}{5}{subparagraph*.10}%
+\contentsline {subparagraph}{Systemd Sockets (`.socket`)}{5}{subparagraph*.11}%
+\contentsline {paragraph}{}{6}{paragraph*.12}%
+\contentsline {subparagraph}{O que é o `xinetd`?}{6}{subparagraph*.13}%
+\contentsline {subparagraph}{Ficheiros de Configuração}{6}{subparagraph*.14}%
+\contentsline {paragraph}{}{7}{paragraph*.15}%
+\contentsline {subparagraph}{O que são os `TCPWrappers`?}{7}{subparagraph*.16}%
+\contentsline {subparagraph}{Fluxo de Processamento}{7}{subparagraph*.17}%
+\contentsline {subparagraph}{Sintaxe das Regras}{7}{subparagraph*.18}%
+\contentsline {subparagraph}{Exemplos Práticos}{8}{subparagraph*.19}%
+\contentsline {paragraph}{}{8}{paragraph*.20}%
+\contentsline {subparagraph}{O que é o NIS?}{8}{subparagraph*.21}%
+\contentsline {subparagraph}{Mecanismo de funcionamento}{9}{subparagraph*.22}%
+\contentsline {paragraph}{}{9}{paragraph*.23}%
+\contentsline {subparagraph}{O que é o DHCP?}{10}{subparagraph*.24}%
+\contentsline {subparagraph}{O Processo DORA}{10}{subparagraph*.25}%
+\contentsline {subparagraph}{DHCP Relay Agent}{10}{subparagraph*.26}%
+\contentsline {paragraph}{}{11}{paragraph*.27}%
+\contentsline {subparagraph}{Hierarquia e Consulta}{11}{subparagraph*.28}%
+\contentsline {subparagraph}{Processo de Consulta Recursiva}{11}{subparagraph*.29}%
+\contentsline {subparagraph}{Registos de Recurso (RRs)}{11}{subparagraph*.30}%
+\contentsline {subparagraph}{BIND (Berkeley Internet Name Domain)}{12}{subparagraph*.31}%
+\contentsline {paragraph}{}{12}{paragraph*.32}%
+\contentsline {subparagraph}{O que é o SSH?}{13}{subparagraph*.33}%
+\contentsline {subparagraph}{Componentes e Sessões}{13}{subparagraph*.34}%
+\contentsline {subparagraph}{Criptografia de Chave Pública}{13}{subparagraph*.35}%
+\contentsline {paragraph}{}{14}{paragraph*.36}%
+\contentsline {subparagraph}{O que é uma Firewall?}{14}{subparagraph*.37}%
+\contentsline {subparagraph}{Fluxo de Pacotes e Cadeias (`Chains`)}{14}{subparagraph*.38}%
+\contentsline {subparagraph}{Sintaxe de Regras}{14}{subparagraph*.39}%
+\contentsline {subparagraph}{O que é `ufw`?}{15}{subparagraph*.40}%
