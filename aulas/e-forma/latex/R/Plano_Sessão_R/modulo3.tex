@@ -1,0 +1,98 @@
+\section{\textcolor{sectionred}{Módulo 3 – Model Development Support (12h)}}
+
+\subsection{\textcolor{subsectionblue}{Objetivos}}
+Ao final deste módulo, os formandos deverão ser capazes de:
+\begin{itemize}
+  \item Compreender o papel do desenvolvimento de modelos no ciclo de vida de um projeto de Ciência de Dados.  
+  \textit{Exemplo prático:} Uma empresa de logística desenvolve um modelo para prever atrasos nas entregas com base em dados históricos e meteorológicos.
+  \item Apoiar na criação de modelos preditivos supervisionados e não supervisionados.  
+  \item Realizar engenharia de variáveis (\textit{feature engineering}) para melhorar a performance dos modelos.  
+  \item Selecionar e aplicar algoritmos adequados ao tipo de problema.  
+  \item Avaliar modelos utilizando métricas apropriadas e técnicas de validação.  
+  \item Documentar e comunicar o processo de modelagem e os resultados obtidos.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Conteúdos Desenvolvidos}}
+\begin{itemize}
+  \item \textbf{Introdução ao fluxo de trabalho de modelagem preditiva} — preparação de dados, treino, validação, teste e implementação.
+  \item \textbf{Preparação dos dados:} divisão treino/validação/teste; normalização e padronização; codificação de variáveis categóricas.
+  \item \textbf{Engenharia de variáveis:} criação de novas variáveis; seleção de variáveis relevantes; redução de dimensionalidade (PCA).
+  \item \textbf{Treino de modelos:} uso de \texttt{caret}, \texttt{tidymodels} e \texttt{recipes}; algoritmos comuns (regressão linear/logística, árvores, random forest, k-NN).
+  \item \textbf{Avaliação de modelos:} métricas para regressão (RMSE, MAE, $R^2$) e classificação (Acurácia, Precisão, Recall, F1-score, AUC); validação cruzada.
+  \item \textbf{Comparação e seleção de modelos}.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Atividades Práticas Detalhadas}}
+\begin{itemize}
+  \item Criar um modelo de regressão para prever preços de imóveis utilizando \texttt{caret}.
+  \item Desenvolver um modelo de classificação para prever churn de clientes com \texttt{tidymodels}.
+  \item Implementar um \texttt{recipe} para normalizar dados, criar variáveis derivadas e codificar variáveis categóricas.
+  \item Comparar o desempenho de pelo menos dois algoritmos diferentes para o mesmo problema.
+  \item Documentar o processo de modelagem e apresentar os resultados com métricas e gráficos.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Recursos e Ferramentas}}
+\begin{itemize}
+  \item \textbf{Software:} R e RStudio.
+  \item \textbf{Pacotes:} \texttt{caret}, \texttt{tidymodels}, \texttt{recipes}, \texttt{ggplot2}, \texttt{dplyr}.
+  \item \textbf{Datasets:} preços de imóveis, churn de clientes, datasets públicos do UCI Machine Learning Repository.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Estudo de Caso – Desenvolvimento de Modelo em R}}
+\textbf{Objetivo:} Demonstrar todas as etapas do desenvolvimento de um modelo preditivo.
+
+\begin{lstlisting}[language=R]
+library(tidyverse)
+library(caret)
+library(tidymodels)
+
+# 1. Importar dataset
+dados <- read_csv("precos_imoveis.csv")
+
+# 2. Divisão treino/teste
+set.seed(123)
+divisao <- initial_split(dados, prop = 0.7)
+treino <- training(divisao)
+teste <- testing(divisao)
+
+# 3. Recipe de pré-processamento
+receita <- recipe(preco ~ ., data = treino) %>%
+  step_normalize(all_numeric_predictors()) %>%
+  step_dummy(all_nominal_predictors())
+
+# 4. Modelo regressão linear
+modelo_rl <- linear_reg() %>% set_engine("lm")
+
+# 5. Workflow
+workflow_rl <- workflow() %>%
+  add_recipe(receita) %>%
+  add_model(modelo_rl)
+
+# 6. Treinar
+modelo_treinado <- fit(workflow_rl, data = treino)
+
+# 7. Avaliar
+predicoes <- predict(modelo_treinado, teste) %>%
+  bind_cols(teste)
+metrics(predicoes, truth = preco, estimate = .pred)
+
+# 8. Comparar com Random Forest
+modelo_rf <- rand_forest() %>%
+  set_engine("ranger") %>%
+  set_mode("regression")
+workflow_rf <- workflow() %>%
+  add_recipe(receita) %>%
+  add_model(modelo_rf)
+modelo_rf_treinado <- fit(workflow_rf, data = treino)
+predicoes_rf <- predict(modelo_rf_treinado, teste) %>%
+  bind_cols(teste)
+metrics(predicoes_rf, truth = preco, estimate = .pred)
+\end{lstlisting}
+
+\textbf{Notas para o Formador:}
+\begin{itemize}
+  \item Este estudo de caso cobre preparação de dados, treino, avaliação e comparação de algoritmos.
+  \item O dataset pode ser obtido de fontes abertas ou gerado sinteticamente.
+  \item Incentivar a experimentação com diferentes algoritmos e hiperparâmetros.
+  \item Discutir a escolha de métricas adequadas ao problema.
+\end{itemize}

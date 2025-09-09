@@ -1,0 +1,80 @@
+\section{\textcolor{sectionred}{Módulo 6 – Ad-hoc Analysis (8h)}}
+
+\subsection{\textcolor{subsectionblue}{Objetivos}}
+Ao final deste módulo, os formandos deverão ser capazes de:
+\begin{itemize}
+  \item Compreender o papel das análises \textit{ad-hoc} na resposta rápida a questões específicas de negócio ou investigação.  
+  \item Formular hipóteses e estruturar análises direcionadas para responder a perguntas concretas.  
+  \item Selecionar e aplicar métodos estatísticos e de visualização adequados ao problema.  
+  \item Comunicar resultados de forma clara e objetiva, focando nas conclusões mais relevantes.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Conteúdos Desenvolvidos}}
+\begin{itemize}
+  \item \textbf{Definição e contexto de análises \textit{ad-hoc}} — diferença entre análises planeadas e \textit{ad-hoc}; quando e porquê utilizá-las.
+  \item \textbf{Formulação de hipóteses e perguntas de negócio} — transformar questões vagas em hipóteses testáveis.
+  \item \textbf{Seleção de métodos e ferramentas} — escolha de técnicas estatísticas, filtros e visualizações adequadas.
+  \item \textbf{Execução rápida e validação de resultados} — garantir que a rapidez não compromete a qualidade.
+  \item \textbf{Comunicação e entrega} — formatos de entrega: relatório breve, e-mail, apresentação curta.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Atividades Práticas Detalhadas}}
+\begin{itemize}
+  \item Receber uma questão de negócio simulada e desenvolver uma análise \textit{ad-hoc} para respondê-la.
+  \item Criar visualizações simples e eficazes para comunicar resultados.
+  \item Aplicar um teste estatístico adequado ao problema apresentado.
+  \item Documentar a análise num formato conciso e claro.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Recursos e Ferramentas}}
+\begin{itemize}
+  \item \textbf{Software:} R e RStudio.
+  \item \textbf{Pacotes:} \texttt{tidyverse}, \texttt{lubridate}, \texttt{ggplot2}, \texttt{broom}.
+  \item \textbf{Fontes de dados:} datasets internos ou públicos simulando cenários reais.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Estudo de Caso – Análise \textit{Ad-hoc} em R}}
+\textbf{Objetivo:} Demonstrar como responder rapidamente a uma questão específica com dados disponíveis.
+
+\begin{lstlisting}[language=R]
+library(tidyverse)
+library(lubridate)
+library(broom)
+
+# Cenário: O gestor quer saber se a média de vendas do último mês
+# foi significativamente diferente do mês anterior.
+
+# 1. Importar dados
+dados <- read_csv("vendas.csv") %>%
+  mutate(data = dmy(data))
+
+# 2. Filtrar últimos dois meses
+ultimo_mes <- max(month(dados$data))
+dados_filtrados <- dados %>%
+  filter(month(data) %in% c(ultimo_mes, ultimo_mes - 1))
+
+# 3. Estatísticas descritivas
+dados_filtrados %>%
+  group_by(mes = month(data)) %>%
+  summarise(media_vendas = mean(vendas, na.rm = TRUE),
+            sd_vendas = sd(vendas, na.rm = TRUE))
+
+# 4. Teste estatístico (t-test)
+resultado_t <- t.test(vendas ~ month(data), data = dados_filtrados)
+tidy(resultado_t)
+
+# 5. Visualização rápida
+ggplot(dados_filtrados, aes(x = factor(month(data)), y = vendas)) +
+  geom_boxplot(fill = "skyblue") +
+  labs(x = "Mês", y = "Vendas", title = "Comparação de Vendas entre Meses")
+
+# 6. Conclusão
+# Se p-valor < 0.05, há diferença estatisticamente significativa.
+\end{lstlisting}
+
+\textbf{Notas para o Formador:}
+\begin{itemize}
+  \item Este exemplo mostra como estruturar rapidamente uma análise desde a importação de dados até à conclusão.
+  \item Incentivar os alunos a adaptar o código a outros tipos de questões \textit{ad-hoc}.
+  \item Discutir a importância de comunicar apenas o essencial em análises urgentes.
+\end{itemize}

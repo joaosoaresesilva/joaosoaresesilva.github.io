@@ -1,0 +1,71 @@
+\section{\textcolor{sectionred}{Módulo 9 – Avaliação (4h)}}
+
+\subsection{\textcolor{subsectionblue}{Objetivos}}
+Ao final deste módulo, os formandos deverão ser capazes de:
+\begin{itemize}
+  \item Definir critérios e instrumentos de avaliação adequados aos objetivos da formação.  
+  \item Aplicar diferentes tipos de avaliação (diagnóstica, formativa e sumativa) ao longo do curso.  
+  \item Fornecer feedback construtivo e orientado à melhoria contínua.  
+  \item Utilizar ferramentas digitais para recolher, registar e analisar resultados de avaliação.  
+  \item Documentar o processo de avaliação para garantir transparência e rastreabilidade.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Conteúdos Desenvolvidos}}
+\begin{itemize}
+  \item \textbf{Tipos de avaliação:} diagnóstica, formativa e sumativa.
+  \item \textbf{Critérios e indicadores de desempenho:} clareza, objetividade e alinhamento com os objetivos do curso.
+  \item \textbf{Instrumentos de avaliação:} grelhas de avaliação, rubricas, testes, apresentações; ferramentas digitais (Google Forms, Microsoft Forms, Moodle).
+  \item \textbf{Feedback construtivo:} estrutura “pontos fortes – pontos a melhorar – sugestões”; técnicas de comunicação assertiva.
+  \item \textbf{Registo e documentação:} armazenamento seguro de resultados; relatórios de avaliação e atas de reuniões de feedback.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Atividades Práticas Detalhadas}}
+\begin{itemize}
+  \item Criar uma grelha de avaliação para um projeto final, com critérios e pesos definidos.
+  \item Aplicar a grelha a um trabalho exemplo e calcular a nota final.
+  \item Elaborar um relatório de feedback com base nos resultados.
+  \item Simular a utilização de uma ferramenta digital para recolher e analisar resultados.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Recursos e Ferramentas}}
+\begin{itemize}
+  \item \textbf{Software:} R e RStudio, Google Forms, Microsoft Forms, Moodle.
+  \item \textbf{Pacotes R:} \texttt{dplyr}, \texttt{readr}, \texttt{knitr}.
+  \item \textbf{Documentos:} modelos de grelhas e rubricas.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Estudo de Caso – Grelha de Avaliação em R}}
+\textbf{Objetivo:} Demonstrar como criar e aplicar uma grelha de avaliação com cálculo automático da nota final.
+
+\begin{lstlisting}[language=R]
+library(dplyr)
+
+# 1. Definir critérios e pesos
+criterios <- data.frame(
+  criterio = c("Qualidade Técnica", "Criatividade", "Comunicação", "Documentação"),
+  peso = c(0.4, 0.2, 0.2, 0.2),
+  pontuacao = c(4, 5, 4, 3) # exemplo de avaliação (1 a 5)
+)
+
+# 2. Calcular nota final (escala 0-20)
+criterios <- criterios %>%
+  mutate(resultado = peso * pontuacao)
+
+nota_final <- sum(criterios$resultado) / sum(criterios$peso) * 4 # 5 pontos = 20 valores
+
+# 3. Mostrar resultados
+criterios
+nota_final
+
+# 4. Exportar relatório simples
+library(knitr)
+kable(criterios, col.names = c("Critério", "Peso", "Pontuação", "Resultado"))
+cat("Nota Final:", round(nota_final, 2), "/ 20")
+\end{lstlisting}
+
+\textbf{Notas para o Formador:}
+\begin{itemize}
+  \item Este exemplo mostra como usar R para automatizar o cálculo de notas com base numa grelha.
+  \item Incentivar os alunos a adaptar critérios e pesos ao tipo de projeto.
+  \item Discutir a importância de manter registos claros e acessíveis para auditoria.
+\end{itemize}

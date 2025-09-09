@@ -1,0 +1,98 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[table]{xcolor}
+\usepackage{geometry}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage[portuguese]{babel}
+
+\geometry{margin=2.5cm}
+
+% Definir cores para títulos
+\definecolor{sectionred}{RGB}{200,0,0}
+\definecolor{subsectionblue}{RGB}{0,0,180}
+
+\titleformat{\section}
+  {\color{sectionred}\normalfont\Large\bfseries}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\color{subsectionblue}\normalfont\large\bfseries}
+  {\thesubsection}{1em}{}
+
+% Configuração para mostrar código R
+\lstdefinelanguage{R}{
+  keywords={library,read_csv,ggplot,geom_col,labs,aes,geom_bar,stat,identity},
+  sensitive=true,
+  comment=[l]{\#},
+  morestring=[b]",
+}
+\lstset{
+  language=R,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{red},
+  showstringspaces=false,
+  breaklines=true
+}
+
+\title{\textbf{Manual de Formação em Ciência de Dados com R}}
+\author{Formador: JOÃO SOARES E SILVA}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+% =========================
+% Módulo 1
+% =========================
+\input{modulo1.tex}
+
+% =========================
+% Módulo 2
+% =========================
+\input{modulo2.tex}
+
+% =========================
+% Módulo 3
+% =========================
+\input{modulo3.tex}
+
+% =========================
+% Módulo 4
+% =========================
+\input{modulo4.tex}
+
+% =========================
+% Módulo 5
+% =========================
+\input{modulo5.tex}
+
+% ================
+=========
+% Módulo 6
+% =========================
+\input{modulo6.tex}
+
+% =========================
+% Módulo 7
+% =========================
+\input{modulo7.tex}
+
+% =========================
+% Módulo 8
+% =========================
+\input{modulo8.tex}
+
+% =========================
+% Módulo 9
+% =========================
+\input{modulo9.tex}
+
+\end{document}

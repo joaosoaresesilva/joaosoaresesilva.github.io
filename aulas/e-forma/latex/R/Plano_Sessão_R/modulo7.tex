@@ -1,0 +1,76 @@
+\section{\textcolor{sectionred}{Módulo 7 – Tooling and Infrastructure (6h)}}
+
+\subsection{\textcolor{subsectionblue}{Objetivos}}
+Ao final deste módulo, os formandos deverão ser capazes de:
+\begin{itemize}
+  \item Configurar e manter ambientes de desenvolvimento eficientes para projetos de Ciência de Dados.  
+  \item Automatizar tarefas e fluxos de trabalho para aumentar a produtividade.  
+  \item Utilizar ferramentas de controlo de versões para gerir código e colaborar em equipa.  
+  \item Integrar pipelines de dados e modelos em ambientes de produção.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Conteúdos Desenvolvidos}}
+\begin{itemize}
+  \item \textbf{Organização de projetos:} estrutura de pastas e ficheiros; nomeação consistente de ficheiros e scripts.
+  \item \textbf{Gestão de dependências:} uso do \texttt{renv} para isolar ambientes; ficheiros \texttt{DESCRIPTION} e \texttt{requirements.txt}.
+  \item \textbf{Controlo de versões:} Git básico (commits, branches, merges); plataformas de colaboração (GitHub, GitLab).
+  \item \textbf{Automação e pipelines:} scripts agendados (cron jobs, tasks); integração contínua (CI) e entrega contínua (CD).
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Atividades Práticas Detalhadas}}
+\begin{itemize}
+  \item Criar a estrutura de um projeto de Ciência de Dados com pastas e scripts organizados.
+  \item Configurar um ambiente isolado com \texttt{renv} e instalar pacotes necessários.
+  \item Criar um repositório Git e praticar operações básicas (commit, branch, merge).
+  \item Configurar um script para ser executado automaticamente (agendamento).
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Recursos e Ferramentas}}
+\begin{itemize}
+  \item \textbf{Software:} R, RStudio, Git.
+  \item \textbf{Pacotes:} \texttt{renv}, \texttt{targets}, \texttt{usethis}.
+  \item \textbf{Plataformas:} GitHub, GitLab.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Estudo de Caso – Estruturação e Automação de um Projeto}}
+\textbf{Objetivo:} Demonstrar como criar um projeto organizado, gerir dependências e automatizar tarefas.
+
+\begin{lstlisting}[language=R]
+# 1. Criar estrutura de projeto
+usethis::create_project("projeto_vendas")
+dir.create("data_raw")
+dir.create("data_processed")
+dir.create("scripts")
+dir.create("reports")
+
+# 2. Iniciar controlo de versões
+usethis::use_git()
+
+# 3. Configurar ambiente isolado
+install.packages("renv")
+renv::init()
+
+# 4. Script de importação e limpeza (scripts/01_importacao.R)
+library(tidyverse)
+dados <- read_csv("data_raw/vendas.csv") %>%
+  janitor::clean_names() %>%
+  filter(!is.na(valor_venda))
+write_csv(dados, "data_processed/vendas_limpo.csv")
+
+# 5. Automatizar execução diária (exemplo em sistema Unix com cron)
+# Abrir crontab: crontab -e
+# Adicionar linha para executar script às 2h da manhã:
+# 0 2 * * * Rscript /caminho/projeto_vendas/scripts/01_importacao.R
+
+# 6. Versionar alterações e sincronizar com GitHub
+# git add .
+# git commit -m "Estrutura inicial e script de importação"
+# git push origin main
+\end{lstlisting}
+
+\textbf{Notas para o Formador:}
+\begin{itemize}
+  \item Este estudo de caso mostra como combinar organização, gestão de dependências, controlo de versões e automação.
+  \item Incentivar os alunos a adaptar a estrutura e scripts às necessidades dos seus próprios projetos.
+  \item Discutir a importância de manter um README atualizado com instruções de execução.
+\end{itemize}

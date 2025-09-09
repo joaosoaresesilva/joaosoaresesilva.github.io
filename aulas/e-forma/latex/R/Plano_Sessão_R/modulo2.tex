@@ -1,0 +1,94 @@
+\section{\textcolor{sectionred}{Módulo 2 – Exploratory Data Analysis (EDA) (10h)}}
+
+\subsection{\textcolor{subsectionblue}{Objetivos}}
+Ao final deste módulo, os formandos deverão ser capazes de:
+\begin{itemize}
+  \item Compreender o papel da Análise Exploratória de Dados (EDA) no ciclo de vida de um projeto de Ciência de Dados.  
+  \textit{Exemplo prático:} Antes de criar um modelo de previsão de vendas, uma empresa analisa a distribuição das vendas por região para identificar padrões sazonais.
+  \item Explorar dados utilizando estatísticas descritivas e visualizações gráficas para obter uma compreensão inicial do conjunto de dados.  
+  \textit{Exemplo prático:} Um hospital calcula médias e desvios padrão de tempos de espera para identificar gargalos no atendimento.
+  \item Identificar padrões, tendências, outliers e relações entre variáveis.  
+  \textit{Exemplo prático:} Uma seguradora deteta clientes com valores de indemnização anormalmente altos, investigando possíveis fraudes.
+  \item Formular hipóteses iniciais com base nas observações obtidas.  
+  \textit{Exemplo prático:} Após observar que clientes mais jovens compram mais online, uma loja formula a hipótese de que campanhas digitais terão maior impacto nesse grupo.
+  \item Comunicar de forma clara os principais achados da análise exploratória.  
+  \textit{Exemplo prático:} Um analista apresenta à direção um dashboard com gráficos interativos mostrando tendências de vendas por produto e região.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Conteúdos Desenvolvidos}}
+\begin{itemize}
+  \item \textbf{Introdução à EDA e sua importância}  
+  \textit{Exemplo prático:} Numa startup de mobilidade, a EDA revelou que a maioria das viagens curtas ocorre em horários de pico.
+  \item \textbf{Estatísticas descritivas:} média, mediana, moda, variância, desvio padrão, amplitude, distribuições de frequência e percentis.  
+  \textit{Exemplo prático:} Calcular a mediana de salários para evitar distorções causadas por valores extremos.
+  \item \textbf{Visualização de dados:} histogramas, boxplots, scatterplots, gráficos de barras com \texttt{ggplot2}; visualizações interativas com \texttt{plotly}; mapas de calor e matrizes de correlação com \texttt{corrplot}.  
+  \textit{Exemplo prático:} Criar um histograma da idade dos clientes para segmentar campanhas.
+  \item \textbf{Identificação de outliers:} métodos gráficos e estatísticos (IQR, Z-score).  
+  \textit{Exemplo prático:} Detetar transações bancárias suspeitas com valores muito acima da média.
+  \item \textbf{Análise de correlação:} Pearson, Spearman, Kendall e interpretação de coeficientes.  
+  \textit{Exemplo prático:} Avaliar a relação entre temperatura e consumo de gelados.
+  \item \textbf{Boas práticas na apresentação de resultados:} gráficos claros, evitar sobrecarga de informação, contextualizar achados.  
+  \textit{Exemplo prático:} Apresentar apenas as 5 variáveis mais relevantes num relatório executivo.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Atividades Práticas Detalhadas}}
+\begin{itemize}
+  \item Calcular estatísticas descritivas para um dataset real.
+  \item Criar visualizações com \texttt{ggplot2} para explorar distribuições e relações.
+  \item Utilizar \texttt{plotly} para criar gráficos interativos.
+  \item Gerar e interpretar uma matriz de correlação com \texttt{corrplot}.
+  \item Identificar e documentar padrões, outliers e correlações relevantes.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Recursos e Ferramentas}}
+\begin{itemize}
+  \item \textbf{Software:} R e RStudio.
+  \item \textbf{Pacotes:} \texttt{ggplot2}, \texttt{plotly}, \texttt{corrplot}, \texttt{dplyr}.
+  \item \textbf{Datasets de apoio:} vendas online, dados de saúde pública, dados meteorológicos.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Estudo de Caso – EDA Completa em R}}
+\textbf{Objetivo:} Demonstrar todas as etapas da EDA num único fluxo de trabalho.
+
+\begin{lstlisting}[language=R]
+library(tidyverse)
+library(plotly)
+library(corrplot)
+
+# 1. Importar dataset
+dados <- read_csv("vendas.csv")
+
+# 2. Estatísticas descritivas
+summary(dados)
+dados %>% summarise(
+  media_preco = mean(preco, na.rm = TRUE),
+  mediana_preco = median(preco, na.rm = TRUE),
+  desvio_padrao_preco = sd(preco, na.rm = TRUE)
+)
+
+# 3. Visualizações básicas
+ggplot(dados, aes(x = preco)) + geom_histogram(binwidth = 5)
+ggplot(dados, aes(x = categoria, y = preco)) + geom_boxplot()
+
+# 4. Visualização interativa
+grafico_interativo <- ggplot(dados, aes(x = preco, y = quantidade, color = categoria)) +
+  geom_point()
+ggplotly(grafico_interativo)
+
+# 5. Matriz de correlação
+matriz <- cor(dados %>% select_if(is.numeric), use = "complete.obs")
+corrplot(matriz, method = "color", type = "upper", tl.col = "black")
+
+# 6. Identificação de outliers (IQR)
+Q1 <- quantile(dados$preco, 0.25, na.rm = TRUE)
+Q3 <- quantile(dados$preco, 0.75, na.rm = TRUE)
+IQR <- Q3 - Q1
+outliers <- dados %>% filter(preco < (Q1 - 1.5*IQR) | preco > (Q3 + 1.5*IQR))
+\end{lstlisting}
+
+\textbf{Notas para o Formador:}
+\begin{itemize}
+  \item O dataset \texttt{vendas.csv} pode ser real ou sintético, mas deve conter variáveis numéricas e categóricas.
+  \item Incentivar os alunos a experimentar diferentes tipos de gráficos e parâmetros.
+  \item Discutir como as descobertas da EDA podem influenciar a modelagem subsequente.
+\end{itemize}
