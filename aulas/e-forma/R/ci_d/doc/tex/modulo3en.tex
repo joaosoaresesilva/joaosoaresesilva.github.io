@@ -1,0 +1,53 @@
+\begin{lstlisting}[language=R]
+library(tidyverse)
+library(caret)
+library(tidymodels)
+
+# 1. Import dataset
+dados <- read_csv("precos_imoveis.csv")
+
+# 2. Train/test split
+set.seed(123)
+divisao <- initial_split(dados, prop = 0.7)
+treino <- training(divisao)
+teste <- testing(divisao)
+
+# 3. Preprocessing recipe
+receita <- recipe(preco ~ ., data = treino) %>%
+  step_normalize(all_numeric_predictors()) %>%
+  step_dummy(all_nominal_predictors())
+
+# 4. Linear regression model
+modelo_rl <- linear_reg() %>% set_engine("lm")
+
+# 5. Workflow
+workflow_rl <- workflow() %>%
+  add_recipe(receita) %>%
+  add_model(modelo_rl)
+
+# 6. Train
+modelo_treinado <- fit(workflow_rl, data = treino)
+
+# 7. Evaluate
+predicoes <- predict(modelo_treinado, teste) %>%
+  bind_cols(teste)
+metrics(predicoes, truth = preco, estimate = .pred)
+
+# 8. Compare with Random Forest
+modelo_rf <- rand_forest() %>%
+  set_engine("ranger") %>%
+  set_mode("regression")
+workflow_rf <- workflow() %>%
+  add_recipe(receita) %>%
+  add_model(modelo_rf)
+modelo_rf_treinado <- fit(workflow_rf, data = treino)
+predicoes_rf <- predict(modelo_rf_treinado, teste) %>%
+  bind_cols(teste)
+metrics(predicoes_rf, truth = preco, estimate = .pred)
+\end{lstlisting}
+
+**Notes for the Instructor:**
+* This case study covers data preparation, training, evaluation, and algorithm comparison.
+* The dataset can be obtained from open sources or generated synthetically.
+* Encourage experimentation with different algorithms and hyperparameters.
+* Discuss the choice of appropriate metrics for the problem.

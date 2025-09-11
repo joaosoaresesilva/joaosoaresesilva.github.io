@@ -1,0 +1,71 @@
+\section{\textcolor{sectionred}{Module 9 – Evaluation (4h)}}
+
+\subsection{\textcolor{subsectionblue}{Objectives}}
+By the end of this module, students should be able to:
+\begin{itemize}
+  \item Define evaluation criteria and instruments suitable for the course objectives.
+  \item Apply different types of evaluation (diagnostic, formative, and summative) throughout the course.
+  \item Provide constructive feedback aimed at continuous improvement.
+  \item Use digital tools to collect, record, and analyze evaluation results.
+  \item Document the evaluation process to ensure transparency and traceability.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Developed Contents}}
+\begin{itemize}
+  \item \textbf{Types of evaluation:} diagnostic, formative, and summative.
+  \item \textbf{Performance criteria and indicators:} clarity, objectivity, and alignment with course objectives.
+  \item \textbf{Evaluation instruments:} evaluation grids, rubrics, tests, presentations; digital tools (Google Forms, Microsoft Forms, Moodle).
+  \item \textbf{Constructive feedback:} "strengths – areas for improvement – suggestions" structure; assertive communication techniques.
+  \item \textbf{Recording and documentation:} secure storage of results; evaluation reports and feedback meeting minutes.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Detailed Practical Activities}}
+\begin{itemize}
+  \item Create an evaluation grid for a final project, with defined criteria and weights.
+  \item Apply the grid to a sample work and calculate the final grade.
+  \item Prepare a feedback report based on the results.
+  \item Simulate the use of a digital tool to collect and analyze results.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Resources and Tools}}
+\begin{itemize}
+  \textbf{Software:} R and RStudio, Google Forms, Microsoft Forms, Moodle.
+  \textbf{R Packages:} \texttt{dplyr}, \texttt{readr}, \texttt{knitr}.
+  \textbf{Documents:} templates for grids and rubrics.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Case Study – Evaluation Grid in R}}
+\textbf{Objective:} Demonstrate how to create and apply an evaluation grid with automatic final grade calculation.
+
+\begin{lstlisting}[language=R]
+library(dplyr)
+
+# 1. Define criteria and weights
+criterios <- data.frame(
+  criterio = c("Technical Quality", "Creativity", "Communication", "Documentation"),
+  peso = c(0.4, 0.2, 0.2, 0.2),
+  pontuacao = c(4, 5, 4, 3) # example evaluation (1 to 5)
+)
+
+# 2. Calculate final grade (0-20 scale)
+criterios <- criterios %>%
+  mutate(resultado = peso * pontuacao)
+
+nota_final <- sum(criterios$resultado) / sum(criterios$peso) * 4 # 5 points = 20 values
+
+# 3. Show results
+criterios
+nota_final
+
+# 4. Export simple report
+library(knitr)
+kable(criterios, col.names = c("Criterion", "Weight", "Score", "Result"))
+cat("Final Grade:", round(nota_final, 2), "/ 20")
+\end{lstlisting}
+
+\textbf{Notes for the Instructor:}
+\begin{itemize}
+  \item This example shows how to use R to automate grade calculation based on a grid.
+  \item Encourage students to adapt criteria and weights to the type of project.
+  \item Discuss the importance of keeping clear and accessible records for auditing.
+\end{itemize}

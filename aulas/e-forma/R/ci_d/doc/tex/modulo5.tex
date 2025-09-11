@@ -1,0 +1,75 @@
+\section{\textcolor{sectionred}{Módulo 5 – Research and Learning (6h)}}
+
+\subsection{\textcolor{subsectionblue}{Objetivos}}
+Ao final deste módulo, os formandos deverão ser capazes de:
+\begin{itemize}
+  \item Desenvolver competências de pesquisa contínua para se manterem atualizados nas áreas de Ciência de Dados, Machine Learning e Inteligência Artificial.  
+  \item Avaliar criticamente novas bibliotecas, técnicas e metodologias antes de as adotar.  
+  \item Integrar novas ferramentas e abordagens nos fluxos de trabalho existentes.  
+  \item Partilhar conhecimento com a comunidade e com a equipa de trabalho.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Conteúdos Desenvolvidos}}
+\begin{itemize}
+  \item \textbf{Fontes de informação e atualização:} repositórios de pacotes (CRAN, Bioconductor), blogs e comunidades (\texttt{R-bloggers}, Stack Overflow, Posit Community), publicações científicas (arXiv, IEEE, Nature Machine Intelligence).
+  \item \textbf{Avaliação de novas ferramentas:} critérios de avaliação (desempenho, documentação, comunidade, manutenção), testes de integração em projetos piloto.
+  \item \textbf{Integração no fluxo de trabalho:} adaptação de código e pipelines, automação de tarefas repetitivas.
+  \item \textbf{Partilha de conhecimento:} documentação interna e externa, contribuição para projetos open-source.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Atividades Práticas Detalhadas}}
+\begin{itemize}
+  \item Pesquisar e apresentar um pacote R recente, explicando as suas funcionalidades e casos de uso.
+  \item Implementar um exemplo prático com uma técnica ou pacote recém-descoberto.
+  \item Criar um documento comparativo entre duas abordagens para o mesmo problema.
+  \item Publicar um pequeno tutorial ou exemplo de código num repositório GitHub.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Recursos e Ferramentas}}
+\begin{itemize}
+  \item \textbf{Software:} R e RStudio.
+  \item \textbf{Pacotes:} variáveis conforme a pesquisa (ex.: \texttt{tidyverse}, \texttt{data.table}, \texttt{lightgbm}).
+  \item \textbf{Fontes de dados:} CRAN, GitHub, arXiv, APIs públicas.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Estudo de Caso – Pesquisa e Integração de um Novo Pacote}}
+\textbf{Objetivo:} Demonstrar como identificar, testar e integrar um novo pacote R num fluxo de trabalho.
+
+\begin{lstlisting}[language=R]
+# 1. Pesquisa de pacote no CRAN
+# Exemplo: pacote 'data.table' para manipulação eficiente de dados
+
+# 2. Instalação e carregamento
+install.packages("data.table")
+library(data.table)
+
+# 3. Comparação de desempenho com dplyr
+library(tidyverse)
+dados <- as.data.frame(matrix(runif(1e6), ncol = 10))
+
+# Usando dplyr
+system.time({
+  df_dplyr <- as_tibble(dados) %>%
+    summarise(across(everything(), mean))
+})
+
+# Usando data.table
+system.time({
+  dt <- as.data.table(dados)
+  dt_means <- dt[, lapply(.SD, mean)]
+})
+
+# 4. Integração no fluxo de trabalho
+# Substituir operações lentas por equivalentes em data.table
+# Documentar alterações e ganhos de desempenho
+
+# 5. Partilha de resultados
+# Criar um README com instruções e benchmarks
+\end{lstlisting}
+
+\textbf{Notas para o Formador:}
+\begin{itemize}
+  \item Incentivar os alunos a escolher pacotes relevantes para os seus interesses ou área de trabalho.
+  \item Discutir critérios objetivos para adoção de novas ferramentas.
+  \item Mostrar como documentar e comunicar resultados de testes à equipa.
+\end{itemize}

@@ -1,0 +1,110 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[table]{xcolor}
+\usepackage{geometry}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage[english]{babel}
+
+\geometry{margin=2.5cm}
+
+% Define colors for titles
+\definecolor{sectionred}{RGB}{200,0,0}
+\definecolor{subsectionblue}{RGB}{0,0,180}
+
+\titleformat{\section}
+  {\color{sectionred}\normalfont\Large\bfseries}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\color{subsectionblue}\normalfont\large\bfseries}
+  {\thesubsection}{1em}{}
+
+% Configuration to display R code
+\lstdefinelanguage{R}{
+  keywords={library,read_csv,ggplot,geom_col,labs,aes,geom_bar,stat,identity},
+  sensitive=true,
+  comment=[l]{\#},
+  morestring=[b]",
+}
+\lstset{
+  language=R,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{red},
+  showstringspaces=false,
+  breaklines=true
+}
+
+\title{\textbf{Data Science with R \\Training Manual}}
+\author{Instructor: JOÃO SOARES E SILVA}
+\date{\today}
+
+\begin{document}
+\begin{titlepage}
+    \centering
+    \vspace*{1cm} % Adjusts the top space, if needed
+    {\color{sectionred}\huge\textbf{Training Manual}} \\
+    \vspace{0.5cm}
+    \includegraphics[width=\textwidth]{capa_r.png} % Replace 'your_image_name.png' with the actual file name of the image
+    \vspace{1cm} % Adjusts the space below the image, if needed
+
+    {\large Instructor: JOÃO SOARES E SILVA} \\
+    \vspace{0.5cm}
+    {\today}
+\end{titlepage}
+
+\maketitle
+\tableofcontents
+\newpage
+
+% =========================
+% Module 1
+% =========================
+\input{modulo1en.tex}
+
+% =========================
+% Module 2
+% =========================
+\input{modulo2en.tex}
+
+% =========================
+% Module 3
+% =========================
+\input{modulo3en.tex}
+
+% =========================
+% Module 4
+% =========================
+\input{modulo4en.tex}
+
+% =========================
+% Module 5
+% =========================
+\input{modulo5en.tex}
+
+% =========================
+% Module 6
+% =========================
+\input{modulo6en.tex}
+
+% =========================
+% Module 7
+% =========================
+\input{modulo7en.tex}
+
+% =========================
+% Module 8
+% =========================
+\input{modulo8en.tex}
+
+% =========================
+% Module 9
+% =========================
+\input{modulo9en.tex}
+
+\end{document}

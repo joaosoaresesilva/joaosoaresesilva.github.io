@@ -1,0 +1,40 @@
+\begin{lstlisting}[language=R]
+library(tidyverse)
+library(plotly)
+library(corrplot)
+
+# 1. Import dataset
+dados <- read_csv("vendas.csv")
+
+# 2. Descriptive statistics
+summary(dados)
+dados %>% summarise(
+  media_preco = mean(preco, na.rm = TRUE),
+  mediana_preco = median(preco, na.rm = TRUE),
+  desvio_padrao_preco = sd(preco, na.rm = TRUE)
+)
+
+# 3. Basic visualizations
+ggplot(dados, aes(x = preco)) + geom_histogram(binwidth = 5)
+ggplot(dados, aes(x = categoria, y = preco)) + geom_boxplot()
+
+# 4. Interactive visualization
+grafico_interativo <- ggplot(dados, aes(x = preco, y = quantidade, color = categoria)) +
+  geom_point()
+ggplotly(grafico_interativo)
+
+# 5. Correlation matrix
+matriz <- cor(dados %>% select_if(is.numeric), use = "complete.obs")
+corrplot(matriz, method = "color", type = "upper", tl.col = "black")
+
+# 6. Outlier identification (IQR)
+Q1 <- quantile(dados$preco, 0.25, na.rm = TRUE)
+Q3 <- quantile(dados$preco, 0.75, na.rm = TRUE)
+IQR <- Q3 - Q1
+outliers <- dados %>% filter(preco < (Q1 - 1.5*IQR) | preco > (Q3 + 1.5*IQR))
+\end{lstlisting}
+
+**Notes for the Instructor:**
+* The \texttt{vendas.csv} dataset can be real or synthetic, but it should contain both numerical and categorical variables.
+* Encourage students to experiment with different chart types and parameters.
+* Discuss how EDA findings can influence subsequent modeling.

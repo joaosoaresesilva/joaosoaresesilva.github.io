@@ -1,0 +1,80 @@
+\section{\textcolor{sectionred}{Module 6 – Ad-hoc Analysis (8h)}}
+
+\subsection{\textcolor{subsectionblue}{Objectives}}
+By the end of this module, students should be able to:
+\begin{itemize}
+  \item Understand the role of **ad-hoc** analyses in quickly responding to specific business or research questions.
+  \item Formulate hypotheses and structure targeted analyses to answer concrete questions.
+  \item Select and apply statistical and visualization methods suitable for the problem.
+  \item Communicate results clearly and objectively, focusing on the most relevant conclusions.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Developed Contents}}
+\begin{itemize}
+  \item \textbf{Definition and context of ad-hoc analyses} — difference between planned and ad-hoc analyses; when and why to use them.
+  \item \textbf{Formulation of hypotheses and business questions} — transforming vague questions into testable hypotheses.
+  \item \textbf{Selection of methods and tools} — choosing appropriate statistical techniques, filters, and visualizations.
+  \item \textbf{Rapid execution and validation of results} — ensuring that speed does not compromise quality.
+  \item \textbf{Communication and delivery} — delivery formats: brief report, email, short presentation.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Detailed Practical Activities}}
+\begin{itemize}
+  \item Receive a simulated business question and develop an ad-hoc analysis to answer it.
+  \item Create simple and effective visualizations to communicate results.
+  \item Apply a statistical test suitable for the presented problem.
+  \item Document the analysis in a concise and clear format.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Resources and Tools}}
+\begin{itemize}
+  \item \textbf{Software:} R and RStudio.
+  \item \textbf{Packages:} \texttt{tidyverse}, \texttt{lubridate}, \texttt{ggplot2}, \texttt{broom}.
+  \item \textbf{Data sources:} internal or public datasets simulating real-world scenarios.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Case Study – Ad-hoc Analysis in R}}
+\textbf{Objective:} Demonstrate how to quickly answer a specific question with available data.
+
+\begin{lstlisting}[language=R]
+library(tidyverse)
+library(lubridate)
+library(broom)
+
+# Scenario: The manager wants to know if the average sales of the last month
+# were significantly different from the previous month.
+
+# 1. Import data
+dados <- read_csv("vendas.csv") %>%
+  mutate(data = dmy(data))
+
+# 2. Filter last two months
+ultimo_mes <- max(month(dados$data))
+dados_filtrados <- dados %>%
+  filter(month(data) %in% c(ultimo_mes, ultimo_mes - 1))
+
+# 3. Descriptive statistics
+dados_filtrados %>%
+  group_by(mes = month(data)) %>%
+  summarise(media_vendas = mean(vendas, na.rm = TRUE),
+            sd_vendas = sd(vendas, na.rm = TRUE))
+
+# 4. Statistical test (t-test)
+resultado_t <- t.test(vendas ~ month(data), data = dados_filtrados)
+tidy(resultado_t)
+
+# 5. Quick visualization
+ggplot(dados_filtrados, aes(x = factor(month(data)), y = vendas)) +
+  geom_boxplot(fill = "skyblue") +
+  labs(x = "Month", y = "Sales", title = "Sales Comparison Between Months")
+
+# 6. Conclusion
+# If p-value < 0.05, there is a statistically significant difference.
+\end{lstlisting}
+
+\textbf{Notes for the Instructor:}
+\begin{itemize}
+  \item This example shows how to quickly structure an analysis from data import to conclusion.
+  \item Encourage students to adapt the code to other types of ad-hoc questions.
+  \item Discuss the importance of communicating only the essentials in urgent analyses.
+\end{itemize}

@@ -1,0 +1,76 @@
+\section{\textcolor{sectionred}{Module 7 – Tooling and Infrastructure (6h)}}
+
+\subsection{\textcolor{subsectionblue}{Objectives}}
+By the end of this module, students should be able to:
+\begin{itemize}
+  \item Configure and maintain efficient development environments for Data Science projects.
+  \item Automate tasks and workflows to increase productivity.
+  \item Use version control tools to manage code and collaborate in a team.
+  \item Integrate data and model pipelines into production environments.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Developed Contents}}
+\begin{itemize}
+  \item \textbf{Project organization:} folder and file structure; consistent naming of files and scripts.
+  \item \textbf{Dependency management:} use of \texttt{renv} to isolate environments; \texttt{DESCRIPTION} and \texttt{requirements.txt} files.
+  \item \textbf{Version control:} Basic Git (commits, branches, merges); collaboration platforms (GitHub, GitLab).
+  \item \textbf{Automation and pipelines:} scheduled scripts (cron jobs, tasks); continuous integration (CI) and continuous delivery (CD).
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Detailed Practical Activities}}
+\begin{itemize}
+  \item Create a Data Science project structure with organized folders and scripts.
+  \item Configure an isolated environment with \texttt{renv} and install necessary packages.
+  \item Create a Git repository and practice basic operations (commit, branch, merge).
+  \item Configure a script to run automatically (scheduling).
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Resources and Tools}}
+\begin{itemize}
+  \item \textbf{Software:} R, RStudio, Git.
+  \item \textbf{Packages:} \texttt{renv}, \texttt{targets}, \texttt{usethis}.
+  \item \textbf{Platforms:} GitHub, GitLab.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Case Study – Project Structuring and Automation}}
+\textbf{Objective:} Demonstrate how to create an organized project, manage dependencies, and automate tasks.
+
+\begin{lstlisting}[language=R]
+# 1. Create project structure
+usethis::create_project("sales_project")
+dir.create("data_raw")
+dir.create("data_processed")
+dir.create("scripts")
+dir.create("reports")
+
+# 2. Initiate version control
+usethis::use_git()
+
+# 3. Configure isolated environment
+install.packages("renv")
+renv::init()
+
+# 4. Import and cleaning script (scripts/01_importation.R)
+library(tidyverse)
+dados <- read_csv("data_raw/sales.csv") %>%
+  janitor::clean_names() %>%
+  filter(!is.na(sales_value))
+write_csv(dados, "data_processed/clean_sales.csv")
+
+# 5. Automate daily execution (example on Unix system with cron)
+# Open crontab: crontab -e
+# Add line to run script at 2 a.m.:
+# 0 2 * * * Rscript /path/to/sales_project/scripts/01_importation.R
+
+# 6. Version changes and sync with GitHub
+# git add .
+# git commit -m "Initial structure and import script"
+# git push origin main
+\end{lstlisting}
+
+\textbf{Notes for the Instructor:}
+\begin{itemize}
+  \item This case study shows how to combine organization, dependency management, version control, and automation.
+  \item Encourage students to adapt the structure and scripts to their own project needs.
+  \item Discuss the importance of keeping a README updated with execution instructions.
+\end{itemize}

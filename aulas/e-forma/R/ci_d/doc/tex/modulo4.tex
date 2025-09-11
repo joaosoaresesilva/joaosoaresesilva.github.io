@@ -1,0 +1,70 @@
+\section{\textcolor{sectionred}{Módulo 4 – Reporting and Documentation (8h)}}
+
+\subsection{\textcolor{subsectionblue}{Objetivos}}
+Ao final deste módulo, os formandos deverão ser capazes de:
+\begin{itemize}
+  \item Compreender a importância da comunicação clara e estruturada dos resultados em projetos de Ciência de Dados.  
+  \item Criar relatórios técnicos e executivos que transmitam de forma eficaz as descobertas e conclusões.  
+  \item Desenvolver dashboards interativos para visualização e monitorização de métricas e indicadores.  
+  \item Adaptar a comunicação para diferentes públicos-alvo (técnico e não técnico).  
+  \item Documentar o código, processos e decisões para garantir reprodutibilidade e manutenção futura.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Conteúdos Desenvolvidos}}
+\begin{itemize}
+  \item \textbf{Boas práticas de comunicação de resultados em Data Science} — estruturar mensagens de forma clara, objetiva e visualmente apelativa.
+  \item \textbf{Relatórios com \texttt{RMarkdown}:} estrutura de um documento técnico; inclusão de código, tabelas e gráficos; exportação para HTML, PDF e Word.
+  \item \textbf{Dashboards interativos:} criação com \texttt{flexdashboard}; aplicações web com \texttt{shiny}; integração de visualizações dinâmicas (\texttt{plotly}, \texttt{leaflet}).
+  \item \textbf{Storytelling com dados:} estrutura narrativa para apresentação de insights; uso de visualizações para reforçar mensagens-chave.
+  \item \textbf{Documentação de código e processos:} comentários claros e consistentes; ficheiros \texttt{README} e guias de utilização; versionamento com Git/GitHub.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Atividades Práticas Detalhadas}}
+\begin{itemize}
+  \item Criar um relatório técnico em \texttt{RMarkdown} com análise exploratória e resultados de um modelo preditivo.
+  \item Desenvolver um dashboard interativo com \texttt{flexdashboard} ou \texttt{shiny}.
+  \item Preparar uma apresentação executiva para um público não técnico.
+  \item Documentar todo o processo de análise, incluindo código, decisões e fontes de dados.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Recursos e Ferramentas}}
+\begin{itemize}
+  \item \textbf{Software:} R e RStudio.
+  \item \textbf{Pacotes:} \texttt{rmarkdown}, \texttt{flexdashboard}, \texttt{shiny}, \texttt{plotly}, \texttt{leaflet}.
+  \item \textbf{Ferramentas de versionamento:} Git e GitHub.
+  \item \textbf{Datasets:} conjuntos de dados utilizados nos módulos anteriores.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Estudo de Caso – Relatório e Dashboard em R}}
+\textbf{Objetivo:} Demonstrar a criação de um relatório técnico e de um dashboard interativo.
+
+\begin{lstlisting}[language=R]
+# Relatório RMarkdown (chunk de código)
+library(tidyverse)
+dados <- read_csv("vendas.csv")
+
+ggplot(dados, aes(x = mes, y = vendas, fill = regiao)) +
+  geom_col(position = "dodge") +
+  labs(title = "Vendas Mensais por Região",
+       x = "Mês", y = "Total de Vendas")
+\end{lstlisting}
+
+Exemplo de cabeçalho e código para dashboard com flexdashboard:
+
+\begin{lstlisting}
+---
+title: "Dashboard de Vendas"
+output: flexdashboard::flex_dashboard
+---
+
+## Vendas por Região
+```{r}
+library(flexdashboard)
+library(plotly)
+
+grafico <- ggplot(dados, aes(x = regiao, y = vendas, fill = regiao)) +
+  geom_bar(stat = "identity")
+ggplotly(grafico)
+\end{lstlisting}
+
+\textbf{Notas para o Formador:} \begin{itemize} \item O código do relatório e do dashboard deve ser colocado em ficheiros \texttt{.Rmd} separados e executado no RStudio. \item No manual, o código é apenas exibido como exemplo. \item Incentivar a personalização do layout, cores e tipos de visualização. \item Demonstrar como publicar o dashboard no \texttt{shinyapps.io} ou partilhar o HTML gerado. \end{itemize}

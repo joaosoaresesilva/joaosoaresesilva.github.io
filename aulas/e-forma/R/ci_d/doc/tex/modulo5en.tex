@@ -1,0 +1,75 @@
+\section{\textcolor{sectionred}{Module 5 – Research and Learning (6h)}}
+
+\subsection{\textcolor{subsectionblue}{Objectives}}
+By the end of this module, students should be able to:
+\begin{itemize}
+  \item Develop continuous research skills to stay updated in the fields of Data Science, Machine Learning, and Artificial Intelligence.  
+  \item Critically evaluate new libraries, techniques, and methodologies before adopting them.  
+  \item Integrate new tools and approaches into existing workflows.  
+  \item Share knowledge with the community and the work team.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Developed Contents}}
+\begin{itemize}
+  \item \textbf{Information and update sources:} package repositories (CRAN, Bioconductor), blogs and communities (\texttt{R-bloggers}, Stack Overflow, Posit Community), scientific publications (arXiv, IEEE, Nature Machine Intelligence).
+  \item \textbf{Evaluation of new tools:} evaluation criteria (performance, documentation, community, maintenance), integration tests in pilot projects.
+  \item \textbf{Workflow integration:} adapting code and pipelines, automating repetitive tasks.
+  \item \textbf{Knowledge sharing:} internal and external documentation, contributing to open-source projects.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Detailed Practical Activities}}
+\begin{itemize}
+  \item Research and present a recent R package, explaining its functionalities and use cases.
+  \item Implement a practical example with a newly discovered technique or package.
+  \item Create a comparative document between two approaches for the same problem.
+  \item Publish a small tutorial or code example in a GitHub repository.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Resources and Tools}}
+\begin{itemize}
+  \textbf{Software:} R and RStudio.
+  \textbf{Packages:} variable according to research (e.g., \texttt{tidyverse}, \texttt{data.table}, \texttt{lightgbm}).
+  \textbf{Data sources:} CRAN, GitHub, arXiv, public APIs.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Case Study – Research and Integration of a New Package}}
+\textbf{Objective:} Demonstrate how to identify, test, and integrate a new R package into a workflow.
+
+\begin{lstlisting}[language=R]
+# 1. Package research on CRAN
+# Example: 'data.table' package for efficient data manipulation
+
+# 2. Installation and loading
+install.packages("data.table")
+library(data.table)
+
+# 3. Performance comparison with dplyr
+library(tidyverse)
+dados <- as.data.frame(matrix(runif(1e6), ncol = 10))
+
+# Using dplyr
+system.time({
+  df_dplyr <- as_tibble(dados) %>%
+    summarise(across(everything(), mean))
+})
+
+# Using data.table
+system.time({
+  dt <- as.data.table(dados)
+  dt_means <- dt[, lapply(.SD, mean)]
+})
+
+# 4. Workflow integration
+# Replace slow operations with data.table equivalents
+# Document changes and performance gains
+
+# 5. Sharing results
+# Create a README with instructions and benchmarks
+\end{lstlisting}
+
+\textbf{Notes for the Instructor:}
+\begin{itemize}
+  \item Encourage students to choose packages relevant to their interests or work area.
+  \item Discuss objective criteria for adopting new tools.
+  \item Show how to document and communicate test results to the team.
+\end{itemize}

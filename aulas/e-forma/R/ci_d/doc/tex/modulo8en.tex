@@ -1,0 +1,77 @@
+\section{\textcolor{sectionred}{Module 8 – Model Deployment and Maintenance (6h)}}
+
+\subsection{\textcolor{subsectionblue}{Objectives}}
+By the end of this module, students should be able to:
+\begin{itemize}
+  \item Understand the process of making Machine Learning models available in production environments.  
+  \item Implement APIs to serve model predictions in real-time or in batch.  
+  \item Monitor the performance of models in production and detect **data drift** or performance degradation.  
+  \item Perform maintenance and periodic re-training of models to ensure relevance and accuracy.  
+  \item Document and version models for traceability and auditing.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Developed Contents}}
+\begin{itemize}
+  \item \textbf{Deployment concepts:} difference between development, testing, and production environments; deployment modes (batch, real-time, **edge deployment**).
+  \item \textbf{Serving models via API:} use of the \texttt{plumber} package to create REST APIs in R; API security and authentication.
+  \item \textbf{Model monitoring:} performance metrics in production; detection of **data drift** and **concept drift**.
+  \item \textbf{Maintenance and re-training:} re-training strategies (scheduled, event-based); automation of re-training pipelines.
+  \item \textbf{Model versioning and documentation:} storing models with \texttt{pins} or \texttt{modeltime}; logging changes and auditing.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Detailed Practical Activities}}
+\begin{itemize}
+  \item Create an API with \texttt{plumber} to serve predictions from a trained model.
+  \item Implement a monitoring script that logs performance metrics daily.
+  \item Simulate **data drift** and perform automatic re-training.
+  \item Document the deployment and maintenance process in a technical report.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Resources and Tools}}
+\begin{itemize}
+  \textbf{Software:} R and RStudio.
+  \textbf{Packages:} \texttt{plumber}, \texttt{pins}, \texttt{modeltime}, \texttt{tidyverse}.
+  \textbf{Platforms:} Local servers, \texttt{shinyapps.io}, Docker.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Case Study – Prediction API with \texttt{plumber}}}
+\textbf{Objective:} Demonstrate how to make a trained model available via a REST API.
+
+\begin{lstlisting}[language=R]
+# 1. Train and save model
+library(tidyverse)
+library(caret)
+dados <- read_csv("dados_clientes.csv")
+
+modelo <- train(churn ~ ., data = dados, method = "glm", family = "binomial")
+saveRDS(modelo, "modelo_churn.rds")
+
+# 2. Create API with plumber (file: api.R)
+library(plumber)
+
+#* @apiTitle Churn Prediction API
+#* @param idade:int Client age
+#* @param rendimento:double Annual income
+#* @post /prever
+function(idade, rendimento){
+  modelo <- readRDS("modelo_churn.rds")
+  novo_dado <- data.frame(idade = as.integer(idade),
+                          rendimento = as.numeric(rendimento))
+  prob <- predict(modelo, novo_dado, type = "prob")[,2]
+  list(probabilidade_churn = prob)
+}
+
+# 3. Run API
+# plumber::pr("api.R") %>% pr_run(port = 8000)
+
+# 4. Test API
+# POST to http://localhost:8000/prever with JSON:
+# {"idade": 35, "rendimento": 45000}
+\end{lstlisting}
+
+\textbf{Notes for the Instructor:}
+\begin{itemize}
+  \item This example shows a simple deployment flow with \texttt{plumber}.
+  \item Encourage students to add authentication and logging to the API.
+  \item Discuss how to integrate this API into a larger system (e.g., dashboard, web application).
+\end{itemize}

@@ -1,0 +1,99 @@
+\section{\textcolor{sectionred}{Module 1 – Data Collection and Preparation (10h)}}
+
+\subsection{\textcolor{subsectionblue}{Objectives}}
+This module aims to equip students with the necessary skills to collect, clean, and prepare data in an efficient and reproducible manner. At the end of the 10 hours, participants should be able to:
+\begin{itemize}
+  \item Acknowledge the importance of the data collection and preparation phase in the life cycle of a Data Science project.  
+  \textit{Practical example:} In a retail company, sales data with registration errors can lead to incorrect stock forecasts.
+  \item Import data from various sources, including local files, REST APIs, and relational databases.  
+  \textit{Practical example:} A marketing analyst imports data from Google Ads via API and combines it with Excel files from the CRM.
+  \item Apply data cleaning and transformation techniques with \texttt{tidyverse} and \texttt{janitor}.  
+  \textit{Practical example:} In a public health study, normalize column names and remove duplicates before calculating rates.
+  \item Implement data integrity and quality checks.  
+  \textit{Practical example:} Verify that all postal codes have the correct format and that there are no duplicate records.
+  \item Document the entire collection and preparation process.  
+  \textit{Practical example:} Create an \texttt{RMarkdown} report with a step-by-step guide for data handling.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Developed Contents}}
+\begin{itemize}
+  \item \textbf{Introduction to the \textit{Data Collection} and \textit{Data Preparation} process}  
+  \textit{Practical example:} In a fintech company, poorly formatted transaction data can generate false fraud alerts.
+  \item \textbf{Reading data:} CSV, Excel, APIs, databases.  
+  \textit{Practical example:} Importing sales history from a POS.
+  \item \textbf{Data cleaning:} name normalization, handling NAs and duplicates, type conversion.  
+  \textit{Practical example:} Convert “01-03-2024” to a Date object.
+  \item \textbf{Data transformation:} filtering, sorting, creating derived variables, reshaping.  
+  \textit{Practical example:} Calculate profit margin and transform data to a long format.
+  \item \textbf{Best practices:} organizing scripts, clear comments, use of \texttt{RMarkdown}.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Detailed Practical Activities}}
+\begin{itemize}
+  \item Import and clean a real dataset from Kaggle or a public API.
+  \item Create a custom function for recurring cleaning.
+  \item Implement automatic integrity checks.
+  \item Document the process in an \texttt{RMarkdown} file.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Resources and Tools}}
+\begin{itemize}
+  \item \textbf{Software:} R and RStudio.
+  \item \textbf{Packages:} \texttt{tidyverse}, \texttt{janitor}, \texttt{httr}, \texttt{jsonlite}, \texttt{DBI}, \texttt{lubridate}.
+  \item \textbf{Data sources:} Kaggle, public APIs, test databases.
+\end{itemize}
+
+\subsection{\textcolor{subsectionblue}{Case Study – Complete Pipeline in R}}
+\textbf{Objective:} Demonstrate all steps of the module in a single workflow.
+
+\begin{lstlisting}[language=R]
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(httr)
+library(jsonlite)
+
+# 1. Import data
+vendas <- read_csv("dados_vendas.csv")
+resposta <- GET("https://api.exemplo.com/vendas")
+dados_api <- fromJSON(content(resposta, "text"))
+dados <- bind_rows(vendas, dados_api)
+
+# 2. Initial cleaning
+dados <- dados %>%
+  clean_names() %>%
+  distinct() %>%
+  mutate(data_venda = dmy(data_venda))
+
+# 3. Handling missing values
+dados <- dados %>%
+  mutate(
+    preco = if_else(is.na(preco), mean(preco, na.rm = TRUE), preco),
+    quantidade = replace_na(quantidade, 0)
+  )
+
+# 4. Derived variables
+dados <- dados %>%
+  mutate(receita = preco * quantidade)
+
+# 5. Reshaping and aggregation
+dados_mensal <- dados %>%
+  mutate(mes = floor_date(data_venda, "month")) %>%
+  group_by(mes, produto) %>%
+  summarise(receita_total = sum(receita, na.rm = TRUE), .groups = "drop")
+
+# 6. Validation
+stopifnot(all(dados$preco >= 0))
+stopifnot(!any(is.na(dados$data_venda)))
+
+# 7. Export
+write_csv(dados, "dados_vendas_limpos.csv")
+write_csv(dados_mensal, "dados_vendas_mensal.csv")
+\end{lstlisting}
+
+\textbf{Notes for the Instructor:}
+\begin{itemize}
+  \item This pipeline covers import, cleaning, transformation, validation, and documentation.
+  \item The dataset can be real or synthetic.
+  \item Encourage adaptation for other data formats.
+\end{itemize}
