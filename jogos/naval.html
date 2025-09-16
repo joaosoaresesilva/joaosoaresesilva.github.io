@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Batalha Naval - 2 jogadores (WebRTC P2P)</title>
+  <style>
+    :root{--cell:32px}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;display:flex;flex-direction:column;align-items:center;padding:18px;background:#0f172a;color:#e6eef8}
+    h1{margin:6px 0 12px;font-size:18px}
+    .boards{display:flex;gap:28px;margin:12px}
+    .board{display:grid;grid-template-columns:repeat(10,var(--cell));grid-template-rows:repeat(10,var(--cell));gap:2px;background:#081020;padding:10px;border-radius:8px}
+    .cell{width:var(--cell);height:var(--cell);display:grid;place-items:center;background:#1b2330;border-radius:4px;cursor:pointer;font-size:12px}
+    .cell.own.ship{background:#4b5563} /* ship on own board */
+    .cell.hit{background:#ef4444;color:white}
+    .cell.miss{background:#94a3b8}
+    .cell.disabled{opacity:0.6;pointer-events:none}
+    .controls{display:flex;flex-direction:column;gap:8px;margin:12px}
+    .row{display:flex;gap:8px;align-items:center}
+    button{background:#2563eb;color:white;border:none;padding:8px 10px;border-radius:6px;cursor:pointer}
+    select,input,textarea{padding:6px;border-radius:6px;border:1px solid #213046;background:#071022;color:#e6eef8}
+    textarea{width:420px;height:90px}
+    .status{margin:8px 0;padding:8px;border-radius:6px;background:#071a2b;color:#bfe0ff}
+    .flexcol{display:flex;flex-direction:column}
+    .small{font-size:13px;color:#bcd}
+    .note{font-size:12px;color:#9fb}
+    .chat{width:420px;height:140px;padding:8px;border-radius:6px;overflow:auto;background:#071224;border:1px solid #0b3048}
+  </style>
+</head>
+<body>
+  <h1>Batalha Naval — 2 jogadores online (WebRTC P2P — sinal manual)</h1>
+  <div class="row">
+    <div class="controls">
+      <div class="row"><label class="small">Escolher navio:</label>
+        <select id="shipSelect"><option value="5">Porta-aviões (5)</option><option value="4">Cruzador (4)</option><option value="3">Contra-torpedeiro (3)</option><option value="3s">Submarino (3)</option><option value="2">Patrulha (2)</option></select>
+        <button id="rotateBtn">Rotacionar (Horizontal)</button>
+        <button id="resetBtn">Resetar colocação</button>
+      </div>
+      <div class="row"><button id="donePlacement">Terminei a colocação</button><span class="note">(Ambos devem terminar antes de começar)</span></div>
+
+      <div class="status" id="status">Estado: colocando navios</div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <div class="flexcol">
+          <label class="small">Sinal (SDP) — Criador (oferta)</label>
+          <textarea id="localSDP" readonly></textarea>
+          <div class="row">
+            <button id="createOffer">Criar oferta</button>
+            <button id="copyOffer">Copiar</button>
+          </div>
+        </div>
+        <div class="flexcol">
+          <label class="small">Pega SDP remoto (colar aqui)</label>
+          <textarea id="remoteSDP"></textarea>
+          <div class="row">
+            <button id="setRemote">Colar e aplicar</button>
+            <button id="createAnswer">Criar resposta (se receber oferta)</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <button id="disconnect">Desconectar</button>
+      </div>
+
+    </div>
+
+    <div>
+      <div class="boards">
+        <div>
+          <div class="small">Seu tabuleiro (coloque seus navios)</div>
+          <div id="ownBoard" class="board"></div>
+        </div>
+        <div>
+          <div class="small">Tabuleiro do adversário (clique para atirar)</div>
+          <div id="enemyBoard" class="board"></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="flexcol">
+          <div class="small">Chat</div>
+          <div id="chatArea" class="chat"></div>
+          <div class="row">
+            <input id="chatInput" placeholder="Escreva mensagem..." style="width:320px" />
+            <button id="sendChat">Enviar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  // Constants
+  const N=10;
+  const shipTypes=[5,4,3,3,2]; // standard fleet sizes
+
+  // State
+  let ownBoard = Array.from({length:N},()=>Array(N).fill(0)); // 0 empty, 1 ship, 2 hit, 3 miss
+  let enemyBoard = Array.from({length:N},()=>Array(N).fill(0)); // 0 unknown, 2 hit,3 miss
+  let placingIndex=0; // which ship from shipTypes we are placing
+  let orientation='h';
+  let placingManualShipSize=5; // from select
+  let placementLocked=false;
+  let peerConn=null; let dataCh=null; let isOfferer=false; let readyLocal=false; let readyRemote=false; let myTurn=false;
+
+  // DOM
+  const ownBoardEl=document.getElementById('ownBoard');
+  const enemyBoardEl=document.getElementById('enemyBoard');
+  const rotateBtn=document.getElementById('rotateBtn');
+  const shipSelect=document.getElementById('shipSelect');
+  const resetBtn=document.getElementById('resetBtn');
+  const doneBtn=document.getElementById('donePlacement');
+  const statusEl=document.getElementById('status');
+  const localSDP=document.getElementById('localSDP');
+  const remoteSDP=document.getElementById('remoteSDP');
+  const createOfferBtn=document.getElementById('createOffer');
+  const createAnswerBtn=document.getElementById('createAnswer');
+  const setRemoteBtn=document.getElementById('setRemote');
+  const copyOfferBtn=document.getElementById('copyOffer');
+  const disconnectBtn=document.getElementById('disconnect');
+  const chatArea=document.getElementById('chatArea');
+  const chatInput=document.getElementById('chatInput');
+  const sendChatBtn=document.getElementById('sendChat');
+
+  // Build boards
+  function makeGrid(el, onclick){
+    el.innerHTML='';
+    for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+      const d=document.createElement('div'); d.className='cell'; d.dataset.r=r; d.dataset.c=c;
+      d.addEventListener('click', onclick);
+      el.appendChild(d);
+    }
+  }
+  makeGrid(ownBoardEl, onOwnClick);
+  makeGrid(enemyBoardEl, onEnemyClick);
+
+  function renderBoards(){
+    for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+      const idx=r*N+c;
+      const ownCell=ownBoardEl.children[idx];
+      ownCell.className='cell';
+      if(ownBoard[r][c]===1) ownCell.classList.add('own','ship');
+      if(ownBoard[r][c]===2) ownCell.classList.add('hit');
+      if(ownBoard[r][c]===3) ownCell.classList.add('miss');
+
+      const enemyCell=enemyBoardEl.children[idx];
+      enemyCell.className='cell';
+      if(enemyBoard[r][c]===2) enemyCell.classList.add('hit');
+      if(enemyBoard[r][c]===3) enemyCell.classList.add('miss');
+      if(!myTurn) enemyCell.classList.add('disabled');
+    }
+  }
+
+  function onOwnClick(e){
+    if(placementLocked) return;
+    const r=+e.currentTarget.dataset.r, c=+e.currentTarget.dataset.c;
+    const size = parseInt(shipSelect.value,10);
+    // attempt place
+    if(canPlace(ownBoard,r,c,size,orientation)){
+      placeShip(ownBoard,r,c,size,orientation);
+      shipSelect.querySelector(`option[value=\"${size}\"]`).disabled=true;
+      renderBoards();
+    } else {
+      alert('Não cabe aqui. Tente outra posição/rotação.');
+    }
+  }
+
+  function canPlace(board,r,c,size,orient){
+    if(orient==='h'){
+      if(c+size> N) return false;
+      for(let i=0;i<size;i++) if(board[r][c+i]===1) return false;
+    } else {
+      if(r+size> N) return false;
+      for(let i=0;i<size;i++) if(board[r+i][c]===1) return false;
+    }
+    return true;
+  }
+  function placeShip(board,r,c,size,orient){
+    if(orient==='h') for(let i=0;i<size;i++) board[r][c+i]=1;
+    else for(let i=0;i<size;i++) board[r+i][c]=1;
+  }
+
+  rotateBtn.addEventListener('click',()=>{ orientation = orientation==='h' ? 'v' : 'h'; rotateBtn.textContent = 'Rotacionar (' + (orientation==='h'?'Horizontal':'Vertical') + ')'; });
+  resetBtn.addEventListener('click',()=>{ ownBoard = Array.from({length:N},()=>Array(N).fill(0)); for(const opt of shipSelect.options) opt.disabled=false; placementLocked=false; readyLocal=false; statusEl.textContent='Estado: colocando navios'; renderBoards(); });
+
+  doneBtn.addEventListener('click',()=>{
+    // verify all ships placed: all ship sizes options disabled
+    let allPlaced=true; for(const opt of shipSelect.options) if(!opt.disabled) allPlaced=false;
+    if(!allPlaced){ if(!confirm('Nem todos os tipos de navio parecem colocados. Quer mesmo terminar?')) return; }
+    placementLocked=true; readyLocal=true; statusEl.textContent='Pronto: esperando adversário'; sendReliable({type:'ready'});
+    checkBothReady();
+  });
+
+  function checkBothReady(){
+    if(readyLocal && readyRemote){
+      // decide who começa: offerer starts
+      myTurn = isOfferer;
+      statusEl.textContent = myTurn ? 'Jogo: é o seu turno' : 'Jogo: à espera do adversário';
+      renderBoards();
+    }
+  }
+
+  function onEnemyClick(e){
+    if(!myTurn) return;
+    const r=+e.currentTarget.dataset.r, c=+e.currentTarget.dataset.c;
+    if(enemyBoard[r][c]===2 || enemyBoard[r][c]===3) return;
+    // send shot
+    sendReliable({type:'shot', r, c});
+    statusEl.textContent='Jogo: aguardando resposta...';
+    myTurn=false; renderBoards();
+  }
+
+  // WebRTC signaling
+  async function createConnection(){
+    peerConn = new RTCPeerConnection();
+    peerConn.ondatachannel = (ev)=>{ dataCh = ev.channel; bindDataChannel(); };
+    peerConn.onicecandidate = (ev)=>{ if(ev.candidate===null){ localSDP.value = JSON.stringify(peerConn.localDescription); } };
+
+    // For ICE candidates incremental we rely on full SDP copying (end when null candidate)
+  }
+
+  function bindDataChannel(){
+    dataCh.onopen = ()=>{ logSys('Canal aberto'); statusEl.textContent='Conectado'; }
+    dataCh.onmessage = (ev)=>{ try{const m=JSON.parse(ev.data); handleMessage(m);}catch(e){console.log('msg',ev.data);} }
+    dataCh.onclose = ()=>{ logSys('Canal fechado'); statusEl.textContent='Desconectado'; }
+  }
+
+  function sendReliable(obj){ if(!dataCh || dataCh.readyState!=='open') return; dataCh.send(JSON.stringify(obj)); }
+  function logSys(text){ const d=document.createElement('div'); d.style.opacity=0.9; d.style.fontSize='13px'; d.textContent='[sistema] '+text; chatArea.appendChild(d); chatArea.scrollTop=chatArea.scrollHeight; }
+  function logChat(sender,text){ const d=document.createElement('div'); d.style.fontSize='13px'; d.innerHTML='<b>'+sender+':</b> '+text; chatArea.appendChild(d); chatArea.scrollTop=chatArea.scrollHeight; }
+
+  function handleMessage(m){
+    if(m.type==='chat'){ logChat('Adversário',m.text); return; }
+    if(m.type==='ready'){ readyRemote=true; statusEl.textContent='Adversário pronto'; checkBothReady(); return; }
+    if(m.type==='shot'){
+      const r=m.r,c=m.c; let res='miss'; if(ownBoard[r][c]===1){ ownBoard[r][c]=2; res='hit'; }
+      if(ownBoard[r][c]===0) ownBoard[r][c]=3; // mark miss
+      renderBoards(); sendReliable({type:'result', r,c,result:res});
+      // check lose
+      if(checkAllSunk(ownBoard)) { sendReliable({type:'end', winner:false}); statusEl.textContent='Perdeu!'; }
+      return;
+    }
+    if(m.type==='result'){
+      const r=m.r,c=m.c; if(m.result==='hit'){ enemyBoard[r][c]=2; logSys('Acertou!'); } else { enemyBoard[r][c]=3; logSys('Falhou'); }
+      renderBoards(); // opponent's turn toggled by them
+      myTurn = true; statusEl.textContent = myTurn ? 'Jogo: é o seu turno' : 'Jogo: à espera do adversário';
+      return;
+    }
+    if(m.type==='end'){
+      if(m.winner===false) statusEl.textContent='Vitória! Adversário afundou todos os seus navios.'; else statusEl.textContent='Perdeu!';
+      return;
+    }
+  }
+
+  function checkAllSunk(board){ for(let r=0;r<N;r++)for(let c=0;c<N;c++) if(board[r][c]===1) return false; return true; }
+
+  // Signaling UI
+  createOfferBtn.addEventListener('click', async ()=>{
+    await createConnection();
+    isOfferer=true;
+    dataCh = peerConn.createDataChannel('bnaval'); bindDataChannel();
+    const offer = await peerConn.createOffer(); await peerConn.setLocalDescription(offer);
+    // localSDP will be filled after ICE gathering completes (onicecandidate null)
+    // but often browsers put candidates in the SDP immediately; still we wait for onicecandidate=null
+    localSDP.value = JSON.stringify(peerConn.localDescription);
+  });
+
+  createAnswerBtn.addEventListener('click', async ()=>{
+    // use remoteSDP as offer
+    try{
+      await createConnection();
+      const offer = JSON.parse(remoteSDP.value);
+      await peerConn.setRemoteDescription(offer);
+      const answer = await peerConn.createAnswer(); await peerConn.setLocalDescription(answer);
+      localSDP.value = JSON.stringify(peerConn.localDescription);
+      isOfferer=false;
+    }catch(e){ alert('Erro ao criar resposta: verifique SDP'); console.error(e); }
+  });
+
+  setRemoteBtn.addEventListener('click', async ()=>{
+    try{
+      const desc = JSON.parse(remoteSDP.value);
+      await peerConn.setRemoteDescription(desc);
+      // if we are answerer, there's no datachannel until ondatachannel triggers
+    }catch(e){ alert('Erro ao aplicar SDP remoto'); console.error(e); }
+  });
+
+  copyOfferBtn.addEventListener('click',()=>{ localSDP.select(); document.execCommand('copy'); });
+  disconnectBtn.addEventListener('click',()=>{ if(peerConn) peerConn.close(); peerConn=null; dataCh=null; statusEl.textContent='Desconectado'; });
+
+  // Chat
+  sendChatBtn.addEventListener('click',()=>{ const t=chatInput.value.trim(); if(!t) return; logChat('Você',t); sendReliable({type:'chat', text:t}); chatInput.value=''; });
+  chatInput.addEventListener('keydown',(e)=>{ if(e.key==='Enter') sendChatBtn.click(); });
+
+  // initial render
+  renderBoards();
+
+})();
+</script>
+</body>
+</html>
