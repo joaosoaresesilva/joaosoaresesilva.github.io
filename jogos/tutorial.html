@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Como jogar — Batalha Naval (Instruções)</title>
+  <style>
+    :root{--bg:#0b1220;--card:#071224;--accent:#2563eb;--muted:#9fb}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,#031026 0%,#071224 100%);color:#e6eef8;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    .wrap{max-width:900px;width:100%;background:var(--card);border-radius:12px;padding:20px;box-shadow:0 8px 30px rgba(2,6,23,.8)}
+    h1{margin:0 0 12px;font-size:20px}
+    p.lead{color:var(--muted);margin:0 0 18px}
+    ol{padding-left:18px}
+    li{margin:10px 0}
+    .kbd{background:#071a2b;border:1px solid rgba(255,255,255,.03);padding:6px 8px;border-radius:6px;font-family:monospace;font-size:13px}
+    .step-title{font-weight:600}
+    .note{font-size:13px;color:#bcd;margin-top:8px}
+    .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+    .btn{background:var(--accent);color:white;padding:8px 12px;border-radius:8px;border:none;cursor:pointer}
+    pre{background:#041223;padding:12px;border-radius:8px;overflow:auto;border:1px solid rgba(255,255,255,.03)}
+    footer{margin-top:16px;color:#9fb;font-size:13px}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h1>Como jogar — Batalha Naval (Instruções)</h1>
+    <p class="lead">Passos simples para dois jogadores conectarem-se e jogarem usando o ficheiro <span class="kbd">batalha-naval-online.html</span>.</p>
+
+    <ol>
+      <li>
+        <div class="step-title">Abrir o jogo</div>
+        <div class="note">Cada jogador abre o ficheiro <span class="kbd">batalha-naval-online.html</span> num navegador (Chrome, Firefox ou Edge). Pode usar duas janelas no mesmo computador ou computadores diferentes.</div>
+      </li>
+
+      <li>
+        <div class="step-title">Colocar os navios</div>
+        <div class="note">No tabuleiro à esquerda: selecione o tipo de navio no menu e clique nas células para posicionar. Use o botão <strong>Rotacionar</strong> para alternar horizontal/vertical. Depois de colocar um tipo de navio, essa opção fica desativada. Quando terminar, clique <strong>Terminei a colocação</strong>.</div>
+      </li>
+
+      <li>
+        <div class="step-title">Conectar os jogadores (sinalização manual WebRTC)</div>
+        <div class="note">
+          <ol>
+            <li><strong>Jogador A</strong>: clique <span class="kbd">Criar oferta</span> e copie o texto do campo <em>Sinal (SDP)</em>. Envie esse texto ao Jogador B (chat, email, etc.).</li>
+            <li><strong>Jogador B</strong>: cole o texto recebido no campo <em>Pega SDP remoto</em> e clique <span class="kbd">Criar resposta</span>. Copie a resposta e envie de volta ao Jogador A.</li>
+            <li><strong>Jogador A</strong>: cole a resposta no campo <em>Pega SDP remoto</em> e clique <span class="kbd">Colar e aplicar</span>.</li>
+            <li>Quando ambos aplicarem as descrições, a ligação será estabelecida e o estado ficará <em>Conectado</em>. O criador da oferta (Jogador A) começa o jogo.</li>
+          </ol>
+        </div>
+      </li>
+
+      <li>
+        <div class="step-title">Começar a jogar</div>
+        <div class="note">O tabuleiro da direita mostra o adversário. Quando for o seu turno, clique numa célula para atirar. Resultado: <strong>vermelho = acerto</strong>, <strong>cinzento = falha</strong>. Os turnos alternam automaticamente.</div>
+      </li>
+
+      <li>
+        <div class="step-title">Usar o chat integrado</div>
+        <div class="note">Na área de chat (abaixo dos tabuleiros) escreva a mensagem e clique <span class="kbd">Enviar</span> ou pressione Enter. As mensagens são enviadas pelo canal de dados WebRTC.</div>
+      </li>
+
+      <li>
+        <div class="step-title">Fim do jogo</div>
+        <div class="note">O jogo termina quando todos os navios de um jogador forem afundados. Uma mensagem de vitória/derrota aparece no painel de estado.</div>
+      </li>
+
+      <li>
+        <div class="step-title">Desconectar</div>
+        <div class="note">Para terminar a ligação, clique <span class="kbd">Desconectar</span>. Para reiniciar a colocação de navios, clique <span class="kbd">Resetar colocação</span>.</div>
+      </li>
+    </ol>
+
+    <div class="row">
+      <button class="btn" onclick="window.print()">Imprimir instruções</button>
+      <button class="btn" onclick="downloadHTML()">Descarregar HTML</button>
+    </div>
+
+    <pre id="downloadArea" style="display:none"><!-- conteúdo usado para download --></pre>
+
+    <footer>
+      Dica: se não quiser copiar/colar SDPs manualmente, posso fornecer uma versão com servidor de sinalização (Node.js + WebSocket) que simplifica a ligação automática entre jogadores.
+    </footer>
+  </main>
+
+<script>
+function downloadHTML(){
+  const html = document.documentElement.outerHTML;
+  const blob = new Blob([html],{type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'como-jogar-batalha-naval.html';
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
