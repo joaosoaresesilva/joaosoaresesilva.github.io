@@ -1,0 +1,275 @@
+\documentclass[12pt, a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[portuguese]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{geometry}
+\geometry{a4paper, margin=2.5cm}
+
+\title{\textbf{MANUAL DE FORMAÇÃO}}
+\author{Autoria (Formador/a): João Silva} % Autoria referida na fonte [2]
+\date{Curso Técnico/a de Informática – Instalação e Gestão de Redes \\ 
+	Módulo/Unidade 0840 – Servidores web \\
+	Duração: 50 horas \\
+	Forma de Organização: eLearning (e-forma), Presencial, bLearning} % Informação da Fonte [2]
+
+\begin{document}
+	\maketitle
+	
+	\thispagestyle{empty} % Sem número de página na capa
+	
+	\begin{abstract}
+		Este manual é da autoria do Formador João Silva, que assume todos os direitos de autor relativos aos conteúdos aqui desenvolvidos [2]. Foi entregue à Talentus para utilização como Recurso Técnico-Pedagógico [2].
+	\end{abstract}
+	
+	\newpage
+	\tableofcontents % Geração automática do índice [3]
+	
+	\newpage
+	
+	% --- Informações Iniciais ---
+	\section*{Objetivos do Manual}
+	Os servidores web são componentes essenciais para o funcionamento da Internet [4]. Os objetivos do manual são aprender:
+	\begin{itemize}
+		\item O que são servidores web e como funcionam [4].
+		\item Quais são os tipos de servidores web (estáticos e dinâmicos) [1].
+		\item Quais são os principais recursos de servidores web [1].
+		\item Quais são os servidores web mais utilizados e suas aplicações práticas [1].
+	\end{itemize}
+	
+	\section*{Destinatários}
+	Este manual é destinado a formandos de nível médio que desejam ampliar os conhecimentos sobre servidores web e suas funcionalidades [1]. É recomendável ter noções básicas de informática e Internet, embora não sejam requeridos conhecimentos prévios sobre o assunto [1]. O manual também oferece exercícios e atividades [1].
+	
+	\section*{Pré-requisitos}
+	Os pré-requisitos para a unidade incluem [5]:
+	\begin{itemize}
+		\item Ter um Virtualbox com Ubuntu instalado e configurado [5].
+		\item Ter acesso à Internet e a um navegador web [5].
+		\item Saber como usar o terminal do Ubuntu e os comandos básicos de Linux [5].
+		\item Ter interesse em aprender sobre os servidores web e suas aplicações [5].
+	\end{itemize}
+	
+	\section*{Introdução}
+	Neste manual, aprenderá a instalar e configurar um servidor web no Linux Ubuntu, bem como os principais protocolos e serviços de computação remota [5]. A computação remota permite o acesso e a utilização de recursos de um computador à distância [6].
+	
+	O manual está dividido em capítulos que abrangem [6-9]:
+	\begin{itemize}
+		\item Protocolos TELNET, RLOGIN e SSH para acesso remoto ao terminal [6].
+		\item Protocolo FTP para transferência de arquivos entre computadores remotos [7].
+		\item Serviço TALK para comunicação em tempo real entre usuários [8].
+		\item Serviço NFS para partilha de arquivos e diretórios entre computadores remotos [9].
+	\end{itemize}
+	
+	\newpage
+	
+	% --- CAPÍTULOS DE CONTEÚDO ---
+	
+	\chapter{TELNET, RLOGIN, SSH E FTP} % Título baseado em [10]
+	O login remoto permite aos utilizadores acederem ao sistema ou servidor remotamente [11].
+	
+	\section{Telnet} % Secção 2 na fonte [10]
+	O Telnet é um serviço cliente amplamente utilizado para login remoto em servidores, permitindo interagir com o sistema remoto através de um terminal virtual [11]. Foi criado por volta de 1969 pelas forças armadas americanas [12].
+	\begin{itemize}
+		\item O Telnet utiliza comunicação em texto plano e bidirecional através de uma conexão em terminal virtual [12].
+		\item É considerado inseguro pois todas as informações, incluindo senhas e comandos, são transmitidas em texto simples [13, 14].
+		\item Foi amplamente substituído por protocolos mais seguros, como o SSH [14].
+	\end{itemize}
+	\subsection{Configuração e Uso do Telnet}
+	\begin{itemize}
+		\item Instalação do pacote do servidor Telnet (e.g., \texttt{sudo apt-get install telnetd} no Ubuntu) [15].
+		\item Configuração de permissões e restrições de acesso (e.g., em \texttt{/etc/inetd.conf}) [16].
+		\item Uso do serviço Telnet para administração remota (execução de comandos) [17, 18] e \textbf{Shutdown remoto} [19].
+		\item \textbf{Desabilitação do serviço Telnet}: Recomendado por questões de segurança devido à transmissão de informações em texto simples [19, 20].
+	\end{itemize}
+	\subsection{Exercícios práticos} % Exercícios práticos 1.1.1 na fonte [10]
+	\subsubsection{Desabilitando o Telnet e o RLOGIN}
+	Aceder às configurações do sistema Linux, desabilitar os serviços Telnet e RLOGIN para aumentar a segurança, e verificar se os serviços estão desabilitados [21].
+	
+	\section{RLOGIN} % Secção 3 na fonte [10]
+	O RLOGIN é um protocolo semelhante ao Telnet para acesso remoto a um servidor, mas também não é seguro pois os dados são transmitidos em texto simples [22, 23].
+	\begin{itemize}
+		\item O RLOGIN permite que as credenciais do cliente sejam armazenadas num arquivo \texttt{rhosts} local, ao contrário do Telnet que exige a digitação de credenciais a cada conexão [24].
+		\item \textbf{Desabilitação do rlogin}: Aceda o arquivo de configuração relevante (geralmente \texttt{/etc/xinetd.d/rlogin}) e altere \texttt{"disable = no"} para \texttt{"disable = yes"}, reiniciando o serviço \texttt{xinetd} [25, 26].
+	\end{itemize}
+	\subsection{Configuração dos serviços em xinetd.d} % Secção 3.1 na fonte [27, 28]
+	O \texttt{xinetd} é um *daemon* do sistema que gerencia serviços de rede no Linux [28].
+	\subsubsection{Exercícios práticos} % Secção 3.1.1 na fonte [27, 29]
+	\begin{itemize}
+		\item Descreva os passos necessários para desabilitar o serviço rlogin num sistema Linux [29].
+	\end{itemize}
+	
+	\section{SSH} % Secção 4 na fonte [27]
+	O SSH (Secure Shell) é um protocolo seguro que utiliza criptografia para proteger os dados enviados e recebidos pela rede, sendo uma alternativa mais segura ao Telnet e ao RLOGIN [23, 29, 30]. O SSH usa a porta TCP 22 por padrão [30].
+	
+	\subsection{Comparação do SSH ao telnet/ftp e o rlogin} % Secção 4.1 na fonte [27, 30]
+	O SSH protege os dados contra interceção, ao contrário do Telnet, FTP e RLOGIN, que usam texto simples [30]. O SSH permite transferências seguras de ficheiros usando SCP ou SFTP [30].
+	
+	\subsection{Logon em máquinas remotas com o SSH} % Secção 4.2 na fonte [27, 31]
+	O logon exige um par de chaves SSH (privada e pública) [31]. A chave pública deve ser copiada para o arquivo \texttt{\textasciitilde/.ssh/authorized\_keys} no servidor remoto [31].
+	
+	\subsection{Copia de ficheiros pelo SSH(scp)} % Secção 4.3 na fonte [32, 33]
+	O comando \texttt{scp} (Secure Copy) permite a cópia segura de ficheiros entre sistemas [33]. A sintaxe geral é: \texttt{scp [opções] origem destino} [34].
+	
+	\subsection{Criação de uma nova assinatura digital} % Secção 4.4 na fonte [32, 35]
+	Uma assinatura digital pode ser criada usando uma chave SSH, que permite autenticação segura [35].
+	\begin{itemize}
+		\item Geração de chave SSH (e.g., \texttt{ssh-keygen -t ed25519 -C "seu\_email@exemplo.com"}) [36].
+		\item A chave gerada consiste num arquivo privado (secreto) e um arquivo público (que pode ser distribuído) [37].
+		\item Verificação de uma mensagem assinada com a chave SSH [38].
+	\end{itemize}
+	\subsubsection{Exercícios práticos} % Secção 4.4.1 na fonte [32, 39]
+	\begin{itemize}
+		\item Passo 1: Criação da nova assinatura digital (chave SSH) [39, 40].
+		\item Passo 2: Configuração da chave pública no servidor remoto (adicionar a \texttt{\textasciitilde/.ssh/authorized\_keys}) [41, 42].
+		\item Passo 3: Logon usando a assinatura (autenticação segura sem a necessidade de inserir a senha constantemente) [42, 43].
+	\end{itemize}
+	
+	\subsection{Utilização do SSH para Execução de Programas Remotos} % Secção 4.5 na fonte [32, 44]
+	Permite executar programas num servidor remoto através da linha de comando local (\texttt{ssh user@servidor comando}) [44].
+	
+	\subsection{Utilização do SSH para Clientes X Localmente} % Secção 4.6 na fonte [32, 45]
+	Suporta o redirecionamento de exibição X11, usando a opção \texttt{"-X"} [45].
+	
+	\subsection{Túneis SSH} % Secção 4.7 na fonte [45, 46]
+	Permitem encaminhar o tráfego de rede de forma segura através de uma conexão SSH [45].
+	\subsubsection{Túnel de encaminhamento de porta local:} \texttt{ssh -L porta\_local:destino:porta\_destino user@servidor} [47].
+	\subsubsection{Túnel de encaminhamento de porta remota:} \texttt{ssh -R porta\_remota:destino:porta\_destino user@servidor} [47].
+	\subsubsection{A habilitação e desabilitação do acesso remoto do utilizador de "root"} [47].
+	\begin{itemize}
+		\item Habilitação: Editar \texttt{/etc/ssh/sshd\_config} e definir \texttt{PermitRootLogin} para \texttt{"yes"} [48, 49].
+		\item Desabilitação (prática recomendada): Definir \texttt{PermitRootLogin} para \texttt{"no"} [49, 50].
+	\end{itemize}
+	
+	\newpage
+	
+	\section{FTP} % Secção 5 na fonte [51, 52]
+	O FTP (File Transfer Protocol) é um protocolo usado para transferência de ficheiros entre cliente e servidor remoto [52]. Foi desenvolvido na década de 1970 [52].
+	\begin{itemize}
+		\item A conexão pode ser \textbf{ativa} (servidor cria o canal de dados) ou \textbf{passiva} (cliente cria o canal de dados) [53].
+		\item É recomendado usar variantes seguras como FTPS (com SSL/TLS) ou SFTP (com SSH) [53, 54].
+	\end{itemize}
+	
+	\subsection{Wu-FTPd} % Secção 5.1 na fonte [51, 55]
+	Wu-FTPd é um software de servidor FTP gratuito para sistemas Unix/Linux, conhecido por ter um grande número de opções configuráveis [55, 56]. O arquivo de configuração principal é \texttt{/etc/ftpaccess} [57].
+	
+	\subsection{Construção de um servidor FTP (Linux)} % Secção 5.2 na fonte [58, 59]
+	Utiliza-se o \texttt{vsftpd} (Very Secure FTP Daemon) no Linux. Os passos incluem instalação (\texttt{sudo apt-get install vsftpd}), configuração do arquivo \texttt{/etc/vsftpd.conf} (definir pasta raiz, acesso anónimo, modo de transferência), e reinício do servidor [59, 60].
+	
+	\subsection{FTP público vs. FTP de utilizadores} % Secção 5.3 na fonte [58, 61]
+	\begin{itemize}
+		\item \textbf{FTP Público:} Não requer credenciais, geralmente usando o nome de utilizador “anonymous” [61]. O diretório \texttt{pub} contém arquivos para download livre e gratuito [61, 62].
+		\item \textbf{FTP de Utilizadores:} Requer autenticação com conta e senha válidas (contas do sistema operacional ou virtuais) [62, 63].
+	\end{itemize}
+	
+	\subsection{Comandos do cliente FTP} % Secção 5.4 na fonte [58, 64]
+	Lista dos comandos mais comuns, como \texttt{ftp}, \texttt{open}, \texttt{user}, \texttt{cd}, \texttt{get} (copiar do servidor para o local), \texttt{put} (copiar do local para o servidor), \texttt{mput}, \texttt{delete}, \texttt{mkdir}, \texttt{ascii}, e \texttt{binary} [64-69].
+	
+	\subsubsection{Configuração de um diretório pub num servidor ftp linux} % Secção 5.4.2 na fonte [70, 71]
+	\begin{itemize}
+		\item Instalação e início do serviço \texttt{vsftpd} [72].
+		\item Configuração de \texttt{/etc/vsftpd.conf}: Definir \texttt{anonymous\_enable=YES} e \texttt{anon\_root=/srv/ftp} [73, 74].
+		\item Teste do diretório \texttt{pub} usando o comando \texttt{ftp} [75].
+	\end{itemize}
+	
+	\subsection{Configuração de mensagens para os utilizadores no servidor vsftpd} % Secção 5.5 na fonte [70, 76]
+	\begin{itemize}
+		\item \textbf{Mensagens de banner (5.5.1):} Exibidas antes ou depois do login, configuradas por \texttt{ftpd\_banner} ou \texttt{banner\_file} [77, 78].
+		\item \textbf{Mensagens de diretório (5.5.2):} Exibidas ao entrar num diretório, configuradas habilitando \texttt{dirmessage\_enable=YES} e criando um arquivo \texttt{.message} em cada diretório [79].
+	\end{itemize}
+	
+	\subsection{Limitação do número de utilizadores} % Secção 5.5.6 na fonte [80, 81]
+	Uso de opções no \texttt{/etc/vsftpd.conf} para controlar o acesso e evitar sobrecarga:
+	\begin{itemize}
+		\item \texttt{max\_clients} (máximo total de utilizadores simultâneos) [81].
+		\item \texttt{max\_per\_ip} (máximo de utilizadores pelo mesmo IP) [82].
+		\item \texttt{max\_login\_fails} (máximo de tentativas falhadas de login) [83].
+		\item \texttt{local\_max\_rate} e \texttt{anon\_max\_rate} (taxa máxima de transferência) [84, 85].
+	\end{itemize}
+	
+	\subsection{Realização FTP para conta de utilizador} % Secção 5.5.7 na fonte [80, 86]
+	Permitir que utilizadores do sistema acedam aos seus diretórios pessoais usando credenciais locais: \texttt{local\_enable=YES} e \texttt{chroot\_local\_user=YES} (restringindo o utilizador ao seu diretório raiz) [86, 87].
+	
+	\subsection{Desactivação do FTP} % Secção 5.5.9 na fonte [80, 88]
+	Para aumentar a segurança, o serviço \texttt{vsftpd} pode ser parado (\texttt{sudo systemctl stop vsftpd}) e desabilitado (\texttt{sudo systemctl disable vsftpd}) [88].
+	
+	\newpage
+	
+	\chapter{Servidor Web - computação remota, TALK e NFS} % Título baseado em [89]
+	
+	\section{Computação Remota} % Secção 6 na fonte [88, 89]
+	A computação remota é a capacidade de aceder e controlar um computador à distância por meio de uma rede [88]. Exemplos incluem TELNET, RLOGIN, SSH, FTP, VNC e NFS [90].
+	
+	\subsection{VNC (Virtual Network Computing)} % Secção 6.1 na fonte [90]
+	Ferramenta de computação remota que permite aceder e controlar a interface gráfica de um computador [90, 91].
+	
+	\subsection{TALK} % Secção 6.2 na fonte [89, 92]
+	O programa Talk é uma ferramenta de comunicação em tempo real com outro utilizador por meio de uma interface de texto dividida em duas partes [92, 93]. Requer que ambos os utilizadores tenham o programa instalado e que o endereço IP ou nome de domínio do outro seja conhecido [93].
+	
+	\subsubsection{Configuração dos serviços necessários para Talk} % Secção 6.2.1 na fonte [89, 94]
+	\begin{itemize}
+		\item Daemons necessários: \texttt{talkd} (responsável por convites e mensagens) e \texttt{inetd} ou \texttt{xinetd} (inicia o \texttt{talkd}) [94].
+		\item Instalação dos pacotes \texttt{talk} e \texttt{talkd} [95].
+		\item Habilitação do serviço \texttt{talkd} nos arquivos \texttt{/etc/inetd.conf} ou \texttt{/etc/xinetd.d/talk} [95, 96].
+		\item Configuração de autorizações em \texttt{/etc/hosts.equiv} ou \texttt{.rhosts} [95, 97].
+	\end{itemize}
+	
+	\subsection{NFS} % Secção 6.3 na fonte [89, 97]
+	O Network File System (NFS) é um sistema de arquivos distribuídos que permite a montagem de sistemas de arquivos remotos numa rede TCP/IP [97, 98].
+	
+	\subsubsection{Utilidades do NFS} % Secção 6.3.1 na fonte [98, 99]
+	Incluem centralização de armazenamento/backup, redução de espaço local e fornecimento de acesso multiplataforma (SMB e NFS) [100, 101].
+	
+	\subsubsection{Daemons do NFS} % Secção 6.3.2 na fonte [99, 101]
+	Os daemons essenciais são: \texttt{rpcd}, \texttt{statd}, \texttt{mountd} e \texttt{nfsd} [101, 102].
+	
+	\subsubsection{Configuração do arquivo exports} % Secção 6.3.3 na fonte [99, 102]
+	O arquivo \texttt{/etc/exports} informa quais sistemas de arquivos serão exportados, para quais clientes e com quais opções (e.g., \texttt{rw} para leitura/escrita, \texttt{ro} para somente leitura) [102, 103].
+	
+	\subsubsection{Iniciação dos serviços de NFS} % Secção 6.3.4 na fonte [99, 104]
+	É necessário iniciar os serviços \texttt{portmap} (ou \texttt{rpcbind}), \texttt{nfs-server} e \texttt{nfs-lock} usando o comando \texttt{systemctl start} [105].
+	
+	\subsubsection{Acesso a pastas como root e utilizador} % Secção 6.3.7 na fonte [106, 107]
+	\begin{itemize}
+		\item Por padrão, o NFS restringe o acesso total do usuário \texttt{root} do cliente (por segurança) [108].
+		\item Para permitir o acesso total do \texttt{root}, use a opção \texttt{no\_root\_squash} no \texttt{/etc/exports} [108, 109].
+		\item Para restringir o acesso do \texttt{root} ainda mais, use a opção \texttt{root\_squash} [109].
+	\end{itemize}
+	
+	\subsubsection{Utilização do mount para aceder a um recurso remoto} % Secção 6.3.10 na fonte [106, 110]
+	O comando \texttt{mount} permite montar um volume NFS temporariamente: \texttt{sudo mount -t nfs servidor:/diretorio /ponto\_de\_montagem} [110, 111].
+	
+	\subsubsection{Configuração do /etc/fstab para acesso} % Secção 6.3.11 na fonte [112, 113]
+	O arquivo \texttt{/etc/fstab} permite montar um volume NFS permanentemente, ou seja, no momento do boot [113].
+	
+	\subsubsection{Configuração de um único site em múltiplos servidores usando NFS} % Secção 6.3.13 na fonte [112, 114]
+	O NFS permite compartilhar o mesmo sistema de arquivos entre vários servidores, facilitando a distribuição de carga e redundância [114]. Isso é feito exportando o diretório do site do servidor NFS (\texttt{/var/www/html}) e montando-o em todos os clientes web, alterando o \texttt{DocumentRoot} do serviço web para o ponto de montagem NFS [115-117].
+	
+	\subsubsection{RPC - conceito} % Secção 6.3.15 na fonte [118, 119]
+	RPC (Remote Procedure Call) é um protocolo que permite que um programa execute uma função em outro computador na rede sem saber detalhes desse computador [119, 120]. O protocolo NFS usa RPC para que os clientes executem funções nos sistemas de arquivos remotos [120].
+	
+	\subsubsection{Utilização do RPC para verificar se um servidor remoto esta executar o NFS} % Secção 6.3.16 na fonte [118, 121]
+	Usa-se o comando \texttt{rpcinfo -p} no servidor especificado para listar os programas registados com o mapeador de portas [121]. A presença do número de programa \textbf{100003} indica que o servidor está executando o NFS [122, 123].
+	
+	\subsubsection{Configuração do NFS no boot para iniciar um servidor com pastas criadas} % Secção 6.3.18 na fonte [118, 124]
+	Envolve a instalação dos pacotes \texttt{nfs-kernel-server} (host) e \texttt{nfs-common} (cliente), configuração do \texttt{/etc/exports} no host e configuração do \texttt{/etc/fstab} no cliente para montagem automática [124, 125].
+	
+	\newpage
+	
+	% --- Referências ---
+	\section*{Bibliografia} [4]
+	
+	\section*{Webgrafia} [4]
+	\begin{itemize}
+		\item RLOGIN e Telnet, https://pt.differkinome.com/articles/protocols—formats/difference-between-rlogin-and-telnet-3.html, 2023 [126]
+		\item Logon em máquinas remotas com o SSH, https://www.digitalocean.com/community/tutorials/how-to-use-ssh-to-connect-to-a-remote-server-pt, 2023 [126]
+		\item scp, https://www.hostinger.com.br/tutoriais/usar-comando-scp-linux-para-transferir-ficheiros, 2023 [126]
+		\item Nova assinatura Digital, https://docs.github.com/pt/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent, 2023 [127]
+		\item Como funciona o FTP,  https://www.hostinger.com.br/tutoriais/ftp-o-que-e-como-funciona, 2023 [128]
+		\item WuFTP,  https://en.wikipedia.org/wiki/WU-FTPD, 2023 [128]
+		\item NFS, https://pt.wikipedia.org/wiki/Network\_File\_System., 2023 [128]
+		\item RPC info, https://www.ibm.com/docs/pt-br/db2/11.1?topic=environment-verifying-that-nfs-is-running. 2023 [128]
+		\item Utilização do NFS para configurar pastas de utilizadores únicos num servidor, https://www.digitalocean.com/community/tutorials/how-to-set-up-an-nfs-mount-on-ubuntu-20-04-pt., 2023 [129]
+	\end{itemize}
+	
+\end{document}

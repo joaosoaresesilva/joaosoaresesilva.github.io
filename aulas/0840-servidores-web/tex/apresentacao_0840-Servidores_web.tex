@@ -1,0 +1,220 @@
+\documentclass{beamer}
+
+% Configurações do Pacote
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[portuguese]{babel}
+
+% Título e Informações da Apresentação
+\title{Servidores Web e Protocolos de Computação Remota}
+\subtitle{Módulo 0840 – Servidores web}
+\author{João Silva}
+\institute{Curso Técnico/a de Informática – Instalação e Gestão de Redes}
+\date{0840-Manual-Servidores-web}
+
+% Tema (opcional - pode escolher um tema diferente)
+\usetheme{Madrid} 
+
+% Início do Documento
+\begin{document}
+	
+	% ----------------------------------------------------------------------
+	% Slide 1: Título
+	% ----------------------------------------------------------------------
+	\begin{frame}
+		\titlepage
+		\vspace{0.5cm}
+		{\small Duração: 50 horas}
+	\end{frame}
+	
+	% ----------------------------------------------------------------------
+	% Slide 2: Objetivos e Destinatários
+	% ----------------------------------------------------------------------
+	\section{Introdução e Contexto}
+	\begin{frame}{Objetivos do Manual}
+		\begin{itemize}
+			\item O manual visa ensinar o que são \textbf{servidores web} e como funcionam, incluindo os tipos (estáticos e dinâmicos).
+			\item Abordará os \textbf{principais protocolos e serviços de computação remota}.
+			\item O objetivo é fornecer conhecimentos para utilizar protocolos e serviços de computação remota de forma \textbf{eficiente e segura}.
+		\end{itemize}
+		
+		\subsection*{Destinatários e Pré-requisitos}
+		\begin{itemize}
+			\item Destinado a \textbf{formandos de nível médio} que desejam ampliar conhecimentos sobre servidores web e funcionalidades.
+			\item \textbf{Pré-requisitos} incluem ter um Virtualbox com Ubuntu instalado e configurado, acesso à Internet, saber usar o terminal do Ubuntu e comandos básicos de Linux.
+		\end{itemize}
+	\end{frame}
+	
+	% ----------------------------------------------------------------------
+	% Slide 3: Computação Remota: TELNET e RLOGIN
+	% ----------------------------------------------------------------------
+	\section{TELNET, RLOGIN e SSH}
+	\begin{frame}{Capítulo 1: TELNET e RLOGIN (Inseguros)}
+		\begin{itemize}
+			\item \textbf{Login Remoto}: Permite aos utilizadores acederem ao sistema ou servidor de um local diferente da sua localização física.
+			\item \textbf{TELNET} (Teletype Network): Protocolo de acesso remoto que permite conexão através de um terminal virtual.
+			\begin{itemize}
+				\item Não fornece criptografia ou autenticação segura; os dados (incluindo senhas) são transmitidos em \textbf{texto simples}.
+				\item É considerado inseguro e \textbf{não recomendado} em ambientes de produção.
+			\end{itemize}
+			\item \textbf{RLOGIN} (Remote Login): Protocolo semelhante ao Telnet, também permite acesso remoto via terminal.
+			\begin{itemize}
+				\item Igualmente inseguro, pois os dados são transmitidos em texto simples.
+				\item Pode armazenar credenciais num arquivo \texttt{rhosts} local, ao contrário do Telnet.
+			\end{itemize}
+		\end{itemize}
+		\vspace{0.5cm}
+		\centering
+		\alert{Ambos foram amplamente substituídos pelo SSH (Secure Shell).}
+	\end{frame}
+	
+	% ----------------------------------------------------------------------
+	% Slide 4: SSH (Secure Shell)
+	% ----------------------------------------------------------------------
+	\begin{frame}{SSH: O Protocolo Seguro}
+		\begin{itemize}
+			\item \textbf{SSH} (Secure Shell): Protocolo seguro para acesso remoto a um servidor, oferecendo \textbf{criptografia e autenticação robustas}.
+			\item \textbf{Criptografia}: Protege os dados enviados e recebidos, evitando que sejam intercetados e lidos, o que é a principal diferença em relação ao Telnet, FTP e RLOGIN.
+			\item \textbf{Portas Padrão}: SSH usa TCP 22, enquanto Telnet usa TCP 23 e RLOGIN usa TCP 513.
+			\item \textbf{Logon Remoto}: Requer um \textbf{par de chaves SSH} (privada e pública) para autenticação segura.
+			\item \textbf{Desabilitar Root}: É altamente recomendado desabilitar o acesso remoto direto à conta \texttt{root} para reduzir riscos de segurança, alterando \texttt{PermitRootLogin} para "no" no \texttt{/etc/ssh/sshd\_config}.
+		\end{itemize}
+	\end{frame}
+	
+	% ----------------------------------------------------------------------
+	% Slide 5: Recursos Avançados do SSH
+	% ----------------------------------------------------------------------
+	\begin{frame}{Recursos Avançados do SSH}
+		\begin{itemize}
+			\item \textbf{Cópia de Ficheiros Segura (SCP)}: O comando \texttt{scp} permite copiar ficheiros entre cliente e servidor remotamente de forma segura.
+			\begin{itemize}
+				\item Sintaxe: \texttt{scp [opções] origem destino}.
+				\item Opção \texttt{-r} (recursivo) para diretórios; \texttt{-i} para especificar a chave SSH.
+			\end{itemize}
+			\item \textbf{Execução de Programas Remotos}: Permite executar comandos diretamente no servidor remoto.
+			\item \textbf{Clientes X Localmente}: Suporta o redirecionamento de exibição X11 (opção \texttt{-X}) para exibir aplicações gráficas remotas na máquina local.
+			\item \textbf{Túneis SSH}: Permitem o encaminhamento seguro de tráfego de rede entre duas máquinas.
+			\begin{itemize}
+				\item Local (\texttt{-L}) e Remoto (\texttt{-R}).
+			\end{itemize}
+		\end{itemize}
+	\end{frame}
+	
+	% ----------------------------------------------------------------------
+	% Slide 6: FTP (File Transfer Protocol)
+	% ----------------------------------------------------------------------
+	\section{FTP (Capítulo 2)}
+	\begin{frame}{FTP: Transferência de Ficheiros}
+		\begin{itemize}
+			\item \textbf{Definição}: Protocolo muito utilizado para transferência de ficheiros entre cliente e servidor remoto, desenvolvido na década de 1970.
+			\item \textbf{Funcionamento}: Permite enviar, baixar, editar e excluir ficheiros num servidor remoto via conexão TCP/IP.
+			\item \textbf{Modos de Conexão}:
+			\begin{itemize}
+				\item \textbf{Ativo}: Servidor FTP cria a conexão de dados com o cliente.
+				\item \textbf{Passivo}: Cliente FTP cria a conexão de dados com o servidor.
+			\end{itemize}
+			\item \textbf{Insegurança}: O FTP padrão transmite informações em texto simples.
+			\item \textbf{Alternativas Seguras}: Recomenda-se o uso de FTPS (FTP com SSL/TLS) ou SFTP (SSH File Transfer Protocol).
+		\end{itemize}
+	\end{frame}
+	
+	% ----------------------------------------------------------------------
+	% Slide 7: Configuração de Servidor FTP (vsftpd)
+	% ----------------------------------------------------------------------
+	\begin{frame}{Servidores e Configuração de FTP}
+		\begin{itemize}
+			\item \textbf{Wu-FTPd}: Software de servidor FTP gratuito para Unix/Linux, conhecido pela sua flexibilidade e opções configuráveis, usando o arquivo \texttt{/etc/ftpaccess}.
+			\item \textbf{vsftpd}: Servidor FTP popular e seguro para Linux, instalado via \texttt{sudo apt-get install vsftpd}.
+			\item \textbf{FTP Público vs. Utilizadores}:
+			\begin{itemize}
+				\item \textbf{Público}: Não requer credenciais, usa "anonymous" (diretório \texttt{pub}).
+				\item \textbf{Utilizadores}: Requer autenticação com conta e senha válidas.
+			\end{itemize}
+			\item \textbf{Configuração de Mensagens (vsftpd)}: Pode-se usar \texttt{ftpd\_banner} (antes do login) ou \texttt{banner\_file} (depois do login).
+			\item \textbf{Limitação de Utilizadores}: Opções como \texttt{max\_clients} (limite total) e \texttt{max\_per\_ip} (limite por IP) podem ser configuradas no \texttt{vsftpd.conf}.
+		\end{itemize}
+	\end{frame}
+	
+	% ----------------------------------------------------------------------
+	% Slide 8: TALK
+	% ----------------------------------------------------------------------
+	\section{TALK (Capítulo 3)}
+	\begin{frame}{TALK: Comunicação em Tempo Real}
+		\begin{itemize}
+			\item \textbf{Definição}: Ferramenta de comunicação que permite uma conversa em tempo real via interface de texto dividida em duas partes.
+			\item \textbf{Requisitos}: Precisa de estar instalado em ambos os computadores e requer o nome de utilizador e o endereço IP do outro utilizador.
+			\item \textbf{Serviços Necessários}:
+			\begin{enumerate}
+				\item \textbf{Daemon \texttt{talkd}}: Responsável por receber e enviar convites e mensagens.
+				\item \textbf{Daemon \texttt{inetd} ou \texttt{xinetd}}: Inicia o \texttt{talkd} quando há solicitação na porta 517 ou 518.
+			\end{enumerate}
+			\item \textbf{Autorização}: O arquivo \texttt{/etc/hosts.equiv} ou \texttt{.rhosts} define quais hosts ou utilizadores podem conectar-se via Talk.
+			\item \textbf{Limitações}: Falta de criptografia dos dados transmitidos e dependência da disponibilidade do outro utilizador.
+		\end{itemize}
+	\end{frame}
+	
+	% ----------------------------------------------------------------------
+	% Slide 9: NFS (Network File System)
+	% ----------------------------------------------------------------------
+	\section{NFS e RPC (Capítulo 4)}
+	\begin{frame}{NFS: Partilha de Arquivos em Rede}
+		\begin{itemize}
+			\item \textbf{Definição}: Sistema de arquivos distribuídos que permite montar sistemas de arquivos remotos numa rede TCP/IP.
+			\item \textbf{Utilidades}: Permite o acesso centralizado a ficheiros como se estivessem localmente, facilitando a partilha e o backup centralizado.
+			\item \textbf{Daemons Essenciais}:
+			\begin{itemize}
+				\item \texttt{rpcd}: Fornece serviços de Chamada Remota de Procedimento (RPC).
+				\item \texttt{statd}: Monitora o status dos servidores e clientes.
+				\item \texttt{mountd}: Atende a solicitações de montagem.
+				\item \texttt{nfsd}: Atende a solicitações de leitura e escrita nos arquivos NFS.
+			\end{itemize}
+			\item \textbf{Arquivo de Configuração (\texttt{exports})}: O arquivo \texttt{/etc/exports} define quais sistemas de arquivos serão exportados, para quais clientes e com quais opções.
+		\end{itemize}
+	\end{frame}
+	
+	% ----------------------------------------------------------------------
+	% Slide 10: Configuração de Permissões e Montagem NFS
+	% ----------------------------------------------------------------------
+	\begin{frame}{Configuração e Acesso NFS}
+		\begin{itemize}
+			\item \textbf{Opções de Permissão (Exports)}:
+			\begin{itemize}
+				\item \texttt{rw} (leitura e escrita) ou \texttt{ro} (somente leitura).
+				\item \textbf{\texttt{no\_root\_squash}}: Permite que o utilizador \texttt{root} do cliente tenha acesso total à pasta exportada (por padrão, o root é restrito).
+			\end{itemize}
+			\item \textbf{Montagem de Volumes}: Associar um sistema de arquivos remoto a um ponto de montagem local.
+			\begin{itemize}
+				\item \textbf{Temporária}: Uso do comando \texttt{mount -t nfs servidor:/diretorio /ponto\_de\_montagem}.
+				\item \textbf{Permanente}: Configuração no arquivo \texttt{/etc/fstab} para montagem automática na inicialização do sistema.
+			\end{itemize}
+			\item \textbf{Verificação}: O comando \texttt{showmount -e servidor} lista as pastas exportadas.
+		\end{itemize}
+	\end{frame}
+	
+	% ----------------------------------------------------------------------
+	% Slide 11: RPC (Remote Procedure Call)
+	% ----------------------------------------------------------------------
+	\begin{frame}{RPC (Remote Procedure Call)}
+		\begin{itemize}
+			\item \textbf{Conceito}: Protocolo que permite que um programa execute uma função ou procedimento em outro computador na rede sem conhecer os detalhes desse computador.
+			\item \textbf{Funcionamento}: O programa envia uma mensagem com os parâmetros ao computador remoto, que usa o \texttt{portmapper} ou \texttt{rpcbind} para encontrar o programa responsável e a porta correta.
+			\item \textbf{Ligação ao NFS}: O protocolo NFS usa o RPC para permitir que os clientes executem funções nos sistemas de arquivos exportados pelos servidores, comunicando como se estivessem executando localmente.
+			\item \textbf{Verificação (rpcinfo)}: O comando \texttt{rpcinfo -p} é usado para verificar quais programas estão registados no mapeador de portas de um servidor remoto, confirmando se o NFS está em execução (programa 100003).
+		\end{itemize}
+	\end{frame}
+	
+	% ----------------------------------------------------------------------
+	% Slide 12: Conclusão
+	% ----------------------------------------------------------------------
+	\begin{frame}{Resumo e Conclusão}
+		\begin{itemize}
+			\item O manual abordou as principais ferramentas de \textbf{computação remota}.
+			\item A segurança é crucial: a transição de \textbf{TELNET e RLOGIN} (inseguros) para \textbf{SSH} (seguro e criptografado) é fundamental.
+			\item \textbf{FTP} é utilizado para transferência de ficheiros, mas requer variantes seguras (FTPS, SFTP).
+			\item \textbf{NFS} facilita a partilha centralizada e montagem de sistemas de arquivos remotos.
+			\item A correta \textbf{configuração de permissões e restrições} (e.g., desabilitação de acesso root remoto, chroot) é essencial para manter a integridade do sistema.
+		\end{itemize}
+	\end{frame}
+	
+\end{document}
+```
