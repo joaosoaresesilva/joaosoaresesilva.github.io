@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plano de Formação: Git e GitHub</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2, h3 {
+            color: #0056b3;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .module {
+            margin-bottom: 25px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+        .module:last-child {
+            border-bottom: none;
+        }
+        .topic {
+            margin-left: 20px;
+            margin-bottom: 10px;
+        }
+        .duration {
+            font-weight: bold;
+            color: #007bff;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        ul li {
+            margin-bottom: 5px;
+        }
+        .total-duration {
+            font-size: 1.2em;
+            font-weight: bold;
+            text-align: right;
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 2px solid #0056b3;
+        }
+        .objective-list li {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    
+    <div class="container">
+        <h1>Plano de Sessão: UC00617 - Utilizar Serviços Git e GitHub</h1>
+        <p><strong>Duração Total:</strong> 25 Horas (1500 minutos)</p>
+        <p><strong>Público-alvo:</strong> Desenvolvedores, estudantes e qualquer profissional interessado em versionamento de código e colaboração.</p>
+        <p><strong>Modalidade:</strong> E-learning (Aulas assíncronas com vídeos, leituras, exercícios práticos e síncronas para dúvidas e workshops).</p>
+
+        <h2>Objetivos da Formação:</h2>
+        <ul class="objective-list">
+            <li>Compreender os conceitos fundamentais de controle de versão e do Git.</li>
+            <li>Dominar os comandos Git essenciais para o dia a dia de desenvolvimento.</li>
+            <li>Utilizar o GitHub para hospedagem de repositórios, colaboração e gestão de projetos.</li>
+            <li>Aplicar boas práticas de versionamento de código.</li>
+            <li>Resolver conflitos de merge de forma eficiente.</li>
+            <li>Configurar e gerenciar chaves SSH para autenticação segura.</li>
+        </ul>
+
+        <hr>
+
+        <div class="module">
+            <h2>Módulo 1: Introdução ao Controle de Versão e Git (3 Horas - 180 minutos)</h2>
+            <div class="topic">
+                <h3>1.1. O que é Controle de Versão? (<span class="duration">30 minutos</span>)</h3>
+                <ul>
+                    <li>História e importância do controle de versão.</li>
+                    <li>Tipos de sistemas de controle de versão (VCS): Local, Centralizado (CVCS) e Distribuído (DVCS).</li>
+                    <li>Vantagens de usar um sistema de controle de versão.</li>
+                </ul>
+            </div>
+            <div class="topic">
+                <h3>1.2. Introdução ao Git (<span class="duration">45 minutos</span>)</h3>
+                <ul>
+                    <li>O que é Git e por que usá-lo.</li>
+                    <li>Filosofia e arquitetura do Git.</li>
+                    <li>Instalação e configuração inicial do Git (usuário e e-mail).</li>
+                </ul>
+            </div>
+            <div class="topic">
+                <h3>1.3. O Ciclo de Vida do Arquivo no Git (<span class="duration">45 minutos</span>)</h3>
+                <ul>
+                    <li>Área de Trabalho (Working Directory), Área de Staging (Staging Area/Index) e Repositório Local (Local Repository).</li>
+                    <li>Estados dos arquivos: Untracked, Unmodified, Modified, Staged.</li>
+                </ul>
+            </div>
+            <div class="topic">
+                <h3>1.4. Comandos Básicos do Git - Parte 1 (<span class="duration">60 minutos</span>)</h3>
+                <ul>
+                    <li><code>git init</code>: Inicializando um novo repositório.</li>
+                    <li><code>git add</code>: Adicionando arquivos à área de staging.</li>
+                    <li><code>git commit</code>: Registrando mudanças no histórico.</li>
+                    <li><code>git status</code>: Verificando o estado do repositório.</li>
+                    <li><code>git log</code>: Visualizando o histórico de commits.</li>
+                </ul>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="module">
+            <h2>Módulo 2: Trabalhando com o Git Localmente (6 Horas - 360 minutos)</h2>
+            <div class="topic">
+                <h3>2.1. Desfazendo Mudanças no Git (<span class="duration">90 minutos</span>)</h3>
+                <ul>
+                    <li><code>git restore</code>: Descartando mudanças no working directory.</li>
+                    <li><code>git reset</code>: Desfazendo commits e removendo arquivos da área de staging.</li>
+                    <li><code>git rm</code>: Removendo arquivos do controle de versão.</li>
+                    <li><code>git mv</code>: Movendo/renomeando arquivos.</li>
+                </ul>
+            </div>
+            <div class="topic">
+                <h3>2.2. Entendendo e Gerenciando Branches (<span class="duration">120 minutos</span>)</h3>
+                <ul>
+                    <li>O que são branches e por que usá-las.</li>
+                    <li><code>git branch</code>: Listar, criar e deletar branches.</li>
+                    <li><code>git checkout</code>: Navegar entre branches.</li>
+                    <li>Boas práticas de branching (e.g., branch principal, feature branches).</li>
+                </ul>
+            </div>
+            <div class="topic">
+                <h3>2.3. Merge e Rebase (<span class="duration">90 minutos</span>)</h3>
+                <ul>
+                    <li><code>git merge</code>: Unindo histórico de branches.</li>
+                    <li>Tipos de merge (Fast-forward e Non-fast-forward).</li>
+                    <li>Conflitos de merge: identificação e resolução manual.</li>
+                    <li><code>git rebase</code>: Reorganizando o histórico de commits.</li>
+                    <li>Diferenças e quando usar merge vs. rebase.</li>
+                </ul>
+            </div>
+            <div class="topic">
+                <h3>2.4. Tags e Stash (<span class="duration">60 minutos</span>)</h3>
+                <ul>
+                    <li><code>git tag</code>: Marcando versões específicas do projeto.</li>
+                    <li><code>git stash</code>: Armazenando temporariamente mudanças não comitadas.</li>
+                </ul>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="module">
+            <h2>Módulo 3: Introdução ao GitHub e Colaboração (8 Horas - 480 minutos)</h2>
+            <div class="topic">
+                <h3>3.1. Conceitos Fundamentais do GitHub (<span class="duration">60 minutos</span>)</h3>
+                <ul>
+                    <li>O que é GitHub e sua importância na comunidade de desenvolvimento.</li>
+                    <li>Estrutura de um repositório no GitHub.</li>
+                    <li>Perfil de usuário, organizações e repositórios.</li>
+                    <li>Escolhendo a visibilidade do repositório (público vs. privado).</li>
+                </ul>
+            </div>
+            <div class="topic">
+                <h3>3.2. Conectando o Git ao GitHub (<span class="duration">90 minutos</span>)</h3>
+                <ul>
+                    <li>Criação de um repositório no GitHub.</li>
+                    <li><code>git remote add</code>: Adicionando um repositório remoto.</li>
+                    <li><code>git push</code>: Enviando commits para o repositório remoto.</li>
+                    <li><code>git pull</code>: Atualizando o repositório local com mudanças do remoto.</li>
+                    <li><code>git clone</code>: Clonando um repositório existente.</li>
+                    <li>Configuração de chaves SSH para autenticação (geração e adição ao GitHub).</li>
+                </ul>
+            </div>
+            <div class="topic">
+                <h3>3.3. Fluxo de Trabalho Colaborativo com Pull Requests (<span class="duration">120 minutos</span>)</h3>
+                <ul>
+                    <li>Forking de repositórios.</li>
+                    <li>Criação e gerenciamento de Pull Requests (PRs).</li>
+                    <li>Revisão de código e comentários em PRs.</li>
+                    <li>Merge de Pull Requests.</li>
+                    <li>Resolvendo conflitos em Pull Requests.</li>
+                </ul>
+            </div>
+            <div class="topic">
+                <h3>3.4. Gerenciamento de Issues e Projetos (<span class="duration">90 minutos</span>)</h3>
+                <ul>
+                    <li>Criação e rastreamento de Issues (problemas, bugs, melhorias).</li>
+                    <li>Atribuição de Issues, rótulos e marcos (milestones).</li>
+                    <li>Quadros de projetos (Projects) no GitHub para gestão de tarefas.</li>
+                    <li>GitHub Actions (breve introdução ao CI/CD).</li>
+                </ul>
+            </div>
+            <div class="topic">
+                <h3>3.5. Contribuindo para Projetos Open Source (<span class="duration">120 minutos</span>)</h3>
+                <ul>
+                    <li>Ética e diretrizes de contribuição.</li>
+                    <li>Encontrando projetos para contribuir.</li>
+                    <li>Fluxo de trabalho de contribuição (fork, clone, feature branch, commit, push, pull request).</li>
+                </ul>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="module">
+            <h2>Módulo 4: Tópicos Avançados e Boas Práticas (5 Horas - 300 minutos)</h2>
+            <div class="topic">
+                <h3>4.1. Refatorando o Histórico de Commits (<span class="duration">90 minutos</span>)</h3>
+                <ul>
+                    <li><code>git amend</code>: Editando o último commit.</li>
+                    <li><code>git rebase -i</code>: Rebase interativo para editar múltiplos commits (squash, reword, drop).</li>
+                    <li>Perigos do rebase em histórico público.</li>
+                </ul>
+            </div>
+            <div class="topic">
+                <h3>4.2. Hooks do Git (<span class="duration">60 minutos</span>)</h3>
+                <ul>
+                    <li>O que são Git Hooks.</li>
+                    <li>Exemplos de hooks comuns (pre-commit, post-commit).</li>
+                    <li>Automação de tarefas com hooks.</li>
+                </ul>
+            </div>
+            <div class="topic">
+                <h3>4.3. Ignorando Arquivos com .gitignore (<span class="duration">30 minutos</span>)</h3>
+                <ul>
+                    <li>Criando e configurando o arquivo <code>.gitignore</code>.</li>
+                    <li>Melhores práticas para ignorar arquivos.</li>
+                </ul>
+            </div>
+            <div class="topic">
+                <h3>4.4. Boas Práticas e Fluxos de Trabalho (<span class="duration">90 minutos</span>)</h3>
+                <ul>
+                    <li>Convenções de mensagens de commit (Conventional Commits).</li>
+                    <li>Fluxos de trabalho populares (Git Flow, GitHub Flow, GitLab Flow).</li>
+                    <li>Gerenciamento de conflitos avançado.</li>
+                    <li>Uso de GUIs para Git (opcional).</li>
+                </ul>
+            </div>
+            <div class="topic">
+                <h3>4.5. Considerações Finais e Próximos Passos (<span class="duration">30 minutos</span>)</h3>
+                <ul>
+                    <li>Recursos adicionais para aprendizado contínuo.</li>
+                    <li>Comunidades e fóruns de suporte.</li>
+                    <li>Apresentação de projetos finais (se aplicável ao formato do curso).</li>
+                </ul>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="module">
+            <h2>Módulo 5: Revisão e Projeto Prático Final (3 Horas - 180 minutos)</h2>
+            <div class="topic">
+                <h3>5.1. Sessão de Perguntas e Respostas e Revisão (<span class="duration">60 minutos</span>)</h3>
+                <ul>
+                    <li>Revisão dos tópicos mais complexos.</li>
+                    <li>Esclarecimento de dúvidas gerais.</li>
+                </ul>
+            </div>
+            <div class="topic">
+                <h3>5.2. Projeto Prático Final (<span class="duration">120 minutos</span>)</h3>
+                <ul>
+                    <li>Criação de um repositório do zero, aplicando todos os conceitos aprendidos.</li>
+                    <li>Simulação de um fluxo de trabalho colaborativo com branches, merges e pull requests.</li>
+                    <li>Resolução de conflitos em um cenário prático.</li>
+                    <li>(Opcional) Implementação de um GitHub Action simples.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="total-duration">
+            <p><strong>Duração Total da Formação: 1500 minutos (25 Horas)</strong></p>
+            <p><a href="ps_UC00617.pdf"><strong>Plano de Sessão PDF</strong></a></p>
+        </div>
+    </div>
+</body>
+</html>
+
+
