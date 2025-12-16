@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cálculo de Pães – Hotelaria</title>
+    <title>Cálculo de Pães – Distribuição</title>
 
     <style>
         body {
@@ -17,7 +17,7 @@
             padding: 20px;
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            max-width: 400px;
+            max-width: 450px;
             margin: auto;
         }
 
@@ -34,7 +34,7 @@
 
         input {
             width: 100%;
-            padding: 10px;
+            padding: 8px;
             font-size: 1em;
             margin-top: 5px;
         }
@@ -56,16 +56,31 @@
             padding: 15px;
             border-radius: 8px;
         }
+
+        .linha {
+            margin-top: 8px;
+        }
     </style>
 </head>
 
 <body>
 
 <div class="container">
-    <h1>Cálculo de Pães (Hotel)</h1>
+    <h1>Planeamento de Pães (Hotel)</h1>
 
     <label for="turistas">Número total de turistas</label>
-    <input type="number" id="turistas" min="0" placeholder="Ex: 120">
+    <input type="number" id="turistas" min="0" placeholder="Ex: 200">
+
+    <h3>Distribuição por tipo de pão (%)</h3>
+
+    <label>Papo seco (50 g)</label>
+    <input type="number" id="papo" value="60">
+
+    <label>Pão de sementes (55 g)</label>
+    <input type="number" id="sementes" value="25">
+
+    <label>Outros pães (65 g)</label>
+    <input type="number" id="outros" value="15">
 
     <button onclick="calcularPaes()">Calcular</button>
 
@@ -76,26 +91,53 @@
 function calcularPaes() {
     const turistas = parseInt(document.getElementById("turistas").value);
 
+    const percPapo = parseInt(document.getElementById("papo").value);
+    const percSementes = parseInt(document.getElementById("sementes").value);
+    const percOutros = parseInt(document.getElementById("outros").value);
+
+    const somaPercentagens = percPapo + percSementes + percOutros;
+
     if (isNaN(turistas) || turistas < 0) {
         alert("Introduza um número válido de turistas.");
         return;
     }
 
-    const percentagemConsumo = 0.8;     // 80%
-    const pesoPaoGramas = 50;            // pão típico de hotelaria portuguesa
+    if (somaPercentagens !== 100) {
+        alert("A soma das percentagens deve ser 100%.");
+        return;
+    }
 
+    const percentagemConsumo = 0.8; // 80%
     const consumidores = Math.ceil(turistas * percentagemConsumo);
-    const totalPaes = consumidores;      // 1 pão por pessoa
-    const pesoTotalKg = (totalPaes * pesoPaoGramas) / 1000;
+
+    const paesPapo = Math.round(consumidores * percPapo / 100);
+    const paesSementes = Math.round(consumidores * percSementes / 100);
+    const paesOutros = consumidores - paesPapo - paesSementes;
+
+    const pesoPapo = 50;
+    const pesoSementes = 55;
+    const pesoOutros = 65;
+
+    const pesoTotal =
+        (paesPapo * pesoPapo +
+         paesSementes * pesoSementes +
+         paesOutros * pesoOutros) / 1000;
 
     const resultadoDiv = document.getElementById("resultado");
     resultadoDiv.style.display = "block";
     resultadoDiv.innerHTML = `
-        <strong>Resultados:</strong><br><br>
+        <strong>Resultados finais:</strong><br><br>
+
         Turistas totais: ${turistas}<br>
-        Consumidores (80%): ${consumidores}<br>
-        Número de pães necessários: <strong>${totalPaes}</strong><br>
-        Peso total aproximado: ${pesoTotalKg.toFixed(2)} kg
+        Consumidores (80%): ${consumidores}<br><br>
+
+        <strong>Distribuição:</strong><br>
+        <div class="linha">Papo seco: ${paesPapo} un.</div>
+        <div class="linha">Pão de sementes: ${paesSementes} un.</div>
+        <div class="linha">Outros pães: ${paesOutros} un.</div>
+
+        <br><strong>Total de pães:</strong> ${consumidores}<br>
+        <strong>Peso total aproximado:</strong> ${pesoTotal.toFixed(2)} kg
     `;
 }
 </script>
