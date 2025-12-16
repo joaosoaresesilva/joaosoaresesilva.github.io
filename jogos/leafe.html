@@ -14,8 +14,8 @@
 <body>
 
 <div id="info">
-    <h2>Leaf of Life</h2>
-    <p>Use arrow keys to move. Collect renewable energy to survive!</p>
+    <h2>Energia da vida</h2>
+    <p>Use as setas para se mover. Colete energia renovável para sobreviver</p>
     <p>Energy: <span id="energy">0</span> | Survival Days: <span id="days">1</span></p>
     <button onclick="restartGame()">Restart</button>
 </div>
@@ -39,8 +39,8 @@ let energySources = [
 
 // Narrative events
 const events = [
-    { day: 3, text: "A storm damages your wind turbine! Energy drops.", effect: () => { energy = Math.max(0, energy - 2); } },
-    { day: 5, text: "Sun shines brightly! Solar panels generate extra energy.", effect: () => { energy += 2; } },
+    { day: 3, text: "Uma tempestade destruiu a sua turbina de vento! Energia caiu a pique.", effect: () => { energy = Math.max(0, energy - 2); } },
+    { day: 5, text: "O sol brilha! Use os panies para colher mais energia.", effect: () => { energy += 2; } },
 ];
 
 function drawPlayer() {
@@ -84,7 +84,7 @@ function nextDay() {
     events.forEach(ev => { if(ev.day === days) { alert(ev.text); ev.effect(); updateInfo(); } });
     // Reduce energy if no sources collected
     if (energySources.every(src => src.collected)) {
-        alert("You collected all renewable sources! Energy sustainable.");
+        alert("Recolheu todas as fontes de  energia renovável! É energéticamente autosuficiente.");
     } else {
         energy = Math.max(0, energy - 1);
     }
