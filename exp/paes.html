@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cálculo de Pães – Hotelaria</title>
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background-color: #f2f2f2;
+            padding: 20px;
+        }
+
+        .container {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            max-width: 400px;
+            margin: auto;
+        }
+
+        h1 {
+            font-size: 1.3em;
+            text-align: center;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            font-size: 1em;
+            margin-top: 5px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 20px;
+            font-size: 1em;
+            background-color: #007aff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+        }
+
+        .resultado {
+            margin-top: 20px;
+            background: #eef6ff;
+            padding: 15px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>Cálculo de Pães (Hotel)</h1>
+
+    <label for="turistas">Número total de turistas</label>
+    <input type="number" id="turistas" min="0" placeholder="Ex: 120">
+
+    <button onclick="calcularPaes()">Calcular</button>
+
+    <div class="resultado" id="resultado" style="display:none;"></div>
+</div>
+
+<script>
+function calcularPaes() {
+    const turistas = parseInt(document.getElementById("turistas").value);
+
+    if (isNaN(turistas) || turistas < 0) {
+        alert("Introduza um número válido de turistas.");
+        return;
+    }
+
+    const percentagemConsumo = 0.8;     // 80%
+    const pesoPaoGramas = 50;            // pão típico de hotelaria portuguesa
+
+    const consumidores = Math.ceil(turistas * percentagemConsumo);
+    const totalPaes = consumidores;      // 1 pão por pessoa
+    const pesoTotalKg = (totalPaes * pesoPaoGramas) / 1000;
+
+    const resultadoDiv = document.getElementById("resultado");
+    resultadoDiv.style.display = "block";
+    resultadoDiv.innerHTML = `
+        <strong>Resultados:</strong><br><br>
+        Turistas totais: ${turistas}<br>
+        Consumidores (80%): ${consumidores}<br>
+        Número de pães necessários: <strong>${totalPaes}</strong><br>
+        Peso total aproximado: ${pesoTotalKg.toFixed(2)} kg
+    `;
+}
+</script>
+
+</body>
+</html>
