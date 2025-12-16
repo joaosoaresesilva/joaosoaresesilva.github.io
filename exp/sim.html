@@ -3,53 +3,215 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simulador de Propagação de Incêndio - Ajuda ao Combate</title>
+  <title>Simulador de Consumo de Pão</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    .form-section { margin-bottom: 20px; padding: 10px; background-color: #fcecec; border-left: 4px solid #c00; }
-    label { display: block; margin-bottom: 8px; }
-    input[type="range"], input[type="number"] { width: 100%; max-width: 300px; }
-    canvas { margin-top: 20px; border: 2px solid #000; max-width: 100%; height: auto; cursor: crosshair; display: block; touch-action: none; }
-    .info {
-        background-color: rgba(244, 244, 244, 0.9); /* Adicionado transparência para o mapa ser visível */
-        padding: 10px;
-        border-left: 4px solid #1f77b4;
-        border-radius: 5px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.2);
-        
-        /* Posição fixa no canto superior direito */
-        position: absolute; /* Usamos absolute para ser relativo ao body */
-        top: 20px;
-        right: 20px;
-        max-width: 300px;
-        z-index: 10; /* Garante que fique por cima do canvas */
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 1rem;
     }
-    .escala-section { margin-top: 20px; background-color: #d0f0d0; padding: 10px; border-left: 4px solid #4CAF50; }
-    .controls button { margin-right: 10px; padding: 8px 12px; }
-    .controls label { display:inline-block; margin-left:10px; }
-    #canvasDirecaoVento { width: 100px; height: 100px; border: 1px solid black; cursor: pointer; }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: #ffffff;
+      padding: 1.2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      font-size: 1.4rem;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    label {
+      font-weight: bold;
+      margin-top: 0.8rem;
+      display: block;
+    }
+    input, select {
+      width: 100%;
+      padding: 0.6rem;
+      margin-top: 0.3rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+    .row {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+    .row > div {
+      flex: 1;
+      min-width: 150px;
+    }
+    button {
+      margin-top: 1rem;
+      width: 100%;
+      padding: 0.8rem;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 10px;
+      background: #2e7d32;
+      color: white;
+      cursor: pointer;
+    }
+    .result {
+      margin-top: 1.2rem;
+      padding: 1rem;
+      background: #eef6ee;
+      border-radius: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.8rem;
+    }
+    th, td {
+      border-bottom: 1px solid #ccc;
+      padding: 0.4rem;
+      text-align: center;
+    }
+    th {
+      background: #dfeedd;
+    }
   </style>
 </head>
 <body>
-  <h1>Simulador de Propagação e Combate</h1>
-  <p><strong>Objetivo:</strong> Simular a propagação de uma frente de incêndio com base na velocidade/direção do vento e considerando a escala da imagem.</p>
 
-  <div class="info" id="resultado">
-    <p><em>Clique no mapa para definir o ponto onde houve suposta ignição do incêndio.</em></p>
+<div class="container">
+  <h1>Simulador de Consumo de Pão<br>Região da Lousã</h1>
+
+  <label for="pessoas">Número de pessoas</label>
+  <input type="number" id="pessoas" value="50" min="1">
+
+  <label for="consumo">Consumo médio por pessoa (g)</label>
+  <select id="consumo">
+    <option value="50">50 g – Entrada</option>
+    <option value="70" selected>70 g – Refeição</option>
+    <option value="100">100 g – Buffet</option>
+  </select>
+
+  <label for="margem">Margem de segurança (%)</label>
+  <select id="margem">
+    <option value="10">10%</option>
+    <option value="15" selected>15%</option>
+    <option value="20">20%</option>
+  </select>
+
+  <h2 style="font-size:1.1rem;margin-top:1rem;">Tipos de pão (percentagem e peso por unidade)</h2>
+
+  <div class="row">
+    <div><label for="p_broa">Broa de milho (%)</label><input type="number" id="p_broa" value="30"></div>
+    <div><label for="w_broa">Peso unidade (g)</label><input type="number" id="w_broa" value="900"></div>
+
+    <div><label for="p_mistura">Pão de mistura (%)</label><input type="number" id="p_mistura" value="25"></div>
+    <div><label for="w_mistura">Peso unidade (g)</label><input type="number" id="w_mistura" value="850"></div>
+
+    <div><label for="p_trigo">Pão de trigo (%)</label><input type="number" id="p_trigo" value="20"></div>
+    <div><label for="w_trigo">Peso unidade (g)</label><input type="number" id="w_trigo" value="700"></div>
+
+    <div><label for="p_centeio">Pão de centeio (%)</label><input type="number" id="p_centeio" value="15"></div>
+    <div><label for="w_centeio">Peso unidade (g)</label><input type="number" id="w_centeio" value="800"></div>
+
+    <div><label for="p_lenha">Forno a lenha (%)</label><input type="number" id="p_lenha" value="10"></div>
+    <div><label for="w_lenha">Peso unidade (g)</label><input type="number" id="w_lenha" value="1000"></div>
   </div>
 
-  <div class="form-section">
-    <h3>Parâmetros do Incêndio</h3>
-    <label>Velocidade do Vento (km/h):
-      <input type="range" id="velocidadeVento" min="0" max="150" value="10" oninput="velocidadeVentoOutput.value = this.value; desenharBase();">
-      <output id="velocidadeVentoOutput">10</output> km/h
-    </label>
-        
-    <label>Direção do Vento (0° = Norte):
-      <canvas id="canvasDirecaoVento"></canvas>
-      <output id="direcaoVentoOutput">45</output> °
-    </label>
-        
-    <label>Taxa de Propagação Base (sem vento):
-      <input type="range" id="taxaPropagacao" min="10" max="200" step="10" value="50" oninput="taxaPropagacaoOutput.value = this.value; desenharBase();">
-      <output id="taxaPropag
+  <button onclick="calcular()">Calcular consumo</button>
+  <button onclick="gerarRelatorio()" style="background:#1565c0;">Gerar relatório (.txt)</button>
+
+  <div class="result" id="resultado" style="display:none;"></div>
+</div>
+
+<script>
+function calcular() {
+  const pessoas = Number(document.getElementById('pessoas').value);
+  const consumo = Number(document.getElementById('consumo').value);
+  const margem = Number(document.getElementById('margem').value);
+
+  window.__dadosRelatorio = { pessoas, consumo, margem };
+
+  const tipos = [
+    { nome: 'Broa de milho', p: Number(document.getElementById('p_broa').value), w: Number(document.getElementById('w_broa').value) },
+    { nome: 'Pão de mistura', p: Number(document.getElementById('p_mistura').value), w: Number(document.getElementById('w_mistura').value) },
+    { nome: 'Pão de trigo', p: Number(document.getElementById('p_trigo').value), w: Number(document.getElementById('w_trigo').value) },
+    { nome: 'Pão de centeio', p: Number(document.getElementById('p_centeio').value), w: Number(document.getElementById('w_centeio').value) },
+    { nome: 'Forno a lenha', p: Number(document.getElementById('p_lenha').value), w: Number(document.getElementById('w_lenha').value) }
+  ];
+
+  const soma = tipos.reduce((acc, t) => acc + t.p, 0);
+  if (soma !== 100) {
+    alert('A soma das percentagens deve ser 100%');
+    return;
+  }
+
+  let totalKg = (pessoas * consumo) / 1000;
+  totalKg = totalKg * (1 + margem / 100);
+
+  window.__dadosRelatorio.totalKg = totalKg;
+  window.__dadosRelatorio.tipos = [];
+
+  let html = `<h3>Total necessário: ${totalKg.toFixed(2)} kg</h3>`;
+  html += '<table><tr><th>Tipo</th><th>Kg</th><th>Unidades</th></tr>';
+
+  tipos.forEach(t => {
+    const kg = totalKg * t.p / 100;
+    const unidades = Math.ceil((kg * 1000) / t.w);
+    window.__dadosRelatorio.tipos.push({ nome: t.nome, kg, unidades, peso: t.w });
+    html += `<tr><td>${t.nome}</td><td>${kg.toFixed(2)}</td><td>${unidades}</td></tr>`;
+  });
+
+  html += '</table>';
+
+  const resultado = document.getElementById('resultado');
+  resultado.style.display = 'block';
+  resultado.innerHTML = html;
+}
+
+function gerarRelatorio() {
+  if (!window.__dadosRelatorio) {
+    alert('Calcule primeiro o consumo antes de gerar o relatório.');
+    return;
+  }
+
+  const d = window.__dadosRelatorio;
+  let texto = '';
+  texto += 'RELATÓRIO DE CONSUMO DE PÃO – REGIÃO DA LOUSÃ
+';
+  texto += '========================================
+
+';
+  texto += `Número de pessoas: ${d.pessoas}
+`;
+  texto += `Consumo médio por pessoa: ${d.consumo} g
+`;
+  texto += `Margem de segurança: ${d.margem}%
+
+`;
+  texto += `Total de pão necessário: ${d.totalKg.toFixed(2)} kg
+
+`;
+  texto += 'Distribuição por tipo de pão:
+';
+
+  d.tipos.forEach(t => {
+    texto += `- ${t.nome}: ${t.kg.toFixed(2)} kg (${t.unidades} unidades de ${t.peso} g)
+`;
+  });
+
+  texto += '
+Relatório gerado automaticamente pelo simulador.';
+
+  const blob = new Blob([texto], { type: 'text/plain;charset=utf-8' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'resumo.txt';
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
+</script>
+
+</body>
+</html>
