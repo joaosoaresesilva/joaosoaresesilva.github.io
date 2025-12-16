@@ -18,6 +18,7 @@
     table { width:100%; border-collapse:collapse; margin-top:.8rem; }
     th, td { border-bottom:1px solid #ccc; padding:.4rem; text-align:center; }
     th { background:#dfeedd; }
+    td input { width:80px; }
   </style>
 </head>
 <body>
@@ -44,31 +45,19 @@
 
   <h2 style="font-size:1.1rem;margin-top:1rem;">Tipos de pão (percentagem, peso por unidade e custo por unidade)</h2>
 
-  <div class="row">
-    <div><label for="p_broa">Broa de milho (%)</label><input type="number" id="p_broa" value="25"></div>
-    <div><label for="w_broa">Peso unidade (g)</label><input type="number" id="w_broa" value="900"></div>
-    <div><label for="c_broa">Custo unidade (€)</label><input type="number" id="c_broa" value="2.5" step="0.01"></div>
-
-    <div><label for="p_mistura">Pão de mistura (%)</label><input type="number" id="p_mistura" value="20"></div>
-    <div><label for="w_mistura">Peso unidade (g)</label><input type="number" id="w_mistura" value="850"></div>
-    <div><label for="c_mistura">Custo unidade (€)</label><input type="number" id="c_mistura" value="2.0" step="0.01"></div>
-
-    <div><label for="p_trigo">Pão de trigo (%)</label><input type="number" id="p_trigo" value="15"></div>
-    <div><label for="w_trigo">Peso unidade (g)</label><input type="number" id="w_trigo" value="700"></div>
-    <div><label for="c_trigo">Custo unidade (€)</label><input type="number" id="c_trigo" value="1.8" step="0.01"></div>
-
-    <div><label for="p_centeio">Pão de centeio (%)</label><input type="number" id="p_centeio" value="15"></div>
-    <div><label for="w_centeio">Peso unidade (g)</label><input type="number" id="w_centeio" value="800"></div>
-    <div><label for="c_centeio">Custo unidade (€)</label><input type="number" id="c_centeio" value="2.2" step="0.01"></div>
-
-    <div><label for="p_lenha">Forno a lenha (%)</label><input type="number" id="p_lenha" value="15"></div>
-    <div><label for="w_lenha">Peso unidade (g)</label><input type="number" id="w_lenha" value="1000"></div>
-    <div><label for="c_lenha">Custo unidade (€)</label><input type="number" id="c_lenha" value="3.0" step="0.01"></div>
-
-    <div><label for="p_paposeco">Papo-seco (%)</label><input type="number" id="p_paposeco" value="10"></div>
-    <div><label for="w_paposeco">Peso unidade (g)</label><input type="number" id="w_paposeco" value="50"></div>
-    <div><label for="c_paposeco">Custo unidade (€)</label><input type="number" id="c_paposeco" value="0.15" step="0.01"></div>
-  </div>
+  <table>
+    <thead>
+      <tr><th>Tipo de pão</th><th>%</th><th>Peso (g)</th><th>Custo (€)</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Broa de milho</td><td><input type="number" id="p_broa" value="25"></td><td><input type="number" id="w_broa" value="900"></td><td><input type="number" id="c_broa" value="2.5" step="0.01"></td></tr>
+      <tr><td>Pão de mistura</td><td><input type="number" id="p_mistura" value="20"></td><td><input type="number" id="w_mistura" value="850"></td><td><input type="number" id="c_mistura" value="2.0" step="0.01"></td></tr>
+      <tr><td>Pão de trigo</td><td><input type="number" id="p_trigo" value="15"></td><td><input type="number" id="w_trigo" value="700"></td><td><input type="number" id="c_trigo" value="1.8" step="0.01"></td></tr>
+      <tr><td>Pão de centeio</td><td><input type="number" id="p_centeio" value="15"></td><td><input type="number" id="w_centeio" value="800"></td><td><input type="number" id="c_centeio" value="2.2" step="0.01"></td></tr>
+      <tr><td>Forno a lenha</td><td><input type="number" id="p_lenha" value="15"></td><td><input type="number" id="w_lenha" value="1000"></td><td><input type="number" id="c_lenha" value="3.0" step="0.01"></td></tr>
+      <tr><td>Papo-seco</td><td><input type="number" id="p_paposeco" value="10"></td><td><input type="number" id="w_paposeco" value="50"></td><td><input type="number" id="c_paposeco" value="0.15" step="0.01"></td></tr>
+    </tbody>
+  </table>
 
   <button id="btnCalcular">Calcular consumo</button>
   <button id="btnRelatorio" class="secondary">Gerar relatório (.txt)</button>
@@ -133,14 +122,12 @@
     let t = '';
     t += 'RELATÓRIO DE CONSUMO DE PÃO \n';
     t += '========================================\n\n';
-    t += `Número de pessoas: ${dadosRelatorio.pessoas}\n`;
-    t += `Consumo médio por pessoa: ${dadosRelatorio.consumo} g\n`;
-    t += `Margem de segurança: ${dadosRelatorio.margem}%\n\n`;
+    t += `Número de pessoas: ${dadosRelatorio.pessoas}, Consumo médio: ${dadosRelatorio.consumo} g, Margem: ${dadosRelatorio.margem}%\n`;
     t += `Total de pão necessário: ${dadosRelatorio.totalKg.toFixed(2)} kg\n\n`;
     t += 'Distribuição por tipo de pão e custo:\n';
 
     dadosRelatorio.tipos.forEach(p => {
-      t += `- ${p.nome}: ${p.kg.toFixed(2)} kg, ${p.unidades} unidades de ${p.peso} g, custo total €${p.custoTotal}\n`;
+      t += `${p.nome}, ${p.kg.toFixed(2)} kg, ${p.unidades} unidades de ${p.peso} g, custo total €${p.custoTotal}\n`;
     });
 
     t += '\nRelatório gerado automaticamente pelo simulador.';
