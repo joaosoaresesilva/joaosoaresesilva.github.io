@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leaf of Life</title>
+<style>
+    body { margin: 0; background: #e0f7fa; font-family: Arial, sans-serif; }
+    canvas { display: block; margin: 0 auto; background: #a3d9a5; border: 3px solid #2e7d32; }
+    #info { text-align: center; margin: 10px; }
+    button { margin-top: 5px; padding: 5px 10px; }
+</style>
+</head>
+<body>
+
+<div id="info">
+    <h2>Leaf of Life</h2>
+    <p>Use arrow keys to move. Collect renewable energy to survive!</p>
+    <p>Energy: <span id="energy">0</span> | Survival Days: <span id="days">1</span></p>
+    <button onclick="restartGame()">Restart</button>
+</div>
+
+<canvas id="gameCanvas" width="600" height="400"></canvas>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let player = { x: 50, y: 50, size: 20 };
+let energy = 0;
+let days = 1;
+
+// Renewable energy items
+let energySources = [
+    { x: 200, y: 100, type: 'Solar', collected: false },
+    { x: 400, y: 200, type: 'Wind', collected: false },
+    { x: 300, y: 350, type: 'Hydro', collected: false },
+];
+
+// Narrative events
+const events = [
+    { day: 3, text: "A storm damages your wind turbine! Energy drops.", effect: () => { energy = Math.max(0, energy - 2); } },
+    { day: 5, text: "Sun shines brightly! Solar panels generate extra energy.", effect: () => { energy += 2; } },
+];
+
+function drawPlayer() {
+    ctx.fillStyle = '#ff6f00';
+    ctx.fillRect(player.x, player.y, player.size, player.size);
+}
+
+function drawEnergySources() {
+    energySources.forEach(src => {
+        if (!src.collected) {
+            if (src.type === 'Solar') ctx.fillStyle = '#ffeb3b';
+            if (src.type === 'Wind') ctx.fillStyle = '#81d4fa';
+            if (src.type === 'Hydro') ctx.fillStyle = '#0288d1';
+            ctx.fillRect(src.x, src.y, 20, 20);
+        }
+    });
+}
+
+function checkCollection() {
+    energySources.forEach(src => {
+        if (!src.collected &&
+            player.x < src.x + 20 &&
+            player.x + player.size > src.x &&
+            player.y < src.y + 20 &&
+            player.y + player.size > src.y) {
+            src.collected = true;
+            energy += 1;
+            updateInfo();
+        }
+    });
+}
+
+function updateInfo() {
+    document.getElementById('energy').innerText = energy;
+    document.getElementById('days').innerText = days;
+}
+
+function nextDay() {
+    days += 1;
+    // Trigger narrative events
+    events.forEach(ev => { if(ev.day === days) { alert(ev.text); ev.effect(); updateInfo(); } });
+    // Reduce energy if no sources collected
+    if (energySources.every(src => src.collected)) {
+        alert("You collected all renewable sources! Energy sustainable.");
+    } else {
+        energy = Math.max(0, energy - 1);
+    }
+    updateInfo();
+}
+
+// Movement
+document.addEventListener('keydown', (e) => {
+    const step = 10;
+    if (e.key === 'ArrowUp') player.y -= step;
+    if (e.key === 'ArrowDown') player.y += step;
+    if (e.key === 'ArrowLeft') player.x -= step;
+    if (e.key === 'ArrowRight') player.x += step;
+
+    // Keep player in bounds
+    player.x = Math.max(0, Math.min(canvas.width - player.size, player.x));
+    player.y = Math.max(0, Math.min(canvas.height - player.size, player.y));
+
+    checkCollection();
+    draw();
+});
+
+// Draw everything
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawPlayer();
+    drawEnergySources();
+}
+
+// Restart game
+function restartGame() {
+    player = { x: 50, y: 50, size: 20 };
+    energy = 0;
+    days = 1;
+    energySources.forEach(src => src.collected = false);
+    updateInfo();
+    draw();
+}
+
+// Advance day every 10 seconds
+setInterval(nextDay, 10000);
+
+draw();
+updateInfo();
+</script>
+
+</body>
+</html>
