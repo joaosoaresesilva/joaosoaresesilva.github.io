@@ -5,77 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Simulador de Consumo de Pão</title>
   <style>
-    body {
-      font-family: Arial, Helvetica, sans-serif;
-      background: #f5f5f5;
-      margin: 0;
-      padding: 1rem;
-    }
-    .container {
-      max-width: 800px;
-      margin: auto;
-      background: #ffffff;
-      padding: 1.2rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
-    h1 {
-      font-size: 1.4rem;
-      text-align: center;
-      margin-bottom: 1rem;
-    }
-    label {
-      font-weight: bold;
-      margin-top: 0.8rem;
-      display: block;
-    }
-    input, select {
-      width: 100%;
-      padding: 0.6rem;
-      margin-top: 0.3rem;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 1rem;
-    }
-    .row {
-      display: flex;
-      gap: 0.6rem;
-      flex-wrap: wrap;
-    }
-    .row > div {
-      flex: 1;
-      min-width: 150px;
-    }
-    button {
-      margin-top: 1rem;
-      width: 100%;
-      padding: 0.8rem;
-      font-size: 1.1rem;
-      border: none;
-      border-radius: 10px;
-      background: #2e7d32;
-      color: white;
-      cursor: pointer;
-    }
-    .result {
-      margin-top: 1.2rem;
-      padding: 1rem;
-      background: #eef6ee;
-      border-radius: 10px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 0.8rem;
-    }
-    th, td {
-      border-bottom: 1px solid #ccc;
-      padding: 0.4rem;
-      text-align: center;
-    }
-    th {
-      background: #dfeedd;
-    }
+    body { font-family: Arial, Helvetica, sans-serif; background:#f5f5f5; margin:0; padding:1rem; }
+    .container { max-width:800px; margin:auto; background:#fff; padding:1.2rem; border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,.1); }
+    h1 { font-size:1.4rem; text-align:center; margin-bottom:1rem; }
+    label { font-weight:bold; margin-top:.8rem; display:block; }
+    input, select { width:100%; padding:.6rem; margin-top:.3rem; border-radius:8px; border:1px solid #ccc; font-size:1rem; }
+    .row { display:flex; gap:.6rem; flex-wrap:wrap; }
+    .row > div { flex:1; min-width:150px; }
+    button { margin-top:1rem; width:100%; padding:.8rem; font-size:1.05rem; border:none; border-radius:10px; background:#2e7d32; color:#fff; cursor:pointer; }
+    button.secondary { background:#1565c0; }
+    .result { margin-top:1.2rem; padding:1rem; background:#eef6ee; border-radius:10px; }
+    table { width:100%; border-collapse:collapse; margin-top:.8rem; }
+    th, td { border-bottom:1px solid #ccc; padding:.4rem; text-align:center; }
+    th { background:#dfeedd; }
   </style>
 </head>
 <body>
@@ -119,98 +61,92 @@
     <div><label for="w_lenha">Peso unidade (g)</label><input type="number" id="w_lenha" value="1000"></div>
   </div>
 
-  <button onclick="calcular()">Calcular consumo</button>
-  <button onclick="gerarRelatorio()" style="background:#1565c0;">Gerar relatório (.txt)</button>
+  <button id="btnCalcular">Calcular consumo</button>
+  <button id="btnRelatorio" class="secondary">Gerar relatório (.txt)</button>
 
   <div class="result" id="resultado" style="display:none;"></div>
 </div>
 
 <script>
-function calcular() {
-  const pessoas = Number(document.getElementById('pessoas').value);
-  const consumo = Number(document.getElementById('consumo').value);
-  const margem = Number(document.getElementById('margem').value);
+(function () {
+  'use strict';
 
-  window.__dadosRelatorio = { pessoas, consumo, margem };
+  let dadosRelatorio = null;
 
-  const tipos = [
-    { nome: 'Broa de milho', p: Number(document.getElementById('p_broa').value), w: Number(document.getElementById('w_broa').value) },
-    { nome: 'Pão de mistura', p: Number(document.getElementById('p_mistura').value), w: Number(document.getElementById('w_mistura').value) },
-    { nome: 'Pão de trigo', p: Number(document.getElementById('p_trigo').value), w: Number(document.getElementById('w_trigo').value) },
-    { nome: 'Pão de centeio', p: Number(document.getElementById('p_centeio').value), w: Number(document.getElementById('w_centeio').value) },
-    { nome: 'Forno a lenha', p: Number(document.getElementById('p_lenha').value), w: Number(document.getElementById('w_lenha').value) }
-  ];
+  function calcular() {
+    const pessoas = Number(document.getElementById('pessoas').value);
+    const consumo = Number(document.getElementById('consumo').value);
+    const margem = Number(document.getElementById('margem').value);
 
-  const soma = tipos.reduce((acc, t) => acc + t.p, 0);
-  if (soma !== 100) {
-    alert('A soma das percentagens deve ser 100%');
-    return;
+    const tipos = [
+      { nome:'Broa de milho', p:+p_broa.value, w:+w_broa.value },
+      { nome:'Pão de mistura', p:+p_mistura.value, w:+w_mistura.value },
+      { nome:'Pão de trigo', p:+p_trigo.value, w:+w_trigo.value },
+      { nome:'Pão de centeio', p:+p_centeio.value, w:+w_centeio.value },
+      { nome:'Forno a lenha', p:+p_lenha.value, w:+w_lenha.value }
+    ];
+
+    const soma = tipos.reduce((a,t)=>a+t.p,0);
+    if (soma !== 100) {
+      alert('A soma das percentagens deve ser 100%');
+      return;
+    }
+
+    let totalKg = (pessoas * consumo) / 1000;
+    totalKg *= (1 + margem/100);
+
+    dadosRelatorio = { pessoas, consumo, margem, totalKg, tipos: [] };
+
+    let html = `<h3>Total necessário: ${totalKg.toFixed(2)} kg</h3>`;
+    html += '<table><tr><th>Tipo</th><th>Kg</th><th>Unidades</th></tr>';
+
+    tipos.forEach(t => {
+      const kg = totalKg * t.p / 100;
+      const unidades = Math.ceil((kg*1000) / t.w);
+      dadosRelatorio.tipos.push({ nome:t.nome, kg, unidades, peso:t.w });
+      html += `<tr><td>${t.nome}</td><td>${kg.toFixed(2)}</td><td>${unidades}</td></tr>`;
+    });
+
+    html += '</table>';
+    const res = document.getElementById('resultado');
+    res.style.display = 'block';
+    res.innerHTML = html;
   }
 
-  let totalKg = (pessoas * consumo) / 1000;
-  totalKg = totalKg * (1 + margem / 100);
+  function gerarRelatorio() {
+    if (!dadosRelatorio) {
+      alert('Calcule primeiro o consumo antes de gerar o relatório.');
+      return;
+    }
 
-  window.__dadosRelatorio.totalKg = totalKg;
-  window.__dadosRelatorio.tipos = [];
+    let t = '';
+    t += 'RELATÓRIO DE CONSUMO DE PÃO – REGIÃO DA LOUSÃ\n';
+    t += '========================================\n\n';
+    t += `Número de pessoas: ${dadosRelatorio.pessoas}\n`;
+    t += `Consumo médio por pessoa: ${dadosRelatorio.consumo} g\n`;
+    t += `Margem de segurança: ${dadosRelatorio.margem}%\n\n`;
+    t += `Total de pão necessário: ${dadosRelatorio.totalKg.toFixed(2)} kg\n\n`;
+    t += 'Distribuição por tipo de pão:\n';
 
-  let html = `<h3>Total necessário: ${totalKg.toFixed(2)} kg</h3>`;
-  html += '<table><tr><th>Tipo</th><th>Kg</th><th>Unidades</th></tr>';
+    dadosRelatorio.tipos.forEach(p => {
+      t += `- ${p.nome}: ${p.kg.toFixed(2)} kg (${p.unidades} unidades de ${p.peso} g)\n`;
+    });
 
-  tipos.forEach(t => {
-    const kg = totalKg * t.p / 100;
-    const unidades = Math.ceil((kg * 1000) / t.w);
-    window.__dadosRelatorio.tipos.push({ nome: t.nome, kg, unidades, peso: t.w });
-    html += `<tr><td>${t.nome}</td><td>${kg.toFixed(2)}</td><td>${unidades}</td></tr>`;
-  });
+    t += '\nRelatório gerado automaticamente pelo simulador.';
 
-  html += '</table>';
-
-  const resultado = document.getElementById('resultado');
-  resultado.style.display = 'block';
-  resultado.innerHTML = html;
-}
-
-function gerarRelatorio() {
-  if (!window.__dadosRelatorio) {
-    alert('Calcule primeiro o consumo antes de gerar o relatório.');
-    return;
+    const blob = new Blob([t], { type:'text/plain;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'resumo.txt';
+    a.click();
+    URL.revokeObjectURL(a.href);
   }
 
-  const d = window.__dadosRelatorio;
-  let texto = '';
-  texto += 'RELATÓRIO DE CONSUMO DE PÃO – REGIÃO DA LOUSÃ
-';
-  texto += '========================================
-
-';
-  texto += `Número de pessoas: ${d.pessoas}
-`;
-  texto += `Consumo médio por pessoa: ${d.consumo} g
-`;
-  texto += `Margem de segurança: ${d.margem}%
-
-`;
-  texto += `Total de pão necessário: ${d.totalKg.toFixed(2)} kg
-
-`;
-  texto += 'Distribuição por tipo de pão:
-';
-
-  d.tipos.forEach(t => {
-    texto += `- ${t.nome}: ${t.kg.toFixed(2)} kg (${t.unidades} unidades de ${t.peso} g)
-`;
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('btnCalcular').addEventListener('click', calcular);
+    document.getElementById('btnRelatorio').addEventListener('click', gerarRelatorio);
   });
-
-  texto += '
-Relatório gerado automaticamente pelo simulador.';
-
-  const blob = new Blob([texto], { type: 'text/plain;charset=utf-8' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = 'resumo.txt';
-  link.click();
-  URL.revokeObjectURL(link.href);
-}
+})();
 </script>
 
 </body>
