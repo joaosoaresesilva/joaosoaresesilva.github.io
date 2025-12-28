@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desafio: Onde, Aonde ou Donde?</title>
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --success: #2ecc71;
+            --error: #e74c3c;
+            --dark: #2c3e50;
+            --light: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        #game-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+
+        h1 { color: var(--dark); margin-bottom: 1.5rem; }
+
+        .question {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            color: #555;
+            min-height: 60px;
+        }
+
+        .options-grid {
+            display: grid;
+            gap: 10px;
+        }
+
+        button {
+            padding: 12px;
+            border: 2px solid var(--primary);
+            background: transparent;
+            color: var(--primary);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        #score-board {
+            margin-top: 1.5rem;
+            font-weight: bold;
+            color: var(--dark);
+        }
+
+        #feedback {
+            margin-top: 1rem;
+            font-weight: bold;
+            height: 20px;
+        }
+
+        .hidden { display: none; }
+        
+        .correct { background: var(--success) !important; color: white !important; border-color: var(--success) !important; }
+        .wrong { background: var(--error) !important; color: white !important; border-color: var(--error) !important; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <h1>Gramática Challenge</h1>
+    <div id="quiz-section">
+        <p class="question" id="question-text">A carregar pergunta...</p>
+        <div class="options-grid" id="options">
+            </div>
+        <p id="feedback"></p>
+        <p id="score-board">Pontuação: 0</p>
+    </div>
+
+    <div id="result-section" class="hidden">
+        <h2>Fim de Jogo!</h2>
+        <p id="final-score"></p>
+        <button onclick="location.reload()">Jogar Novamente</button>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        { q: "______ guardaste o dicionário?", a: "Onde", explanation: "Lugar fixo." },
+        { q: "______ vais com tanta pressa?", a: "Aonde", explanation: "Movimento/Destino." },
+        { q: "______ veio aquela notícia estranha?", a: "Donde", explanation: "Origem/Proveniência." },
+        { q: "A escola ______ estudo é longe daqui.", a: "onde", explanation: "Localização fixa." },
+        { q: "Quero saber ______ nos levas.", a: "aonde", explanation: "Verbo levar indica movimento." },
+        { q: "Não sei ______ surgiram estas dúvidas.", a: "donde", explanation: "Indica origem." },
+        { q: "______ fica a secretaria?", a: "Onde", explanation: "Lugar fixo." },
+        { q: "______ queres chegar com esse comportamento?", a: "Aonde", explanation: "Destino figurado." }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+
+    const questionText = document.getElementById('question-text');
+    const optionsContainer = document.getElementById('options');
+    const feedbackText = document.getElementById('feedback');
+    const scoreBoard = document.getElementById('score-board');
+    const quizSection = document.getElementById('quiz-section');
+    const resultSection = document.getElementById('result-section');
+
+    function loadQuestion() {
+        const q = questions[currentQuestionIndex];
+        questionText.innerText = q.q;
+        optionsContainer.innerHTML = '';
+        feedbackText.innerText = '';
+
+        const choices = ["Onde", "Aonde", "Donde"];
+        choices.forEach(choice => {
+            const btn = document.createElement('button');
+            btn.innerText = choice;
+            btn.onclick = () => checkAnswer(choice, btn);
+            optionsContainer.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(choice, btn) {
+        const correctAnswer = questions[currentQuestionIndex].a.toLowerCase();
+        const userChoice = choice.toLowerCase();
+        
+        const allButtons = optionsContainer.querySelectorAll('button');
+        allButtons.forEach(b => b.disabled = true);
+
+        if (userChoice === correctAnswer) {
+            score++;
+            btn.classList.add('correct');
+            feedbackText.style.color = 'var(--success)';
+            feedbackText.innerText = "Correto! " + questions[currentQuestionIndex].explanation;
+        } else {
+            btn.classList.add('wrong');
+            feedbackText.style.color = 'var(--error)';
+            feedbackText.innerText = "Errado. O correto seria: " + questions[currentQuestionIndex].a;
+        }
+
+        scoreBoard.innerText = `Pontuação: ${score}`;
+
+        setTimeout(() => {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }, 2000);
+    }
+
+    function showResults() {
+        quizSection.classList.add('hidden');
+        resultSection.classList.remove('hidden');
+        document.getElementById('final-score').innerText = `Acertaste ${score} de ${questions.length} perguntas!`;
+    }
+
+    // Iniciar o jogo
+    loadQuestion();
+</script>
+
+</body>
+</html>
