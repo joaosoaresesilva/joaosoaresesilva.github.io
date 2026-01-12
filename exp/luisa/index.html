@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<title>Manual de Formação PMS - Hotelaria</title>
+<style>
+    body { font-family: Calibri, sans-serif; line-height: 1.6; color: #333; max-width: 900px; margin: auto; padding: 20px; }
+    h1 { color: #2c3e50; border-bottom: 2px solid #2c3e50; }
+    h2 { color: #e67e22; background: #fdf2e9; padding: 10px; border-radius: 5px; }
+    .modulo { margin-bottom: 30px; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+    .ancora-link { color: #2980b9; text-decoration: none; font-weight: bold; }
+    .ancora-link:hover { text-decoration: underline; }
+    .detalhes-section { background: #f9f9f9; padding: 20px; border-left: 5px solid #2c3e50; margin-top: 50px; }
+    .nota-final { font-style: italic; color: #7f8c8d; margin-top: 20px; }
+    b { color: #000; }
+</style>
+</head>
+<body>
+
+<h1>Manual de Boas Práticas e Gestão Operacional em PMS</h1>
+
+<div class="modulo">
+    <h2>Módulo 1: Gestão de Reservas Individuais</h2>
+    <p>Para otimizar o atendimento, o utilizador deve privilegiar o uso de automatismos no Front Office. Em vez de preencher campos manualmente, deve utilizar a ferramenta <b>"Procurar Tarifas"</b>, que sugere opções com base na disponibilidade real [1, 2].</p>
+    <ul>
+        <li><b>Atribuição de Quartos:</b> Utilize a <a href="#explica1" class="ancora-link">atribuição automática [3]</a> para ganhar agilidade.</li>
+        <li><b>Fidelização:</b> O registo no <a href="#explica2" class="ancora-link">Kardex [4]</a> permite personalizar a oferta segundo o perfil do cliente.</li>
+        <li><b>Produtividade:</b> A funcionalidade de <a href="#explica3" class="ancora-link">"Cópia de Reserva" [5]</a> evita a repetição de dados para reservas semelhantes.</li>
+    </ul>
+</div>
+
+<div class="modulo">
+    <h2>Módulo 2: Operações com Grupos</h2>
+    <p>A gestão de grupos exige distinção entre contas comuns e faturas individuais. O sistema permite criar um <b>E-Group</b> (conta corrente única) ou <b>E-Part</b> (reservas idênticas faturadas separadamente) [6, 7].</p>
+    <ul>
+        <li><b>Rooming List:</b> Utilize a <a href="#explica4" class="ancora-link">importação por CSV [8, 9]</a> para inserir múltiplos hóspedes rapidamente.</li>
+        <li><b>Gestão em Bloco:</b> É possível efetuar <a href="#explica5" class="ancora-link">alterações múltiplas [10]</a> e check-in/out massivo [11, 12].</li>
+    </ul>
+</div>
+
+<div class="modulo">
+    <h2>Módulo 3: Revenue e Estratégia de Tarifas</h2>
+    <p>A rentabilidade é gerida através de tarifas dinâmicas e restrições de venda. O sistema utiliza algoritmos como o <b>Yield Optimization</b> para sugerir o preço ideal [13, 14].</p>
+    <ul>
+        <li><b>Tipos de Tarifa:</b> Diferencie entre <a href="#explica6" class="ancora-link">Tarifas Derivadas e Cópias [15-17]</a>.</li>
+        <li><b>Contratos e Pacotes:</b> Implemente ofertas como <a href="#explica7" class="ancora-link">"3 noites pelo preço de 2" [18, 19]</a>.</li>
+        <li><b>Upselling:</b> Configure serviços de <a href="#explica8" class="ancora-link">Upsell [20, 21]</a> visíveis no momento do check-in.</li>
+    </ul>
+</div>
+
+<div class="modulo">
+    <h2>Módulo 4: Housekeeping e Manutenção</h2>
+    <p>A comunicação em tempo real é feita através de estados de quarto e aplicações móveis, garantindo que a receção saiba exatamente quando um quarto está pronto [22, 23].</p>
+    <ul>
+        <li><b>Disponibilidade:</b> Saiba a diferença entre <a href="#explica9" class="ancora-link">Inatividade e Auto-Rental [24, 25]</a>.</li>
+        <li><b>Manutenção:</b> Registe <a href="#explica10" class="ancora-link">avarias com prioridade [26, 27]</a> para a equipa técnica.</li>
+    </ul>
+</div>
+
+<hr>
+
+<div class="detalhes-section">
+    <h1>Detalhamento Técnico (Explicações)</h1>
+
+    <div id="explica1">
+        <h3>1. Atribuição Automática de Quartos</h3>
+        <p>Esta função permite ao PMS distribuir quartos não atribuídos baseando-se em filtros como tipologia ou empresa [28]. O sistema dá prioridade aos quartos que estão <b>limpos</b> e utiliza a regra da <b>última data de ocupação</b> (priorizando o quarto parado há mais tempo) [3].</p>
+    </div>
+
+    <div id="explica2">
+        <h3>2. Perfil do Hóspede (Kardex)</h3>
+        <p>O Kardex armazena dados fiscais, contactos e preferências [4]. Além disso, fornece estatísticas acumuladas de estadias e receitas, permitindo ajustar a oferta ao valor do cliente [4, 29].</p>
+    </div>
+
+    <div id="explica3">
+        <h3>3. Cópia de Reserva</h3>
+        <p>Permite criar uma reserva idêntica à original (mesma tipologia, datas e preços) sem necessidade de criar um grupo [5]. O utilizador pode escolher se deseja copiar também os dados do hóspede ou apenas a estrutura da reserva [5, 30].</p>
+    </div>
+
+    <div id="explica4">
+        <h3>4. Importação de Rooming List</h3>
+        <p>Para evitar inserir hóspedes um a um, exporta-se um modelo em Excel que, após preenchido, é gravado em formato <b>CSV</b> [8, 9]. É obrigatório respeitar os códigos de país (ex: PT) e género (1-M, 2-F) para o sucesso da importação [8].</p>
+    </div>
+
+    <div id="explica5">
+        <h3>5. Alterações Múltiplas</h3>
+        <p>Esta ferramenta permite selecionar várias reservas de um grupo e alterar, simultaneamente, datas de chegada, tipologias, preços ou adicionar comentários comuns [10, 31].</p>
+    </div>
+
+    <div id="explica6">
+        <h3>6. Tarifas Derivadas vs. Cópias</h3>
+        <p>Uma <b>Tarifa Derivada</b> está ligada a uma tarifa Base; se a Base muda, a derivada ajusta-se automaticamente (ex: -10%) [15, 32]. Já a <b>Cópia de Tarifa</b> é independente; alterações na original não afetam a cópia [16, 17].</p>
+    </div>
+
+    <div id="explica7">
+        <h3>7. Pacotes e Noites de Oferta</h3>
+        <p>Através de contratos, pode-se definir que a última noite é gratuita (oferta aplicada à saída) [18, 19]. Isto protege o hotel contra check-outs antecipados, onde o cliente usufruiria da oferta na primeira noite e sairia antes do previsto [19, 33].</p>
+    </div>
+
+    <div id="explica8">
+        <h3>8. Upselling e Serviços Extra</h3>
+        <p>O sistema permite associar serviços (ex: tours, parking) a tarifas específicas [21, 34]. No check-in, o rececionista recebe uma sugestão automática para vender estes extras, aumentando a receita por quarto [21, 35].</p>
+    </div>
+
+    <div id="explica9">
+        <h3>9. Inatividade vs. Auto-Rental</h3>
+        <p>A <b>Inatividade</b> retira o quarto do inventário para manutenção (obras/avarias) e afeta a disponibilidade de venda [36, 37]. O <b>Auto-Rental</b> é usado para staff ou proprietários e, ao contrário da inatividade, é excluído das estatísticas de RevPAR e ocupação [24, 25].</p>
+    </div>
+
+    <div id="explica10">
+        <h3>10. Gestão de Avarias</h3>
+        <p>As avarias são registadas com níveis de prioridade (Alta, Média, Baixa) [26, 38]. Enquanto uma avaria crítica não for resolvida e marcada como "resolvida", o sistema pode impedir o check-in nesse quarto [27, 39].</p>
+    </div>
+</div>
+
+<p class="nota-final"><b>Metáfora de Formação:</b> Operar o PMS é como <b>pilotar um avião</b>: os automatismos (piloto automático) garantem a estabilidade e segurança, mas é a sensibilidade do utilizador (piloto) ao interpretar os dados de Revenue e Housekeeping que garante uma viagem rentável e confortável para o passageiro.</p>
+
+</body>
+</html>
