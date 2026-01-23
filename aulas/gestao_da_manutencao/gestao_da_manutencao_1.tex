@@ -1,0 +1,159 @@
+\documentclass[11pt, a4paper]{article}
+
+% --- BLOCO DE PREÂMBULO UNIVERSAL (Compatível com TeX Live) ---
+\usepackage[a4paper, top=2.5cm, bottom=2.5cm, left=2cm, right=2cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[portuguese]{babel}
+
+% Utilização de fontes padrão do TeX Live (Helvetica e Times)
+% O pacote helvet é parte da coleção básica do TeX Live
+\usepackage[scaled]{helvet}
+\usepackage{amsfonts, amssymb, amsmath}
+\renewcommand{\familydefault}{\sfdefault}
+
+\usepackage{enumitem}
+\setlist[itemize]{label=-}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{longtable}
+
+% Hyperref deve ser o último a ser carregado
+\usepackage[hidelinks]{hyperref}
+
+% Configuração de Cabeçalho e Rodapé
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\small UFCD 4564 - Gestão da manutenção - introdução}
+\rhead{\small Dossier Técnico-Pedagógico}
+\lfoot{\small Plano de Formação Integral}
+\rfoot{\small Página \thepage\ de \pageref{LastPage}}
+
+\begin{document}
+
+\begin{center}
+    \LARGE \textbf{Plano de Formação Integral e Estruturado} \\
+    \large \textbf{UFCD 4564: Gestão da manutenção - introdução} \\
+    \vspace{0.5cm}
+    \small \textbf{Carga Horária Total:} 25 Horas | \textbf{Créditos:} 2.25
+\end{center}
+
+\section{Introdução e Enquadramento}
+Este documento consolida todo o planeamento pedagógico para a UFCD 4564. O foco é a capacitação técnica para a gestão de ativos industriais, abordando desde conceitos básicos até filosofias avançadas (TPM/RCM) e ferramentas de cálculo de fiabilidade.
+
+\section{Desenvolvimento Detalhado das Sessões}
+
+% --- SESSÃO 1 ---
+\subsection{Sessão 1: Conceitos e Estratégias (3.5h)}
+\begin{longtable}{|p{2cm}|p{6cm}|p{3.5cm}|p{3.5cm}|}
+\hline
+\textbf{Tempo} & \textbf{Conteúdos} & \textbf{Metodologias} & \textbf{Recursos} \\ \hline
+30 min & Apresentação e Enquadramento da UFCD. & Interrogativa & Projetor \\ \hline
+60 min & Introdução à manutenção: histórico e conceitos. & Expositiva & Slides \\ \hline
+60 min & Tipos de Manutenção: Corretiva e Preventiva. & Demonstrativa & Estudo de Caso \\ \hline
+65 min & Dinâmica: Análise de falhas e seleção de estratégia. & Ativa & Fichas de Trabalho \\ \hline
+\end{longtable}
+
+% --- SESSÃO 2 ---
+\subsection{Sessão 2: Custos e Criticidade (3.5h)}
+\begin{longtable}{|p{2cm}|p{6cm}|p{3.5cm}|p{3.5cm}|}
+\hline
+\textbf{Tempo} & \textbf{Conteúdos} & \textbf{Metodologias} & \textbf{Recursos} \\ \hline
+60 min & Custos Diretos vs Indiretos (Icebergue de Custos). & Expositiva & Infográficos \\ \hline
+60 min & Grau de criticidade e Matriz ABC. & Demonstrativa & Grelha de Avaliação \\ \hline
+90 min & Exercício: Classificação de criticidade de ativos. & Ativa & Caso Prático \\ \hline
+\end{longtable}
+
+% --- SESSÃO 3 ---
+\subsection{Sessão 3: Indicadores de Performance - KPIs (3.5h)}
+\begin{longtable}{|p{2cm}|p{6cm}|p{3.5cm}|p{3.5cm}|}
+\hline
+\textbf{Tempo} & \textbf{Conteúdos} & \textbf{Metodologias} & \textbf{Recursos} \\ \hline
+60 min & Conceitos e Fórmulas: MTBF, MTTR e Disponibilidade. & Expositiva & Quadro Branco \\ \hline
+90 min & Workshop: Resolução de problemas de cálculo. & Ativa & Calculadoras \\ \hline
+60 min & Análise de tendências e tomada de decisão. & Interrogativa & Gráficos exemplo \\ \hline
+\end{longtable}
+
+\textbf{Fórmulas base para a sessão:}
+\begin{equation}
+MTBF = \frac{T_{Total} - T_{Paragem}}{N_{Falhas}} \quad | \quad MTTR = \frac{T_{Paragem}}{N_{Falhas}} \quad | \quad A = \frac{MTBF}{MTBF + MTTR}
+\end{equation}
+
+% --- SESSÃO 4 ---
+\subsection{Sessão 4: Organização do Ativo (3.5h)}
+\begin{longtable}{|p{2cm}|p{6cm}|p{3.5cm}|p{3.5cm}|}
+\hline
+\textbf{Tempo} & \textbf{Conteúdos} & \textbf{Metodologias} & \textbf{Recursos} \\ \hline
+60 min & Codificação Alfanumérica e Hierarquia de Ativos. & Expositiva & Exemplos etiquetas \\ \hline
+60 min & Árvore de Ativos e Arquivo Técnico. & Demonstrativa & Diagramas \\ \hline
+90 min & Atividade: Estruturar a árvore de ativos de uma oficina. & Ativa & Papel A3/Software \\ \hline
+\end{longtable}
+
+% --- SESSÃO 5 ---
+\subsection{Sessão 5: Planeamento e Gestão de OTs (3.5h)}
+\begin{longtable}{|p{2cm}|p{6cm}|p{3.5cm}|p{3.5cm}|}
+\hline
+\textbf{Tempo} & \textbf{Conteúdos} & \textbf{Metodologias} & \textbf{Recursos} \\ \hline
+60 min & Planeamento (GANTT) e Programação (PERT). & Expositiva & Slides \\ \hline
+90 min & Exercício: Criar cronograma para revisão de motor. & Ativa & Grelhas GANTT \\ \hline
+60 min & Ciclo da Ordem de Trabalho (Abertura ao Fecho). & Demonstrativa & Modelos de OT \\ \hline
+\end{longtable}
+
+% --- SESSÃO 6 ---
+\subsection{Sessão 6: Materiais, DMM e Qualidade (3.5h)}
+\begin{longtable}{|p{2cm}|p{6cm}|p{3.5cm}|p{3.5cm}|}
+\hline
+\textbf{Tempo} & \textbf{Conteúdos} & \textbf{Metodologias} & \textbf{Recursos} \\ \hline
+60 min & Gestão de Materiais e Stocks de Segurança. & Expositiva & Fichas Armazém \\ \hline
+90 min & DMM e Importância da Calibração na Qualidade. & Demonstrativa & Paquímetro/Multímetro \\ \hline
+60 min & Elaboração de Relatórios Técnicos. & Ativa & Templates Relatório \\ \hline
+\end{longtable}
+
+% --- SESSÃO 7 ---
+\subsection{Sessão 7: Filosofias Avançadas e Avaliação (4.0h)}
+\begin{longtable}{|p{2cm}|p{6cm}|p{3.5cm}|p{3.5cm}|}
+\hline
+\textbf{Tempo} & \textbf{Conteúdos} & \textbf{Metodologias} & \textbf{Recursos} \\ \hline
+60 min & TPM (8 Pilares) e RCM (Fiabilidade). & Expositiva & Slides \\ \hline
+60 min & Demonstração de Software CMMS/GMAO. & Demonstrativa & PC/Software Demo \\ \hline
+120 min & Revisão Global e Avaliação Sumativa Final. & Avaliação & Teste Escrito \\ \hline
+\end{longtable}
+
+\newpage
+\section{Avaliação Sumativa Final}
+
+\textbf{Nome:} \rule{10cm}{0.4pt} \textbf{Data:} \rule{3cm}{0.4pt}
+
+\subsection*{Grupo I - Teoria (6 valores)}
+1. O que diferencia a Manutenção Corretiva da Preventiva Sistemática? \\ \rule{\textwidth}{0.4pt} \\
+2. Explique a analogia do "Icebergue de Custos" na gestão da manutenção. \\ \rule{\textwidth}{0.4pt}
+
+\subsection*{Grupo II - Prática de Indicadores (10 valores)}
+3. Um ativo operou 200 horas. Registou 5 avarias com tempos de reparação: 2h, 3h, 1h, 4h e 5h. Calcule: \\
+\textbf{A) MTBF:} \rule{4cm}{0.4pt} \\
+\textbf{B) MTTR:} \rule{4cm}{0.4pt} \\
+\textbf{C) Disponibilidade (\%):} \rule{4cm}{0.4pt}
+
+\subsection*{Grupo III - Organização e Filosofias (4 valores)}
+4. Identifique o pilar da TPM que envolve o operador na manutenção básica. \\ \rule{\textwidth}{0.4pt}
+
+\newpage
+\section{Guia para o Formador (Soluções)}
+\begin{itemize}
+    \item \textbf{MTBF:} $(200 - 15) / 5 = 185 / 5 = 37$ horas.
+    \item \textbf{MTTR:} $15 / 5 = 3$ horas.
+    \item \textbf{Disp.:} $37 / (37 + 3) = 37 / 40 = 0.925 \rightarrow 92.5\%$.
+    \item \textbf{TPM:} Pilar da Manutenção Autónoma.
+\end{itemize}
+
+\section{Checklist de Recursos}
+\begin{itemize}
+    \item [ ] Projetor e computador.
+    \item [ ] Exemplos físicos de instrumentos DMM (Calibrados e fora de validade).
+    \item [ ] Software Excel para simulação de Gantt e KPIs.
+    \item [ ] Cópias das fichas de exercício e testes.
+\end{itemize}
+
+\end{document}

@@ -1,0 +1,9 @@
+\babel@toc {nil}{}
+\contentsline {section}{\numberline {1}Sessão 1: Conceitos Fundamentais e Tipos de Manutenção}{2}{}%
+\contentsline {section}{\numberline {2}Sessão 2: Custos da Manutenção e Criticidade}{2}{}%
+\contentsline {section}{\numberline {3}Sessão 3: Indicadores de Produtividade (MTBF, MTTR)}{2}{}%
+\contentsline {section}{\numberline {4}Sessão 4: Organização do Ativo e Arquivo Técnico}{2}{}%
+\contentsline {section}{\numberline {5}Sessão 5: Planeamento e Programação (GANTT, PERT)}{2}{}%
+\contentsline {section}{\numberline {6}Sessão 6: Gestão de Materiais, DMM e Qualidade}{2}{}%
+\contentsline {section}{\numberline {7}Sessão 7: Filosofias Modernas e Software}{3}{}%
+\contentsline {section}{\numberline {8}Modelo de Avaliação Sumativa}{4}{}%
