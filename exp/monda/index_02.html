@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Simulador de Margens Dinâmicas - Mondego</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: #121212; color: white; }
+        #map { height: 65vh; width: 100%; background: #222; }
+        .panel { height: 35vh; padding: 15px; background: #1e1e1e; box-sizing: border-box; }
+        .controls-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .slider-box { background: #2b2b2b; padding: 10px; border-radius: 8px; border: 1px solid #444; }
+        .stats { font-size: 1.3em; color: #3498db; font-weight: bold; }
+        button { width: 100%; padding: 10px; border-radius: 5px; border: none; font-weight: bold; cursor: pointer; }
+        #btnStart { background: #27ae60; color: white; }
+        #btnReset { background: #c0392b; color: white; margin-top: 5px; }
+        #msg { text-align: center; margin-top: 10px; font-weight: bold; color: #f1c40f; }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div class="panel">
+    <div class="controls-grid">
+        <div class="slider-box">
+            <label>Caudal: <b id="lblFlow">500</b> m³/s</label>
+            <input type="range" id="inpFlow" min="500" max="4000" step="100" value="500">
+        </div>
+        <div class="slider-box">
+            <label>Nível Inicial: <b id="lblStartLevel">15.0</b> m</label>
+            <input type="range" id="inpStartLevel" min="14.0" max="21.0" step="0.1" value="15.0">
+        </div>
+        <div class="slider-box" style="text-align:center;">
+            Tempo: <span id="valTime" class="stats">0h</span><br>
+            Nível: <span id="valLevel" class="stats">15.00m</span>
+        </div>
+        <div class="slider-box">
+            <button id="btnStart">INICIAR SIMULAÇÃO</button>
+            <button id="btnReset">REINICIAR</button>
+        </div>
+    </div>
+    <div id="msg">Pronto para simular transbordo das margens.</div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    // Mapa focado no leito do rio em Coimbra
+    var map = L.map('map').setView([40.2080, -8.4320], 15);
+    
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri &mdash; Simulação de Cheia Realista'
+    }).addTo(map);
+
+    // Coordenadas base do leito do rio (Simplificadas)
+    // Cada par representa [Margem Esquerda, Margem Direita]
+    const leitoBase = [
+        { lat: 40.2150, lngE: -8.4390, lngD: -8.4375 }, // Zona Norte (Estação Água)
+        { lat: 40.2110, lngE: -8.4345, lngD: -8.4315 }, // Ponte de Santa Clara / Baixa
+        { lat: 40.2060, lngE: -8.4315, lngD: -8.4285 }, // Parque Verde / Estádio Univ.
+        { lat: 40.2010, lngE: -8.4310, lngD: -8.4280 }  // Zona Sul
+    ];
+
+    // Criar o polígono da água
+    var waterPolygon = L.polygon([], {
+        color: '#2980b9',
+        fillColor: '#3498db',
+        fillOpacity: 0.6,
+        weight: 2
+    }).addTo(map);
+
+    // Marcador da Estação de Água
+    L.marker([40.2222, -8.4495]).addTo(map).bindPopup("<b>ETA Boavista</b>");
+
+    var nivel = 15.0, tempo = 0, timer = null;
+
+    function desenharRio() {
+        let pontos = [];
+        let fatorExpansao = 0;
+        
+        // Só expande se passar o nível base de 16.5m
+        if (nivel > 16.5) {
+            fatorExpansao = (nivel - 16.5) * 0.005; // Ajuste fino da largura
+        }
+
+        // Construir o polígono: desce pela margem direita, sobe pela esquerda
+        leitoBase.forEach(p => pontos.push([p.lat, p.lngD + fatorExpansao]));
+        leitoBase.slice().reverse().forEach(p => pontos.push([p.lat, p.lngE - (fatorExpansao * 1.5)])); // Margem esquerda expande mais (campo)
+
+        waterPolygon.setLatLngs(pontos);
+        
+        // Mudar cor se atingir nível crítico
+        if (nivel > 19) waterPolygon.setStyle({fillColor: '#e74c3c', color: '#c0392b'});
+        else waterPolygon.setStyle({fillColor: '#3498db', color: '#2980b9'});
+    }
+
+    const inpFlow = document.getElementById('inpFlow');
+    const inpStartLevel = document.getElementById('inpStartLevel');
+    const valLevel = document.getElementById('valLevel');
+    const valTime = document.getElementById('valTime');
+    const msgDiv = document.getElementById('msg');
+
+    function ciclo() {
+        document.getElementById('lblFlow').innerText = inpFlow.value;
+        document.getElementById('lblStartLevel').innerText = parseFloat(inpStartLevel.value).toFixed(1);
+        valLevel.innerText = nivel.toFixed(2) + "m";
+        valTime.innerText = tempo + "h";
+        
+        desenharRio();
+
+        if (nivel > 18.5) msgDiv.innerHTML = "🚨 <b>CRÍTICO:</b> Margens transbordaram. Inundação na Baixa e Santa Clara!";
+        else if (nivel > 16.5) msgDiv.innerText = "⚠️ AVISO: Água a galgar as margens no Parque Verde.";
+        else msgDiv.innerText = "Rio dentro do leito normal.";
+    }
+
+    inpStartLevel.oninput = function() {
+        if(!timer) {
+            nivel = parseFloat(this.value);
+            ciclo();
+        }
+    };
+
+    document.getElementById('btnStart').onclick = function() {
+        if (timer) {
+            clearInterval(timer); timer = null;
+            this.innerText = "RESUMIR";
+        } else {
+            this.innerText = "PAUSAR";
+            inpStartLevel.disabled = true;
+            timer = setInterval(() => {
+                tempo++;
+                nivel += (parseInt(inpFlow.value) - 1000) / 4500;
+                if (nivel < 14) nivel = 14;
+                ciclo();
+            }, 800);
+        }
+    };
+
+    document.getElementById('btnReset').onclick = () => location.reload();
+    
+    // Inicialização
+    desenharRio();
+    ciclo();
+
+</script>
+</body>
+</html>
