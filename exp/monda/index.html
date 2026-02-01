@@ -1,131 +1,127 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>Simulador de Cheias Mondego - Fluxo Temporal</title>
+    <title>Simulador Mondego</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; }
-        #map { flex-grow: 1; width: 100%; background: #aad3df; }
-        .panel { padding: 20px; background: #2c3e50; color: white; box-shadow: 0 2px 10px rgba(0,0,0,0.3); z-index: 1000; }
-        .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; align-items: center; }
-        .slider-container { display: flex; flex-direction: column; }
-        input[type=range] { width: 100%; cursor: pointer; }
-        .stats { font-size: 1.2em; font-weight: bold; color: #3498db; }
-        .alert-box { margin-top: 10px; padding: 10px; border-radius: 4px; background: rgba(255,255,255,0.1); text-align: center; }
-        #timeDisplay { color: #f1c40f; }
+        body { margin: 0; padding: 0; font-family: sans-serif; }
+        #map { height: 70vh; width: 100%; background: #ccd; }
+        .panel { 
+            height: 30vh; 
+            background: #1a1a1a; 
+            color: white; 
+            padding: 15px; 
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .row { display: flex; justify-content: space-around; align-items: center; margin-bottom: 10px; }
+        .stats { font-size: 1.5em; color: #00bbff; font-weight: bold; }
+        input[type=range] { width: 250px; }
+        button { padding: 10px 20px; font-weight: bold; cursor: pointer; border-radius: 5px; border: none; }
+        #btnStart { background: #2ecc71; color: white; }
+        #btnReset { background: #e74c3c; color: white; }
+        #msg { text-align: center; font-weight: bold; color: #ffcc00; margin-top: 10px; }
     </style>
 </head>
 <body>
 
+<div id="map"></div>
+
 <div class="panel">
-    <div class="controls">
-        <div class="slider-container">
-            <label>Caudal da Barragem (Aguieira): <span class="stats" id="flowVal">500</span> m³/s</label>
-            <input type="range" id="flowRate" min="500" max="3000" step="100" value="500">
+    <div class="row">
+        <div>
+            <label>Caudal: <span id="valFlow">500</span> m³/s</label><br>
+            <input type="range" id="inpFlow" min="500" max="3000" step="100" value="500">
         </div>
         <div>
-            <button id="startBtn" style="padding: 10px 20px; cursor:pointer;">Iniciar Simulação</button>
-            <button id="resetBtn" style="padding: 10px 20px; cursor:pointer;">Reset</button>
+            <button id="btnStart">INICIAR</button>
+            <button id="btnReset">RESET</button>
         </div>
-        <div class="slider-container">
-            <span>Tempo Decorrido: <span id="timeDisplay">0</span> horas</span>
-            <span>Nível Médio: <span id="levelDisplay" class="stats">15.0</span> m</span>
+        <div>
+            Tempo: <span id="valTime" class="stats">0</span>h | 
+            Nível: <span id="valLevel" class="stats">15.0</span>m
         </div>
     </div>
-    <div id="alertMsg" class="alert-box">Sistema em monitorização.</div>
+    <div id="msg">Sistema Pronto - Coimbra (Margens Direita e Esquerda)</div>
 </div>
-
-<div id="map"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    const map = L.map('map').setView([40.2085, -8.4285], 15);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+    // Inicialização do Mapa
+    var map = L.map('map').setView([40.2065, -8.4300], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-    // Configurações das zonas críticas (Centro e Raio Inicial)
-    const zonas = {
-        parque: { 
-            circle: L.circle([40.2045, -8.4275], { color: 'none', fillColor: '#00ced1', fillOpacity: 0, radius: 0 }).addTo(map),
-            threshold: 16.5, // Nível em que começa a inundar
-            maxRadius: 400
-        },
-        baixa: { 
-            circle: L.circle([40.2105, -8.4300], { color: 'none', fillColor: '#e74c3c', fillOpacity: 0, radius: 0 }).addTo(map),
-            threshold: 18.5,
-            maxRadius: 500
-        }
-    };
+    // Configuração das Manchas (Zonas)
+    var zonas = [
+        { nome: "Parque Verde", lat: 40.2045, lng: -8.4275, cor: "#00f", threshold: 16.2, max: 400 },
+        { nome: "Santa Clara", lat: 40.2035, lng: -8.4320, cor: "#f80", threshold: 16.8, max: 500 },
+        { nome: "Baixa", lat: 40.2110, lng: -8.4310, cor: "#f00", threshold: 18.8, max: 600 }
+    ];
 
-    let waterLevel = 15.0;
-    let time = 0;
-    let timer = null;
+    // Criar círculos no mapa
+    zonas.forEach(function(z) {
+        z.shape = L.circle([z.lat, z.lng], {
+            color: 'none', fillColor: z.cor, fillOpacity: 0, radius: 0
+        }).addTo(map);
+    });
 
-    const flowInput = document.getElementById('flowRate');
-    const flowVal = document.getElementById('flowVal');
-    const timeDisplay = document.getElementById('timeDisplay');
-    const levelDisplay = document.getElementById('levelDisplay');
-    const alertMsg = document.getElementById('alertMsg');
+    // Variáveis de Controlo
+    var nivel = 15.0;
+    var tempo = 0;
+    var timer = null;
 
-    flowInput.oninput = () => flowVal.innerText = flowInput.value;
+    // Elementos
+    var flowInp = document.getElementById('inpFlow');
+    var flowVal = document.getElementById('valFlow');
+    var timeVal = document.getElementById('valTime');
+    var levelVal = document.getElementById('valLevel');
+    var msgDiv = document.getElementById('msg');
 
-    function updateMap() {
-        levelDisplay.innerText = waterLevel.toFixed(2);
-        timeDisplay.innerText = time;
+    flowInp.oninput = function() { flowVal.innerText = this.value; };
 
-        for (let z in zonas) {
-            let zona = zonas[z];
-            if (waterLevel > zona.threshold) {
-                // Cálculo de expansão e opacidade gradual
-                let diff = waterLevel - zona.threshold;
-                let newRadius = Math.min(diff * 150, zona.maxRadius);
-                let newOpacity = Math.min(diff * 0.2, 0.7);
-                
-                zona.circle.setRadius(newRadius);
-                zona.circle.setStyle({ fillOpacity: newOpacity });
+    function atualizar() {
+        levelVal.innerText = nivel.toFixed(2);
+        timeVal.innerText = tempo;
+        var perigo = [];
+
+        zonas.forEach(function(z) {
+            if (nivel > z.threshold) {
+                var diff = nivel - z.threshold;
+                z.shape.setRadius(Math.min(diff * 200, z.max));
+                z.shape.setStyle({ fillOpacity: Math.min(diff * 0.2, 0.7) });
+                perigo.push(z.nome);
             } else {
-                zona.circle.setRadius(0);
+                z.shape.setRadius(0);
             }
-        }
+        });
 
-        // Alertas narrativos
-        if (waterLevel > 19.5) {
-            alertMsg.innerText = "CRÍTICO: Baixa de Coimbra com inundações severas!";
-            alertMsg.style.color = "#ff4757";
-        } else if (waterLevel > 17) {
-            alertMsg.innerText = "AVISO: Parque Verde e Praça da Canção submersos.";
-            alertMsg.style.color = "#ffa502";
-        } else {
-            alertMsg.innerText = "Caudal estável dentro do leito.";
-            alertMsg.style.color = "#2ecc71";
-        }
+        msgDiv.innerText = perigo.length > 0 ? "Inundação: " + perigo.join(", ") : "Nível do Mondego Normal";
     }
 
-    document.getElementById('startBtn').onclick = () => {
-        if (timer) return;
-        timer = setInterval(() => {
-            time++;
-            let caudal = parseInt(flowInput.value);
-            
-            // Lógica simplificada: O nível sobe proporcionalmente ao excesso de caudal
-            // Abaixo de 1000m3/s o rio drena bem. Acima disso, acumula.
-            let subida = (caudal - 800) / 5000; 
-            waterLevel += Math.max(subida, -0.05); // Pode descer se o caudal for baixo
-
-            // Limites de segurança do simulador
-            if (waterLevel < 14) waterLevel = 14;
-            if (waterLevel > 22) waterLevel = 22;
-
-            updateMap();
-        }, 500); // Cada 0.5s equivale a 1 hora de simulação
+    document.getElementById('btnStart').onclick = function() {
+        if (timer) {
+            clearInterval(timer);
+            timer = null;
+            this.innerText = "CONTINUAR";
+        } else {
+            this.innerText = "PAUSAR";
+            timer = setInterval(function() {
+                tempo++;
+                var caudal = parseInt(flowInp.value);
+                // Lógica: sobe acima de 1000m3/s, desce abaixo disso
+                nivel += (caudal - 1000) / 4000;
+                if (nivel < 14.5) nivel = 14.5;
+                if (nivel > 22) nivel = 22;
+                atualizar();
+            }, 600);
+        }
     };
 
-    document.getElementById('resetBtn').onclick = () => {
-        clearInterval(timer);
-        timer = null;
-        waterLevel = 15.0;
-        time = 0;
-        updateMap();
+    document.getElementById('btnReset').onclick = function() {
+        location.reload(); // Forma mais segura de limpar tudo
     };
 
 </script>
