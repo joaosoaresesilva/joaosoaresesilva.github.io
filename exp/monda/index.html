@@ -2,72 +2,132 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>Simulador de Inundação - Coimbra</title>
+    <title>Simulador de Cheias Mondego - Fluxo Temporal</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        #map { height: 500px; width: 100%; border-radius: 8px; }
-        .controls { padding: 20px; background: #f4f4f4; margin-bottom: 10px; border-radius: 8px; }
-        .status { font-weight: bold; color: #d9534f; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        #map { flex-grow: 1; width: 100%; background: #aad3df; }
+        .panel { padding: 20px; background: #2c3e50; color: white; box-shadow: 0 2px 10px rgba(0,0,0,0.3); z-index: 1000; }
+        .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; align-items: center; }
+        .slider-container { display: flex; flex-direction: column; }
+        input[type=range] { width: 100%; cursor: pointer; }
+        .stats { font-size: 1.2em; font-weight: bold; color: #3498db; }
+        .alert-box { margin-top: 10px; padding: 10px; border-radius: 4px; background: rgba(255,255,255,0.1); text-align: center; }
+        #timeDisplay { color: #f1c40f; }
     </style>
 </head>
 <body>
 
-<div class="controls">
-    <h2>Simulador de Cheias - Rio Mondego (Coimbra)</h2>
-    <label for="waterLevel">Nível do Rio (metros): </label>
-    <input type="number" id="waterLevel" value="15" step="0.5">
-    <button onclick="updateSimulation()">Simular</button>
-    <p id="alertMsg" class="status"></p>
+<div class="panel">
+    <div class="controls">
+        <div class="slider-container">
+            <label>Caudal da Barragem (Aguieira): <span class="stats" id="flowVal">500</span> m³/s</label>
+            <input type="range" id="flowRate" min="500" max="3000" step="100" value="500">
+        </div>
+        <div>
+            <button id="startBtn" style="padding: 10px 20px; cursor:pointer;">Iniciar Simulação</button>
+            <button id="resetBtn" style="padding: 10px 20px; cursor:pointer;">Reset</button>
+        </div>
+        <div class="slider-container">
+            <span>Tempo Decorrido: <span id="timeDisplay">0</span> horas</span>
+            <span>Nível Médio: <span id="levelDisplay" class="stats">15.0</span> m</span>
+        </div>
+    </div>
+    <div id="alertMsg" class="alert-box">Sistema em monitorização.</div>
 </div>
 
 <div id="map"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    // Inicializar o mapa focado em Coimbra
-    const map = L.map('map').setView([40.2085, -8.4285], 14);
+    const map = L.map('map').setView([40.2085, -8.4285], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
+    // Configurações das zonas críticas (Centro e Raio Inicial)
+    const zonas = {
+        parque: { 
+            circle: L.circle([40.2045, -8.4275], { color: 'none', fillColor: '#00ced1', fillOpacity: 0, radius: 0 }).addTo(map),
+            threshold: 16.5, // Nível em que começa a inundar
+            maxRadius: 400
+        },
+        baixa: { 
+            circle: L.circle([40.2105, -8.4300], { color: 'none', fillColor: '#e74c3c', fillOpacity: 0, radius: 0 }).addTo(map),
+            threshold: 18.5,
+            maxRadius: 500
+        }
+    };
 
-    // Definição da zona da Baixa de Coimbra (coordenadas aproximadas)
-    const baixaPolygon = L.polygon([
-        [40.2115, -8.4315],
-        [40.2115, -8.4285],
-        [40.2085, -8.4285],
-        [40.2085, -8.4315]
-    ], {color: 'blue', fillOpacity: 0}).addTo(map);
+    let waterLevel = 15.0;
+    let time = 0;
+    let timer = null;
 
-    // Definição da zona do Parque Verde (inunda mais cedo)
-    const parqueVerde = L.polygon([
-        [40.2055, -8.4290],
-        [40.2055, -8.4260],
-        [40.2030, -8.4260],
-        [40.2030, -8.4290]
-    ], {color: 'cyan', fillOpacity: 0}).addTo(map);
+    const flowInput = document.getElementById('flowRate');
+    const flowVal = document.getElementById('flowVal');
+    const timeDisplay = document.getElementById('timeDisplay');
+    const levelDisplay = document.getElementById('levelDisplay');
+    const alertMsg = document.getElementById('alertMsg');
 
-    function updateSimulation() {
-        const level = parseFloat(document.getElementById('waterLevel').value);
-        const msg = document.getElementById('alertMsg');
+    flowInput.oninput = () => flowVal.innerText = flowInput.value;
 
-        // Lógica de simulação baseada nos teus inputs
-        if (level >= 20) {
-            baixaPolygon.setStyle({fillOpacity: 0.6, color: 'red'});
-            msg.innerText = "ALERTA: Inundação total da Baixa de Coimbra!";
-        } else if (level >= 19) {
-            baixaPolygon.setStyle({fillOpacity: 0.3, color: 'orange'});
-            msg.innerText = "AVISO: Início de inundação na Baixa (zonas ribeirinhas).";
-        } else if (level >= 17) {
-            parqueVerde.setStyle({fillOpacity: 0.5, color: 'blue'});
-            msg.innerText = "O Parque Verde já se encontra submerso.";
+    function updateMap() {
+        levelDisplay.innerText = waterLevel.toFixed(2);
+        timeDisplay.innerText = time;
+
+        for (let z in zonas) {
+            let zona = zonas[z];
+            if (waterLevel > zona.threshold) {
+                // Cálculo de expansão e opacidade gradual
+                let diff = waterLevel - zona.threshold;
+                let newRadius = Math.min(diff * 150, zona.maxRadius);
+                let newOpacity = Math.min(diff * 0.2, 0.7);
+                
+                zona.circle.setRadius(newRadius);
+                zona.circle.setStyle({ fillOpacity: newOpacity });
+            } else {
+                zona.circle.setRadius(0);
+            }
+        }
+
+        // Alertas narrativos
+        if (waterLevel > 19.5) {
+            alertMsg.innerText = "CRÍTICO: Baixa de Coimbra com inundações severas!";
+            alertMsg.style.color = "#ff4757";
+        } else if (waterLevel > 17) {
+            alertMsg.innerText = "AVISO: Parque Verde e Praça da Canção submersos.";
+            alertMsg.style.color = "#ffa502";
         } else {
-            baixaPolygon.setStyle({fillOpacity: 0});
-            parqueVerde.setStyle({fillOpacity: 0});
-            msg.innerText = "Nível normal ou controlado.";
+            alertMsg.innerText = "Caudal estável dentro do leito.";
+            alertMsg.style.color = "#2ecc71";
         }
     }
-</script>
 
+    document.getElementById('startBtn').onclick = () => {
+        if (timer) return;
+        timer = setInterval(() => {
+            time++;
+            let caudal = parseInt(flowInput.value);
+            
+            // Lógica simplificada: O nível sobe proporcionalmente ao excesso de caudal
+            // Abaixo de 1000m3/s o rio drena bem. Acima disso, acumula.
+            let subida = (caudal - 800) / 5000; 
+            waterLevel += Math.max(subida, -0.05); // Pode descer se o caudal for baixo
+
+            // Limites de segurança do simulador
+            if (waterLevel < 14) waterLevel = 14;
+            if (waterLevel > 22) waterLevel = 22;
+
+            updateMap();
+        }, 500); // Cada 0.5s equivale a 1 hora de simulação
+    };
+
+    document.getElementById('resetBtn').onclick = () => {
+        clearInterval(timer);
+        timer = null;
+        waterLevel = 15.0;
+        time = 0;
+        updateMap();
+    };
+
+</script>
 </body>
 </html>
