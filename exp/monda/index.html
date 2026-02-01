@@ -2,23 +2,21 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>Simulador Crítico Mondego - Coimbra</title>
+    <title>Simulador Topográfico Coimbra</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: #121212; color: white; overflow: hidden; }
-        #map { height: 65vh; width: 100%; background: #222; }
-        .panel { height: 35vh; padding: 15px; background: #1e1e1e; box-sizing: border-box; }
-        .controls-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
-        .slider-box { background: #2b2b2b; padding: 10px; border-radius: 8px; border: 1px solid #444; }
-        .stats-display { text-align: center; font-size: 1.1em; border: 2px solid #3498db; }
-        .critical-alert { color: #ff4757; font-weight: bold; animation: blink 1.5s infinite; }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
-        button { width: 100%; padding: 12px; margin-top: 5px; border-radius: 5px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        #btnStart { background: #27ae60; color: white; }
-        #btnStart:hover { background: #2ecc71; }
-        #btnReset { background: #c0392b; color: white; }
-        input[type=range] { width: 100%; cursor: pointer; }
-        #msg { text-align: center; margin-top: 10px; font-weight: bold; min-height: 1.2em; }
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: white; }
+        #map { height: 70vh; width: 100%; background: #222; }
+        .panel { padding: 15px; background: #16213e; border-top: 4px solid #48dbfb; }
+        .controls-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .slider-box { background: #0f3460; padding: 10px; border-radius: 6px; border: 1px solid #1e3799; }
+        .stats-val { font-size: 1.4em; color: #48dbfb; font-weight: bold; }
+        input[type=range] { width: 100%; cursor: pointer; accent-color: #48dbfb; }
+        button { padding: 12px; font-weight: bold; cursor: pointer; border-radius: 4px; border: none; width: 100%; transition: 0.3s; }
+        #btnStart { background: #1dd1a1; color: white; }
+        #btnReset { background: #ee5253; color: white; margin-top: 5px; }
+        #msg { text-align: center; margin-top: 10px; font-weight: bold; color: #feca57; text-shadow: 1px 1px 2px #000; }
+        .label-style { background: rgba(0,0,0,0.6); border: 1px solid #48dbfb; color: white; font-weight: bold; font-size: 11px; padding: 2px; border-radius: 3px; }
     </style>
 </head>
 <body>
@@ -28,120 +26,110 @@
 <div class="panel">
     <div class="controls-grid">
         <div class="slider-box">
-            <label>Caudal (Aguieira): <b id="lblFlow">500</b> m³/s</label>
-            <input type="range" id="inpFlow" min="500" max="4000" step="100" value="500">
+            <label>Caudal (m³/s): <b id="lblFlow">1000</b></label>
+            <input type="range" id="inpFlow" min="500" max="10000" step="100" value="1000">
         </div>
-
         <div class="slider-box">
-            <label>Nível Inicial: <b id="lblStartLevel">15.0</b> m</label>
-            <input type="range" id="inpStartLevel" min="14.0" max="21.0" step="0.1" value="15.0">
+            <label>Nível Rio: <b id="lblStartLevel">15.0</b> m</label>
+            <input type="range" id="inpStartLevel" min="14.0" max="25.0" step="0.1" value="15.0">
         </div>
-
-        <div class="stats-display slider-box">
-            <span>Tempo: <b id="valTime">0h</b></span><br>
-            <span>Nível: <b id="valLevel" style="color:#3498db">15.00m</b></span>
-        </div>
-
         <div class="slider-box">
-            <button id="btnStart">INICIAR SIMULAÇÃO</button>
-            <button id="btnReset">REINICIAR TUDO</button>
+            <button id="btnStart">SIMULAR FLUXO</button>
+            <button id="btnReset">REINICIAR</button>
+        </div>
+        <div class="stats-box" style="text-align:center">
+            <span>Tempo Simulado</span><br><span id="valTime" class="stats-val">0h</span>
+        </div>
+        <div class="stats-box" style="text-align:center">
+            <span>Elevação Água</span><br><span id="valLevel" class="stats-val">15.00m</span>
         </div>
     </div>
-    <div id="msg">Monitorização do Sistema Hidrográfico</div>
+    <div id="msg">Mapa Topográfico Ativo. Analisando curvas de nível.</div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    // Inicialização com servidor de tiles da ESRI (mais estável para carregar mapas)
-    var map = L.map('map').setView([40.2100, -8.4400], 13);
+    // Configuração com OpenTopoMap para ver curvas de nível e relevo
+    var map = L.map('map').setView([40.2050, -8.4300], 14);
     
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Tiles &copy; Esri &mdash; Coimbra Simulation'
+    L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+        attribution: 'Map data: &copy; OpenStreetMap contributors, SRTM | Map style: &copy; OpenTopoMap'
     }).addTo(map);
 
-    // Zonas de Inundação
     var zonas = [
-        { nome: "Estação Água (ETA)", centro: [40.2222, -8.4495], cor: "#00d2d3", threshold: 17.8, max: 400, critico: true },
-        { nome: "Parque Verde", centro: [40.2045, -8.4275], cor: "#341f97", threshold: 16.2, max: 450, critico: false },
-        { nome: "Santa Clara", centro: [40.2035, -8.4320], cor: "#f39c12", threshold: 16.8, max: 550, critico: false },
-        { nome: "Baixa de Coimbra", centro: [40.2115, -8.4305], cor: "#ee5253", threshold: 18.8, max: 600, critico: false },
-        { nome: "Baixo Mondego", centro: [40.2200, -8.4800], cor: "#10ac84", threshold: 17.4, max: 2500, critico: false }
+        { nome: "ETA Boavista (16.5m)", centro: [40.1895, -8.4215], threshold: 16.5, max: 550 },
+        { nome: "Chanterene / Baixa (15.5m)", centro: [40.2118, -8.4295], threshold: 15.5, max: 400 },
+        { nome: "Santa-Clara-a-Velha (15.8m)", centro: [40.2018, -8.4335], threshold: 15.8, max: 450 },
+        { nome: "Parque Verde Docas (15.8m)", centro: [40.2030, -8.4255], threshold: 15.8, max: 550 },
+        { nome: "Parque Choupalinho (16.4m)", centro: [40.2085, -8.4355], threshold: 16.4, max: 350 },
+        { nome: "Açude-Ponte (17.8m)", centro: [40.2155, -8.4410], threshold: 17.8, max: 400 },
+        { nome: "Baixo Mondego (15.2m)", centro: [40.1850, -8.4950], threshold: 15.2, max: 3000 }
     ];
 
-    zonas.forEach(z => {
-        z.shape = L.circle(z.centro, { color: 'none', fillColor: z.cor, fillOpacity: 0, radius: 0 }).addTo(map);
-        if(z.critico) {
-            L.marker(z.centro).addTo(map).bindPopup("<b>" + z.nome + "</b><br>Ponto Crítico");
-        }
+    zonas.forEach(function(z) {
+        z.shape = L.circle(z.centro, {
+            color: '#48dbfb', weight: 1, fillColor: "#48dbfb", fillOpacity: 0, radius: 0, interactive: false
+        }).addTo(map);
+        
+        L.marker(z.centro, {opacity: 0}).addTo(map)
+         .bindTooltip(z.nome, {permanent: true, direction: 'top', className: 'label-style'});
     });
 
-    var nivel = 15.0, tempo = 0, timer = null;
+    var nivelAtual = 15.0;
+    var tempo = 0;
+    var timer = null;
 
     const inpFlow = document.getElementById('inpFlow');
     const inpStartLevel = document.getElementById('inpStartLevel');
+    const valLevel = document.getElementById('valLevel');
+    const valTime = document.getElementById('valTime');
     const msgDiv = document.getElementById('msg');
 
-    function atualizarVisual() {
-        document.getElementById('valLevel').innerText = nivel.toFixed(2) + "m";
-        document.getElementById('valTime').innerText = tempo + "h";
-        let ativos = [];
-        let etaEmPerigo = false;
+    inpFlow.oninput = function() { document.getElementById('lblFlow').innerText = this.value; };
+    inpStartLevel.oninput = function() { 
+        if(!timer) {
+            nivelAtual = parseFloat(this.value);
+            document.getElementById('lblStartLevel').innerText = nivelAtual.toFixed(1);
+            valLevel.innerText = nivelAtual.toFixed(2) + "m";
+            atualizarMapa();
+        }
+    };
 
-        zonas.forEach(z => {
-            if (nivel > z.threshold) {
-                let d = nivel - z.threshold;
-                z.shape.setRadius(Math.min(d * 300, z.max));
-                z.shape.setStyle({ fillOpacity: Math.min(d * 0.35, 0.6) });
-                ativos.push(z.nome);
-                if(z.critico) etaEmPerigo = true;
+    function atualizarMapa() {
+        var afetados = [];
+        zonas.forEach(function(z) {
+            if (nivelAtual > z.threshold) {
+                var d = nivelAtual - z.threshold;
+                z.shape.setRadius(Math.min(d * 400, z.max));
+                z.shape.setStyle({ fillOpacity: Math.min(d * 0.45, 0.8) });
+                afetados.push(z.nome.split(" (")[0]);
             } else {
                 z.shape.setRadius(0);
             }
         });
-
-        if (etaEmPerigo) {
-            msgDiv.innerHTML = "<span class='critical-alert'>🚨 EMERGÊNCIA: ESTAÇÃO DE ÁGUA COMPROMETIDA!</span>";
-        } else if (ativos.length > 0) {
-            msgDiv.innerHTML = "⚠️ Inundação em curso: " + ativos.join(", ");
-            msgDiv.style.color = "#f1c40f";
-        } else {
-            msgDiv.innerText = "Nível do rio estável.";
-            msgDiv.style.color = "#2ecc71";
-        }
+        if (afetados.length > 0) msgDiv.innerHTML = "🚨 ZONAS ABAIXO DA LINHA DE ÁGUA: " + afetados.join(" | ");
+        else msgDiv.innerText = "Nível do rio estável. Topologia segura.";
     }
-
-    inpStartLevel.oninput = function() {
-        if(!timer) {
-            nivel = parseFloat(this.value);
-            document.getElementById('lblStartLevel').innerText = nivel.toFixed(1);
-            atualizarVisual();
-        }
-    };
-
-    inpFlow.oninput = () => document.getElementById('lblFlow').innerText = inpFlow.value;
 
     document.getElementById('btnStart').onclick = function() {
         if (timer) {
             clearInterval(timer); timer = null;
-            this.innerText = "RESUMIR SIMULAÇÃO";
-            this.style.background = "#27ae60";
+            this.innerText = "RETOMAR";
+            this.style.background = "#1dd1a1";
         } else {
             this.innerText = "PAUSAR";
-            this.style.background = "#f39c12";
-            inpStartLevel.disabled = true;
-            timer = setInterval(() => {
+            this.style.background = "#ff9f43";
+            timer = setInterval(function() {
                 tempo++;
-                // Lógica de subida acumulada
-                nivel += (parseInt(inpFlow.value) - 1050) / 4500;
-                if (nivel < 14) nivel = 14;
-                if (nivel > 24) nivel = 24;
-                atualizarVisual();
-            }, 800);
+                nivelAtual += (parseInt(inpFlow.value) - 1100) / 12000;
+                valLevel.innerText = Math.max(14, nivelAtual).toFixed(2) + "m";
+                valTime.innerText = tempo + "h";
+                atualizarMapa();
+            }, 600);
         }
     };
 
     document.getElementById('btnReset').onclick = () => location.reload();
-    atualizarVisual();
 </script>
 </body>
 </html>
