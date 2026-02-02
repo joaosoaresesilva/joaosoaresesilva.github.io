@@ -2,21 +2,20 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>Simulador Hidráulico: Saturação Regional (20km)</title>
+    <title>Simulador: Integridade de Diques Mondego</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: #121212; color: white; }
-        #map { height: 65vh; width: 100%; }
+        #map { height: 60vh; width: 100%; }
         .panel { padding: 15px; background: #1e1e1e; border-top: 4px solid #00d2ff; }
         .controls-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
-        .slider-box { background: #2d2d2d; padding: 12px; border-radius: 8px; border: 1px solid #444; text-align: center; }
-        .stats-val { font-size: 1.4em; color: #00d2ff; font-weight: bold; display: block; margin-top: 5px; }
+        .slider-box { background: #2d2d2d; padding: 10px; border-radius: 8px; border: 1px solid #444; text-align: center; }
+        .stats-val { font-size: 1.3em; color: #00d2ff; font-weight: bold; display: block; }
+        .danger { color: #ff7675 !important; }
         input[type=range] { width: 100%; accent-color: #00d2ff; }
-        button { padding: 12px; font-weight: bold; cursor: pointer; border-radius: 4px; border: none; width: 100%; transition: 0.3s; }
-        #btnStart { background: #00b894; color: white; }
-        #btnReset { background: #d63031; color: white; margin-top: 5px; }
-        #msg { text-align: center; margin-top: 10px; font-weight: bold; color: #feca57; font-size: 0.9em; min-height: 2.4em; }
-        .label-style { background: rgba(0,0,0,0.85); border: 1px solid #00d2ff; color: white; font-size: 10px; padding: 3px; border-radius: 3px; }
+        #integrity-bar { width: 100%; height: 10px; background: #444; border-radius: 5px; margin-top: 5px; overflow: hidden; }
+        #integrity-fill { width: 100%; height: 100%; background: #00b894; transition: 0.3s; }
+        #msg { text-align: center; margin-top: 10px; font-weight: bold; color: #feca57; font-size: 0.85em; min-height: 3em; }
     </style>
 </head>
 <body>
@@ -26,121 +25,97 @@
 <div class="panel">
     <div class="controls-grid">
         <div class="slider-box">
-            <label>Caudal: <b id="lblFlow">1200</b> m³/s</label>
-            <input type="range" id="inpFlow" min="500" max="15000" step="100" value="1200">
+            <label>Caudal: <b id="lblFlow">1500</b> m³/s</label>
+            <input type="range" id="inpFlow" min="500" max="4000" step="50" value="1500">
         </div>
         <div class="slider-box">
-            <label>Estado da Drenagem:</label>
-            <select id="selDam" style="width:100%; margin-top:10px; padding:5px; background: #333; color: white;">
-                <option value="1">Livre</option>
-                <option value="0.5">Saturada (Campo)</option>
-                <option value="0">Crítica (Regional)</option>
-            </select>
+            <span>Integridade dos Diques</span>
+            <div id="integrity-bar"><div id="integrity-fill"></div></div>
+            <span id="valIntegrity" class="stats-val">100%</span>
         </div>
         <div class="slider-box">
-            <span>Tempo Simulado</span>
-            <span id="valTime" class="stats-val">0h</span>
+            <span>Nível em Coimbra</span>
+            <span id="valLevel" class="stats-val">19.00m</span>
         </div>
         <div class="slider-box">
-            <span>Nível Rio (CBR)</span>
-            <span id="valLevel" class="stats-val">15.00m</span>
-        </div>
-        <div class="slider-box">
-            <button id="btnStart">INICIAR</button>
-            <button id="btnReset">RESET</button>
+            <button id="btnStart" style="padding:10px; background:#00d2ff; font-weight:bold; width:100%; cursor:pointer;">INICIAR</button>
+            <button onclick="location.reload()" style="margin-top:5px; width:100%; cursor:pointer;">RESET</button>
         </div>
     </div>
-    <div id="msg">Monitorização regional ativa (Raio de 20km).</div>
+    <div id="msg">Diques estáveis. Terras baixas protegidas.</div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    // Vista mais afastada para ver os 20km de expansão
-    var map = L.map('map').setView([40.1800, -8.5500], 10);
-    L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { attribution: 'OpenTopoMap' }).addTo(map);
+    var map = L.map('map').setView([40.1750, -8.5500], 11);
+    L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png').addTo(map);
 
     var zonas = [
-        { nome: "ETA Boavista", centro: [40.1895, -8.4215], threshold: 16.5, max: 400 },
-        { nome: "Coimbra: Baixa", centro: [40.2095, -8.4315], threshold: 15.7, max: 600 },
-        { nome: "Alfarelos: Estação", centro: [40.1555, -8.6145], threshold: 8.2, max: 1500 },
-        { nome: "Ereira", centro: [40.1605, -8.7050], threshold: 6.2, max: 1600 },
-        { nome: "Soure: Baixa", centro: [40.0580, -8.5920], threshold: 9.0, max: 1200 } // Adicionado Soure
+        { nome: "Baixa de Coimbra", centro: [40.2095, -8.4315], threshold: 20.0, max: 700, jusante: false },
+        { nome: "Alfarelos", centro: [40.1555, -8.6145], threshold: 21.0, max: 1500, jusante: true },
+        { nome: "Ereira", centro: [40.1605, -8.7050], threshold: 21.5, max: 1800, jusante: true }
     ];
 
-    var focosDinamicos = [];
-    var nivelBase = 15.0;
+    zonas.forEach(z => {
+        z.shape = L.circle(z.centro, { color: '#0984e3', weight: 2, fillOpacity: 0, radius: 0 }).addTo(map);
+    });
+
+    var integrity = 100;
     var tempoHoras = 0;
     var timer = null;
 
-    zonas.forEach(function(z) {
-        z.shape = L.circle(z.centro, { color: '#0984e3', weight: 2, fillColor: "#74b9ff", fillOpacity: 0, radius: 0 }).addTo(map);
-        L.marker(z.centro, {opacity: 0}).addTo(map).bindTooltip(z.nome, {permanent: true, direction: 'top', className: 'label-style'});
-    });
-
-    function formatarTempo(horas) {
-        if (horas < 24) return horas + "h";
-        return Math.floor(horas / 24) + "d " + (horas % 24) + "h";
-    }
-
-    function gerarFocoRegional() {
-        if (nivelBase > 18.0) {
-            // Expansão num raio de 20km do eixo principal do Mondego
-            // Gera pontos aleatórios num retângulo maior entre Coimbra, Cantanhede, Soure e Figueira
-            let lat = 40.00 + (Math.random() * 0.30); // Abrangência Norte-Sul
-            let lng = -8.80 + (Math.random() * 0.45); // Abrangência Este-Oeste
-            
-            let novoFoco = L.circle([lat, lng], {
-                color: '#e67e22', weight: 1, fillColor: "#fdcb6e", fillOpacity: 0.4, radius: 100 + (Math.random() * 500)
-            }).addTo(map);
-            
-            focosDinamicos.push(novoFoco);
-        }
-    }
-
     function atualizarSimulacao() {
-        var statusDam = parseFloat(document.getElementById('selDam').value);
         var caudal = parseInt(document.getElementById('inpFlow').value);
-        var afetados = [];
+        var nivelCBR = 19.0 + (caudal - 1500) * (1.0 / 200.0);
+        
+        // Lógica de Desgaste do Dique
+        if (caudal > 1700) {
+            let desgaste = (caudal - 1700) / 500; // Desgaste por hora
+            integrity -= desgaste;
+        } else if (caudal < 1200 && integrity < 100) {
+            integrity += 0.1; // Pequena "recuperação" se o caudal baixar
+        }
+        
+        integrity = Math.max(0, Math.min(100, integrity));
 
-        zonas.forEach(function(z) {
-            let nLocal = nivelBase - (3.5 * statusDam) + (caudal / 4500);
-            if (nLocal > z.threshold) {
-                let fatorTempo = 1 + (tempoHoras / 36); 
-                z.shape.setRadius(Math.min((nLocal - z.threshold) * 700 * fatorTempo, z.max * 3));
+        // Atualizar UI
+        document.getElementById('valLevel').innerText = nivelCBR.toFixed(2) + "m";
+        document.getElementById('valIntegrity').innerText = Math.floor(integrity) + "%";
+        document.getElementById('integrity-fill').style.width = integrity + "%";
+        if (integrity < 30) document.getElementById('integrity-fill').style.background = "#d63031";
+
+        zonas.forEach(z => {
+            let alagado = false;
+            if (!z.jusante && nivelCBR > z.threshold) alagado = true;
+            if (z.jusante && integrity < 5) alagado = true; // Rotura total
+
+            if (alagado) {
+                z.shape.setRadius(z.max);
                 z.shape.setStyle({ fillOpacity: 0.6, color: '#d63031' });
-                afetados.push(z.nome);
-            } else { z.shape.setRadius(0); }
+            } else {
+                z.shape.setRadius(0);
+            }
         });
 
-        // A cada 4 horas, gera um novo foco regional em zonas distantes
-        if (tempoHoras % 4 === 0 && tempoHoras > 0) {
-            gerarFocoRegional();
-        }
-
-        document.getElementById('msg').innerHTML = afetados.length > 0 ? 
-            "🚨 <b>EMERGÊNCIA REGIONAL:</b> Propagação em curso (20km). " + focosDinamicos.length + " focos secundários." : 
-            "Canais operacionais. Sem transbordos periféricos.";
+        let msg = integrity < 5 ? "🚨 ROTURA DOS DIQUES! Inundação catastrófica a jusante." : 
+                  (caudal > 2400 ? "⚠️ PRESSÃO CRÍTICA: Diques em risco de colapso!" : "✅ Diques a suportar a descarga.");
+        document.getElementById('msg').innerHTML = msg;
     }
 
     document.getElementById('btnStart').onclick = function() {
-        if (timer) { clearInterval(timer); timer = null; this.innerText = "RETOMAR"; }
+        if (timer) { clearInterval(timer); timer = null; }
         else {
-            this.innerText = "PAUSAR";
-            timer = setInterval(function() {
+            timer = setInterval(() => {
                 tempoHoras++;
-                let caudal = parseInt(document.getElementById('inpFlow').value);
-                nivelBase += (caudal - 1400) / 15000;
-                if (nivelBase > 22.5) nivelBase = 22.5; 
-
-                document.getElementById('valTime').innerText = formatarTempo(tempoHoras);
-                document.getElementById('valLevel').innerText = Math.max(8, nivelBase).toFixed(2) + "m";
                 atualizarSimulacao();
-            }, 400); // Simulação mais rápida para observar a propagação regional
+            }, 600);
         }
     };
 
-    document.getElementById('btnReset').onclick = () => location.reload();
-    document.getElementById('inpFlow').oninput = function() { document.getElementById('lblFlow').innerText = this.value; };
+    document.getElementById('inpFlow').oninput = function() { 
+        document.getElementById('lblFlow').innerText = this.value; 
+        atualizarSimulacao();
+    };
 </script>
 </body>
 </html>
