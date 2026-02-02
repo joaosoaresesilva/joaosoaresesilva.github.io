@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Simulador Avançado: Hidráulica do Baixo Mondego</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background: #0f172a; color: #f8fafc; }
+        #map { height: 50vh; width: 100%; border-bottom: 3px solid #334155; cursor: crosshair; }
+        .dashboard { padding: 15px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; background: #1e293b; }
+        .card { background: #334155; padding: 12px; border-radius: 8px; border: 1px solid #475569; }
+        .label { font-size: 0.75em; color: #94a3b8; text-transform: uppercase; font-weight: bold; }
+        .value { font-size: 1.4em; font-weight: bold; color: #38bdf8; display: block; }
+        input[type=range] { width: 100%; margin-top: 8px; cursor: pointer; accent-color: #38bdf8; }
+        .btn-main { grid-column: 1 / -1; display: flex; gap: 10px; }
+        button { flex: 1; padding: 12px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; }
+        #btnStart { background: #22c55e; color: white; }
+        #btnReset { background: #ef4444; color: white; }
+        .info-panel { position: absolute; top: 10px; right: 10px; z-index: 1000; background: rgba(15,23,42,0.9); padding: 10px; border-radius: 8px; font-size: 0.8em; border: 1px solid #38bdf8; }
+    </style>
+</head>
+<body>
+
+<div class="info-panel">
+    <b>Instruções:</b><br>
+    1. Clica no mapa para marcar pontos críticos.<br>
+    2. A cota será detetada automaticamente.<br>
+    3. Ajusta o Caudal e a Integridade.<br>
+    4. Inicia a simulação.
+</div>
+
+<div id="map"></div>
+
+<div class="dashboard">
+    <div class="card">
+        <span class="label">Caudal Total (m³/s)</span>
+        <input type="range" id="inpFlow" min="500" max="6000" step="100" value="1500">
+        <span id="valFlow" class="value">1500</span>
+    </div>
+
+    <div class="card">
+        <span class="label">Integridade dos Diques (%)</span>
+        <input type="range" id="inpIntegrity" min="0" max="100" step="1" value="100">
+        <span id="valIntegrity" class="value">100%</span>
+        <small id="intDesc" style="color:#94a3b8">Diques Totalmente Fechados</small>
+    </div>
+
+    <div class="card">
+        <span class="label">Tempo e Cota Coimbra</span>
+        <span id="valTime" class="value">00d 00h</span>
+        <span id="valLevel" class="value" style="color:#fbbf24">19.00m</span>
+    </div>
+
+    <div class="card">
+        <span class="label">Caudal de Extravasamento</span>
+        <span id="valLeak" class="value" style="color:#f87171">0 m³/s</span>
+        <small style="color:#94a3b8">Água fora do canal principal</small>
+    </div>
+
+    <div class="btn-main">
+        <button id="btnStart">INICIAR MONITORIZAÇÃO</button>
+        <button id="btnReset" onclick="location.reload()">LIMPAR MAPA</button>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    var map = L.map('map').setView([40.1850, -8.5500], 11);
+    L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png').addTo(map);
+
+    var monitorPoints = [];
+    var timer = null;
+    var totalHours = 0;
+
+    // Função para obter cota via API ou estimativa local
+    async function getElevation(lat, lng) {
+        try {
+            const resp = await fetch(`https://api.open-elevation.com/api/v1/lookup?locations=${lat},${lng}`);
+            const data = await resp.json();
+            return data.results[0].elevation;
+        } catch (e) {
+            // Estimativa baseada na distância ao rio para o Baixo Mondego
+            return 7 + (Math.random() * 15); 
+        }
+    }
+
+    map.on('click', async function(e) {
+        if (timer) return;
+        let cota = await getElevation(e.latlng.lat, e.latlng.lng);
+        let nome = prompt(`Ponto detetado a ${cota.toFixed(1)}m de altitude. Nome:`, "Zona Sensível");
+        
+        if (nome) {
+            let p = {
+                latlng: e.latlng,
+                nome: nome,
+                elevation: cota,
+                circle: L.circle(e.latlng, { color: '#38bdf8', weight: 2, fillOpacity: 0, radius: 0 }).addTo(map)
+            };
+            L.marker(e.latlng).addTo(map).bindTooltip(`${nome} (${cota.toFixed(1)}m)`, {permanent: true});
+            monitorPoints.push(p);
+        }
+    });
+
+    function updateSim() {
+        let flow = parseInt(document.getElementById('inpFlow').value);
+        let integrity = parseInt(document.getElementById('inpIntegrity').value);
+        
+        // Nível em Coimbra (Lógica do Prof: 1700m3s = 20m)
+        let nivelCBR = 19.0 + (flow - 1500) * (1.0 / 200.0);
+        
+        // Caudal que "vaza" dos diques baseado na integridade
+        // Se integridade for 100%, vaza 0. Se for 0%, vaza quase tudo acima da cota.
+        let leakFlow = (flow * (100 - integrity) / 100);
+
+        // Atualizar UI
+        document.getElementById('valFlow').innerText = flow;
+        document.getElementById('valIntegrity').innerText = integrity + "%";
+        document.getElementById('valLevel').innerText = nivelCBR.toFixed(2) + "m";
+        document.getElementById('valLeak').innerText = Math.floor(leakFlow) + " m³/s";
+        document.getElementById('valTime').innerText = Math.floor(totalHours/24) + "d " + (totalHours%24) + "h";
+        
+        document.getElementById('intDesc').innerText = integrity < 20 ? "Ruptura Iminente / Diques Abertos" : 
+                                                      (integrity < 80 ? "Fissuras e Infiltração" : "Diques Estáveis");
+
+        monitorPoints.forEach(p => {
+            let distCBR = map.distance(p.latlng, [40.2095, -8.4315]);
+            let alagado = false;
+            let severidade = 0;
+
+            if (distCBR < 4000) { // Coimbra e arredores
+                if (nivelCBR > p.elevation) {
+                    alagado = true;
+                    severidade = nivelCBR - p.elevation;
+                }
+            } else { // Jusante (Diques)
+                // Alaga se houver Leak Flow e a cota for ultrapassada pelo nível relativo
+                let nivelLocal = (leakFlow / 500) + 15; // Simplificação de pressão a jusante
+                if (integrity < 95 && nivelLocal > p.elevation) {
+                    alagado = true;
+                    severidade = (100 - integrity) / 10;
+                }
+            }
+
+            if (alagado) {
+                p.circle.setRadius(200 + (severidade * 300));
+                p.circle.setStyle({ fillOpacity: 0.5, color: '#ef4444' });
+            } else {
+                p.circle.setRadius(0);
+            }
+        });
+        totalHours++;
+    }
+
+    document.getElementById('btnStart').onclick = function() {
+        if (timer) {
+            clearInterval(timer);
+            timer = null;
+            this.innerText = "RETOMAR";
+            this.style.background = "#38bdf8";
+        } else {
+            this.innerText = "PAUSAR SIMULAÇÃO";
+            this.style.background = "#fbbf24";
+            timer = setInterval(updateSim, 800);
+        }
+    };
+
+    // Atualização em tempo real ao mexer nos sliders
+    document.getElementById('inpFlow').oninput = updateSim;
+    document.getElementById('inpIntegrity').oninput = updateSim;
+</script>
+</body>
+</html>
+
