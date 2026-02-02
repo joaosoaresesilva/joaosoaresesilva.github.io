@@ -2,21 +2,21 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>Simulador Hidráulico: Coimbra - Alfarelos - Montemor</title>
+    <title>Simulador Hidráulico: Coimbra - Alfarelos - Montemor - Ereira</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: #121212; color: white; }
-        #map { height: 70vh; width: 100%; }
+        #map { height: 65vh; width: 100%; }
         .panel { padding: 15px; background: #1e1e1e; border-top: 4px solid #00d2ff; }
-        .controls-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-        .slider-box { background: #2d2d2d; padding: 12px; border-radius: 8px; border: 1px solid #444; }
-        .stats-val { font-size: 1.4em; color: #00d2ff; font-weight: bold; }
+        .controls-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
+        .slider-box { background: #2d2d2d; padding: 12px; border-radius: 8px; border: 1px solid #444; text-align: center; }
+        .stats-val { font-size: 1.4em; color: #00d2ff; font-weight: bold; display: block; margin-top: 5px; }
         input[type=range] { width: 100%; accent-color: #00d2ff; }
-        button { padding: 10px; font-weight: bold; cursor: pointer; border-radius: 4px; border: none; width: 100%; transition: 0.3s; }
+        button { padding: 12px; font-weight: bold; cursor: pointer; border-radius: 4px; border: none; width: 100%; transition: 0.3s; }
         #btnStart { background: #00b894; color: white; }
         #btnReset { background: #d63031; color: white; margin-top: 5px; }
-        #msg { text-align: center; margin-top: 10px; font-weight: bold; color: #fab1a0; font-size: 0.9em; }
-        .label-style { background: rgba(0,0,0,0.85); border: 1px solid #00d2ff; color: white; font-size: 10px; padding: 3px; border-radius: 3px; white-space: nowrap; }
+        #msg { text-align: center; margin-top: 10px; font-weight: bold; color: #feca57; font-size: 0.9em; min-height: 1.2em; }
+        .label-style { background: rgba(0,0,0,0.85); border: 1px solid #00d2ff; color: white; font-size: 10px; padding: 3px; border-radius: 3px; }
     </style>
 </head>
 <body>
@@ -26,60 +26,59 @@
 <div class="panel">
     <div class="controls-grid">
         <div class="slider-box">
-            <label>Caudal (m³/s): <b id="lblFlow">1200</b></label>
+            <label>Caudal: <b id="lblFlow">1200</b> m³/s</label>
             <input type="range" id="inpFlow" min="500" max="15000" step="100" value="1200">
         </div>
         <div class="slider-box">
-            <label>Estado do Açude/Diques:</label>
+            <label>Estado do Sistema:</label>
             <select id="selDam" style="width:100%; margin-top:10px; padding:5px; background: #333; color: white; border: 1px solid #555;">
-                <option value="1">Operacional (Drenagem Ativa)</option>
-                <option value="0.5">Sobrecarga (Diques no Limite)</option>
-                <option value="0">Falha (Galgamento Generalizado)</option>
+                <option value="1">Diques Operacionais</option>
+                <option value="0.5">Sobrecarga/Galgamento</option>
+                <option value="0">Falha de Diques (Crítico)</option>
             </select>
         </div>
         <div class="slider-box">
-            <button id="btnStart">INICIAR SIMULAÇÃO</button>
-            <button id="btnReset">REINICIAR</button>
+            <span>Tempo Decorrido</span>
+            <span id="valTime" class="stats-val">0h</span>
         </div>
-        <div class="stats-box" style="text-align:center">
-            <span>Nível Médio (Rio)</span><br><span id="valLevel" class="stats-val">15.00m</span>
+        <div class="stats-box slider-box">
+            <span>Nível do Rio (Base)</span>
+            <span id="valLevel" class="stats-val">15.00m</span>
+        </div>
+        <div class="slider-box">
+            <button id="btnStart">SIMULAR</button>
+            <button id="btnReset">RESET</button>
         </div>
     </div>
-    <div id="msg">Monitorização de cotas mínimas ativa.</div>
+    <div id="msg">Monitorização da rede do Baixo Mondego ativa.</div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    // Vista ampla abrangendo Coimbra, Alfarelos e Montemor
-    var map = L.map('map').setView([40.1750, -8.5500], 12);
-    
-    L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-        attribution: 'Map data: OpenStreetMap, SRTM | Style: OpenTopoMap'
-    }).addTo(map);
+    var map = L.map('map').setView([40.1700, -8.6000], 11);
+    L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { attribution: 'OpenTopoMap' }).addTo(map);
 
-    // Zonas críticas de cota mínima (pontos onde a água entra primeiro)
     var zonas = [
-        // COIMBRA (Montante do Açude)
-        { nome: "CBR: Sta Clara-a-Velha (15.1m)", centro: [40.2018, -8.4338], threshold: 15.1, max: 400, jusante: false },
-        { nome: "CBR: Baixa/Estação Nova (15.7m)", centro: [40.2095, -8.4315], threshold: 15.7, max: 500, jusante: false },
+        // COIMBRA
+        { nome: "ETA Boavista (16.5m)", centro: [40.1895, -8.4215], threshold: 16.5, max: 400, jusante: false, critico: true },
+        { nome: "CBR: Sta Clara (15.1m)", centro: [40.2018, -8.4338], threshold: 15.1, max: 400, jusante: false },
+        { nome: "CBR: Baixa (15.7m)", centro: [40.2095, -8.4315], threshold: 15.7, max: 500, jusante: false },
         
-        // JUSANTE IMEDIATA (Protegida pelo Açude)
+        // JUSANTE
         { nome: "Jusante: Choupal (14.2m)", centro: [40.2185, -8.4480], threshold: 14.2, max: 1200, jusante: true },
+        { nome: "Taveiro: Várzea (12.5m)", centro: [40.1850, -8.5000], threshold: 12.5, max: 2000, jusante: true },
         
-        // ZONAS INTERMÉDIAS (Baixo Mondego)
-        { nome: "Taveiro: Campos Baixos (12.5m)", centro: [40.1850, -8.5000], threshold: 12.5, max: 2000, jusante: true },
-        { nome: "Arzila: Leito de Cheia (10.2m)", centro: [40.1650, -8.5500], threshold: 10.2, max: 1500, jusante: true },
-        
-        // ALFARELOS E MONTEMOR (Cotas críticas de jusante)
-        { nome: "Alfarelos: Nó Ferroviário (8.2m)", centro: [40.1555, -8.6145], threshold: 8.2, max: 1300, jusante: true },
-        { nome: "Formoselha: Várzea (7.8m)", centro: [40.1685, -8.5980], threshold: 7.8, max: 1600, jusante: true },
-        { nome: "Montemor: Campos do Bolão (6.5m)", centro: [40.1710, -8.6750], threshold: 6.5, max: 2500, jusante: true },
-        { nome: "Montemor: Baixa da Vila (7.8m)", centro: [40.1745, -8.6830], threshold: 7.8, max: 500, jusante: true }
+        // ALFARELOS E MONTEMOR
+        { nome: "Alfarelos: Estação (8.2m)", centro: [40.1555, -8.6145], threshold: 8.2, max: 1300, jusante: true },
+        { nome: "Ereira: Campos Baixos (6.2m)", centro: [40.1605, -8.7050], threshold: 6.2, max: 1500, jusante: true },
+        { nome: "Montemor: Campos (6.5m)", centro: [40.1710, -8.6750], threshold: 6.5, max: 2500, jusante: true },
+        { nome: "Montemor: Vila (7.8m)", centro: [40.1745, -8.6830], threshold: 7.8, max: 500, jusante: true }
     ];
 
     zonas.forEach(function(z) {
-        z.shape = L.circle(z.centro, {
-            color: z.jusante ? '#1dd1a1' : '#0984e3', weight: 2, fillColor: "#74b9ff", fillOpacity: 0, radius: 0
+        z.shape = L.circle(z.centro, { 
+            color: z.critico ? '#f1c40f' : (z.jusante ? '#1dd1a1' : '#0984e3'), 
+            weight: 2, fillColor: "#74b9ff", fillOpacity: 0, radius: 0 
         }).addTo(map);
         
         L.marker(z.centro, {opacity: 0}).addTo(map)
@@ -87,52 +86,64 @@
     });
 
     var nivelBase = 15.0;
+    var tempoHoras = 0;
     var timer = null;
 
-    function atualizarMapa() {
+    function formatarTempo(horas) {
+        if (horas < 24) return horas + "h";
+        let dias = Math.floor(horas / 24);
+        let hRestantes = horas % 24;
+        return dias + "d " + hRestantes + "h";
+    }
+
+    function atualizarSimulacao() {
         var statusDam = parseFloat(document.getElementById('selDam').value);
         var caudal = parseInt(document.getElementById('inpFlow').value);
         var afetados = [];
+        var isolados = false;
 
         zonas.forEach(function(z) {
             let nLocal = nivelBase;
-            
-            // Lógica para Alfarelos e Montemor (Cotas muito baixas mas protegidas por diques)
             if (z.jusante) {
-                // Se o açude/diques funcionam, reduzimos a pressão do nível base
-                // mas aumentamos a sensibilidade ao caudal bruto
-                let protecaoEfetiva = 3.0 * statusDam; 
-                nLocal = (nivelBase * (z.threshold / 15.0)) - protecaoEfetiva + (caudal / 4000);
+                // Lógica de proteção: Diques seguram até certo ponto, mas a cota baixa da Ereira e Alfarelos é implacável
+                let protecao = 3.5 * statusDam; 
+                nLocal = (nivelBase * (z.threshold / 15.0)) - protecao + (caudal / 4500);
             }
-
+            
             if (nLocal > z.threshold) {
                 var d = nLocal - z.threshold;
-                z.shape.setRadius(Math.min(d * 600, z.max));
-                z.shape.setStyle({ fillOpacity: Math.min(d * 0.4, 0.75), color: '#d63031' });
-                afetados.push(z.nome.split(": ")[1].split(" (")[0]);
+                z.shape.setRadius(Math.min(d * 650, z.max));
+                z.shape.setStyle({ fillOpacity: Math.min(d * 0.45, 0.8), color: '#d63031' });
+                afetados.push(z.nome.split(" (")[0]);
+                if(z.nome.includes("Ereira")) isolados = true;
             } else {
                 z.shape.setRadius(0);
-                z.shape.setStyle({ color: z.jusante ? '#1dd1a1' : '#0984e3' });
+                z.shape.setStyle({ color: z.critico ? '#f1c40f' : (z.jusante ? '#1dd1a1' : '#0984e3') });
             }
         });
 
-        document.getElementById('msg').innerHTML = afetados.length > 0 ? 
-            "🚨 ALERTA DE ALAGAMENTO: " + afetados.join(" | ") : 
-            "Cotas de segurança respeitadas. Escoamento normal.";
+        let textoMsg = afetados.length > 0 ? "🚨 INUNDAÇÃO: " + afetados.join(" | ") : "Cotas de segurança normais.";
+        if (isolados) textoMsg = "🏘️ EREIRA ISOLADA (Cortes de Acesso) | " + textoMsg;
+        document.getElementById('msg').innerHTML = textoMsg;
     }
 
     document.getElementById('btnStart').onclick = function() {
         if (timer) {
             clearInterval(timer); timer = null;
-            this.innerText = "RETOMAR SIMULAÇÃO";
+            this.innerText = "RETOMAR";
         } else {
             this.innerText = "PAUSAR";
             timer = setInterval(function() {
+                tempoHoras++;
                 let caudal = parseInt(document.getElementById('inpFlow').value);
-                // O nível sobe se o caudal exceder a capacidade nominal do Mondego (~1400m3/s)
-                nivelBase += (caudal - 1400) / 18000;
-                document.getElementById('valLevel').innerText = Math.max(10, nivelBase).toFixed(2) + "m";
-                atualizarMapa();
+                
+                let incremento = (caudal - 1400) / 18000;
+                nivelBase += incremento;
+                if (nivelBase > 22.0) nivelBase = 22.0; // Teto físico realista
+
+                document.getElementById('valTime').innerText = formatarTempo(tempoHoras);
+                document.getElementById('valLevel').innerText = Math.max(8, nivelBase).toFixed(2) + "m";
+                atualizarSimulacao();
             }, 800);
         }
     };
