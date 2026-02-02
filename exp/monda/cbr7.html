@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Monitorização Mondego: Gestão de Crise</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #f8fafc; }
+        #map { height: 60vh; width: 100%; border-bottom: 2px solid #334155; }
+        .panel { padding: 20px; background: #1e293b; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+        .control-unit { background: #334155; padding: 15px; border-radius: 12px; border: 1px solid #475569; }
+        .stats-big { font-size: 1.8em; font-weight: bold; color: #38bdf8; display: block; }
+        .integrity-container { width: 100%; height: 20px; background: #1e293b; border-radius: 10px; margin: 10px 0; border: 1px solid #94a3b8; }
+        #integrity-fill { width: 100%; height: 100%; background: #22c55e; border-radius: 8px; transition: 0.5s; }
+        input[type=range] { width: 100%; cursor: pointer; }
+        button { width: 100%; padding: 12px; margin-top: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        #btnStart { background: #38bdf8; color: #0f172a; }
+        #btnStart:hover { background: #7dd3fc; }
+        .status-msg { grid-column: span 3; text-align: center; color: #fbbf24; font-weight: bold; padding: 10px; background: #0f172a; border-radius: 8px; }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div class="panel">
+    <div class="control-unit">
+        <label>Caudal (Aguieira + Afluentes): <b id="lblFlow">1500</b> m³/s</label>
+        <input type="range" id="inpFlow" min="500" max="4500" step="50" value="1500">
+        <p style="font-size: 0.8em; color: #94a3b8;">* Acima de 1700m³/s inicia o desgaste dos diques.</p>
+    </div>
+
+    <div class="control-unit">
+        <span>Tempo de Simulação: <b id="valTime" class="stats-big">00:00h</b></span>
+        <span>Cota em Coimbra: <b id="valLevel" class="stats-big">19.00m</b></span>
+    </div>
+
+    <div class="control-unit">
+        <span>Integridade Estrutural (Diques)</span>
+        <div class="integrity-container"><div id="integrity-fill"></div></div>
+        <span id="valIntegrity" class="stats-big">100%</span>
+    </div>
+
+    <div class="status-msg" id="statusBox">MODO CONFIGURAÇÃO: Clica no mapa para marcar pontos de monitorização.</div>
+
+    <button id="btnStart">INICIAR SIMULAÇÃO</button>
+    <button onclick="location.reload()" style="background:#ef4444; color:white;">REINICIAR TUDO</button>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    var map = L.map('map').setView([40.1850, -8.5500], 11);
+    L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png').addTo(map);
+
+    var monitorPoints = [
+        { nome: "Baixa de Coimbra", centro: [40.2095, -8.4315], threshold: 20.0, max: 800, isCity: true }
+    ];
+
+    // Adicionar pontos dinamicamente pelo clique
+    map.on('click', function(e) {
+        if (timer) return; // Bloqueia novos pontos após início
+        let nome = prompt("Nome do Ponto de Referência:", "Zona Agrícola / Habitação");
+        if (nome) {
+            let threshold = parseFloat(prompt("Cota de inundação (metros):", "21.0"));
+            let p = { nome: nome, centro: [e.latlng.lat, e.latlng.lng], threshold: threshold, max: 1200, isCity: false };
+            monitorPoints.push(p);
+            drawPoint(p);
+        }
+    });
+
+    function drawPoint(p) {
+        p.shape = L.circle(p.centro, { color: '#38bdf8', weight: 2, fillOpacity: 0, radius: 0 }).addTo(map);
+        L.marker(p.centro, {opacity: 0}).addTo(map).bindTooltip(p.nome + " (" + p.threshold + "m)", {permanent: true}).openTooltip();
+    }
+
+    // Desenha o ponto inicial
+    monitorPoints.forEach(drawPoint);
+
+    var integrity = 100;
+    var tempoHoras = 0;
+    var timer = null;
+
+    function runEngine() {
+        let caudal = parseInt(document.getElementById('inpFlow').value);
+        let nivelCBR = 19.0 + (caudal - 1500) * (1.0 / 200.0);
+        
+        // Lógica de Desgaste Baseada no Texto do Professor
+        if (caudal > 1700) {
+            let pressao = (caudal - 1700) / 400; 
+            integrity -= pressao;
+        }
+
+        integrity = Math.max(0, integrity);
+        tempoHoras++;
+
+        // Atualizar Interface
+        document.getElementById('valLevel').innerText = nivelCBR.toFixed(2) + "m";
+        document.getElementById('valIntegrity').innerText = Math.floor(integrity) + "%";
+        document.getElementById('valTime').innerText = Math.floor(tempoHoras/24) + "d " + (tempoHoras%24) + "h";
+        
+        let fill = document.getElementById('integrity-fill');
+        fill.style.width = integrity + "%";
+        if (integrity < 40) fill.style.background = "#f59e0b";
+        if (integrity < 15) fill.style.background = "#ef4444";
+
+        monitorPoints.forEach(p => {
+            let alagado = false;
+            // Coimbra alaga por cota direta
+            if (p.isCity && nivelCBR > p.threshold) alagado = true;
+            // Pontos de jusante alagam se integridade falhar (colapso de diques)
+            if (!p.isCity && integrity < 5) alagado = true;
+
+            if (alagado) {
+                let r = (nivelCBR - p.threshold + 1) * 400;
+                p.shape.setRadius(Math.min(r, p.max));
+                p.shape.setStyle({ fillOpacity: 0.5, color: '#ef4444' });
+            }
+        });
+
+        let msg = integrity < 5 ? "🔴 COLAPSO TOTAL DOS DIQUES" : 
+                  (caudal > 2400 ? "🟠 RISCO IMINENTE DE ROTURA" : 
+                  (nivelCBR >= 20 ? "🟡 INUNDAÇÃO NA BAIXA DE COIMBRA" : "🟢 SISTEMA SOB CONTROLO"));
+        document.getElementById('statusBox').innerHTML = msg;
+    }
+
+    document.getElementById('btnStart').onclick = function() {
+        if (timer) { clearInterval(timer); timer = null; this.innerText = "RESUMIR"; }
+        else {
+            this.innerText = "PAUSAR SIMULAÇÃO";
+            timer = setInterval(runEngine, 800);
+        }
+    };
+
+    document.getElementById('inpFlow').oninput = function() { document.getElementById('lblFlow').innerText = this.value; };
+</script>
+</body>
+</html>
