@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>Sim  Topográfico Coimbra</title>
+    <title>Simulador Baixo Mondego - Açude a Montemor</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: #1a1a2e; color: white; }
@@ -15,8 +15,8 @@
         button { padding: 12px; font-weight: bold; cursor: pointer; border-radius: 4px; border: none; width: 100%; transition: 0.3s; }
         #btnStart { background: #1dd1a1; color: white; }
         #btnReset { background: #ee5253; color: white; margin-top: 5px; }
-        #msg { text-align: center; margin-top: 10px; font-weight: bold; color: #feca57; text-shadow: 1px 1px 2px #000; }
-        .label-style { background: rgba(0,0,0,0.6); border: 1px solid #48dbfb; color: white; font-weight: bold; font-size: 11px; padding: 2px; border-radius: 3px; }
+        #msg { text-align: center; margin-top: 10px; font-weight: bold; color: #feca57; }
+        .label-style { background: rgba(0,0,0,0.7); border: 1px solid #48dbfb; color: white; font-weight: bold; font-size: 10px; padding: 2px; border-radius: 3px; }
     </style>
 </head>
 <body>
@@ -26,44 +26,45 @@
 <div class="panel">
     <div class="controls-grid">
         <div class="slider-box">
-            <label>Caudal (m³/s): <b id="lblFlow">1000</b></label>
-            <input type="range" id="inpFlow" min="500" max="10000" step="100" value="1000">
+            <label>Caudal (m³/s): <b id="lblFlow">1200</b></label>
+            <input type="range" id="inpFlow" min="500" max="12000" step="100" value="1200">
         </div>
         <div class="slider-box">
-            <label>Nível Rio: <b id="lblStartLevel">15.0</b> m</label>
-            <input type="range" id="inpStartLevel" min="14.0" max="25.0" step="0.1" value="15.0">
+            <label>Nível em Montemor: <b id="lblStartLevel">12.0</b> m</label>
+            <input type="range" id="inpStartLevel" min="8.0" max="22.0" step="0.1" value="12.0">
         </div>
         <div class="slider-box">
-            <button id="btnStart">SIMULAR FLUXO</button>
+            <button id="btnStart">SIMULAR CHEIA NO VALE</button>
             <button id="btnReset">REINICIAR</button>
         </div>
         <div class="stats-box" style="text-align:center">
             <span>Tempo Simulado</span><br><span id="valTime" class="stats-val">0h</span>
         </div>
         <div class="stats-box" style="text-align:center">
-            <span>Elevação Água</span><br><span id="valLevel" class="stats-val">15.00m</span>
+            <span>Cota Médio Mondego</span><br><span id="valLevel" class="stats-val">12.00m</span>
         </div>
     </div>
-    <div id="msg">Mapa Topográfico Ativo. Analisando curvas de nível.</div>
+    <div id="msg">Monitorização do Vale do Baixo Mondego Ativa.</div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    // Configuração com OpenTopoMap para ver curvas de nível e relevo
-    var map = L.map('map').setView([40.2050, -8.4300], 14);
+    // Foco entre Coimbra e Montemor-o-Velho
+    var map = L.map('map').setView([40.1850, -8.5500], 12);
     
     L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-        attribution: 'Map data: &copy; OpenStreetMap contributors, SRTM | Map style: &copy; OpenTopoMap'
+        attribution: 'OpenTopoMap'
     }).addTo(map);
 
+    // Pontos Críticos do Baixo Mondego
     var zonas = [
-        { nome: "ETA Boavista (16.5m)", centro: [40.1895, -8.4215], threshold: 16.5, max: 550 },
-        { nome: "Chanterene / Baixa (15.5m)", centro: [40.2118, -8.4295], threshold: 15.5, max: 400 },
-        { nome: "Santa-Clara-a-Velha (15.8m)", centro: [40.2018, -8.4335], threshold: 15.8, max: 450 },
-        { nome: "Parque Verde Docas (15.8m)", centro: [40.2030, -8.4255], threshold: 15.8, max: 550 },
-        { nome: "Parque Choupalinho (16.4m)", centro: [40.2085, -8.4355], threshold: 16.4, max: 350 },
-        { nome: "Açude-Ponte (17.8m)", centro: [40.2155, -8.4410], threshold: 17.8, max: 400 },
-        { nome: "Baixo Mondego (15.2m)", centro: [40.1850, -8.4950], threshold: 15.2, max: 3000 }
+        { nome: "Taveiro / Zona Industrial", centro: [40.1850, -8.5050], threshold: 14.5, max: 2000 },
+        { nome: "Campos de Ameal", centro: [40.1800, -8.5350], threshold: 12.5, max: 2500 },
+        { nome: "Arzila / Paul de Arzila", centro: [40.1650, -8.5550], threshold: 11.8, max: 3000 },
+        { nome: "Pereira", centro: [40.1600, -8.5850], threshold: 11.2, max: 1800 },
+        { nome: "Formoselha", centro: [40.1620, -8.6100], threshold: 10.8, max: 1500 },
+        { nome: "Montemor-o-Velho (Baixa)", centro: [40.1720, -8.6820], threshold: 9.5, max: 2500 },
+        { nome: "Eixo de Alfarelos", centro: [40.1450, -8.6450], threshold: 10.5, max: 3500 }
     ];
 
     zonas.forEach(function(z) {
@@ -75,7 +76,7 @@
          .bindTooltip(z.nome, {permanent: true, direction: 'top', className: 'label-style'});
     });
 
-    var nivelAtual = 15.0;
+    var nivelAtual = 12.0;
     var tempo = 0;
     var timer = null;
 
@@ -100,29 +101,29 @@
         zonas.forEach(function(z) {
             if (nivelAtual > z.threshold) {
                 var d = nivelAtual - z.threshold;
-                z.shape.setRadius(Math.min(d * 400, z.max));
-                z.shape.setStyle({ fillOpacity: Math.min(d * 0.45, 0.8) });
-                afetados.push(z.nome.split(" (")[0]);
+                // No Baixo Mondego, a mancha espalha-se muito mais rápido (multiplicador 800)
+                z.shape.setRadius(Math.min(d * 800, z.max));
+                z.shape.setStyle({ fillOpacity: Math.min(d * 0.4, 0.75) });
+                afetados.push(z.nome);
             } else {
                 z.shape.setRadius(0);
             }
         });
-        if (afetados.length > 0) msgDiv.innerHTML = "🚨 ZONAS ABAIXO DA LINHA DE ÁGUA: " + afetados.join(" | ");
-        else msgDiv.innerText = "Nível do rio estável. Topologia segura.";
+        if (afetados.length > 0) msgDiv.innerHTML = "⚠️ LEZÍRIA ALAGADA: " + afetados.join(" | ");
+        else msgDiv.innerText = "Campos do Baixo Mondego em segurança.";
     }
 
     document.getElementById('btnStart').onclick = function() {
         if (timer) {
             clearInterval(timer); timer = null;
-            this.innerText = "RETOMAR";
-            this.style.background = "#1dd1a1";
+            this.innerText = "RETOMAR SIMULAÇÃO";
         } else {
             this.innerText = "PAUSAR";
-            this.style.background = "#ff9f43";
             timer = setInterval(function() {
                 tempo++;
-                nivelAtual += (parseInt(inpFlow.value) - 1100) / 12000;
-                valLevel.innerText = Math.max(14, nivelAtual).toFixed(2) + "m";
+                // Calibração: caudal acima de 1200 m3/s satura as valas de drenagem do Baixo Mondego
+                nivelAtual += (parseInt(inpFlow.value) - 1200) / 10000;
+                valLevel.innerText = Math.max(8, nivelAtual).toFixed(2) + "m";
                 valTime.innerText = tempo + "h";
                 atualizarMapa();
             }, 600);
