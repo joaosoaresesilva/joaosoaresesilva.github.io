@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Simulador Hidráulico: Calibração Técnica Mondego</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: #121212; color: white; }
+        #map { height: 60vh; width: 100%; }
+        .panel { padding: 15px; background: #1e1e1e; border-top: 4px solid #d63031; }
+        .controls-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
+        .slider-box { background: #2d2d2d; padding: 10px; border-radius: 8px; border: 1px solid #444; text-align: center; }
+        .stats-val { font-size: 1.3em; color: #ff7675; font-weight: bold; display: block; }
+        input[type=range] { width: 100%; accent-color: #d63031; }
+        button { padding: 10px; font-weight: bold; cursor: pointer; border-radius: 4px; border: none; width: 100%; }
+        #btnStart { background: #00b894; color: white; }
+        #msg { text-align: center; margin-top: 10px; font-weight: bold; color: #feca57; font-size: 0.85em; min-height: 3em; border: 1px dashed #555; padding: 5px; }
+        .label-style { background: rgba(0,0,0,0.85); border: 1px solid #d63031; color: white; font-size: 10px; padding: 2px; }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div class="panel">
+    <div class="controls-grid">
+        <div class="slider-box">
+            <label>Caudal Total em Coimbra: <br><b id="lblFlow">1500</b> m³/s</label>
+            <input type="range" id="inpFlow" min="500" max="5000" step="50" value="1500">
+            <small>(Aguieira + Alva + Ceira)</small>
+        </div>
+        <div class="slider-box">
+            <span>Tempo de Exposição</span>
+            <span id="valTime" class="stats-val">0h</span>
+        </div>
+        <div class="slider-box">
+            <span>Nível Médio (a.n.m.)</span>
+            <span id="valLevel" class="stats-val">19.00m</span>
+        </div>
+        <div class="slider-box">
+            <button id="btnStart">INICIAR SIMULAÇÃO</button>
+            <button onclick="location.reload()" style="margin-top:5px; background:#444; color:white;">RESET</button>
+        </div>
+    </div>
+    <div id="msg">Aguardando início... (Cota atual de segurança: 19m)</div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    var map = L.map('map').setView([40.1750, -8.5500], 11);
+    L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png').addTo(map);
+
+    var zonas = [
+        { nome: "ETA Boavista", centro: [40.1895, -8.4215], threshold: 22.0, max: 400, critico: true },
+        { nome: "Baixa de Coimbra", centro: [40.2095, -8.4315], threshold: 20.0, max: 700, critico: true },
+        { nome: "Sta Clara / Parque Verde", centro: [40.2018, -8.4338], threshold: 19.0, max: 500, critico: false },
+        { nome: "Alfarelos (Diques)", centro: [40.1555, -8.6145], threshold: 21.0, max: 1500, jusante: true },
+        { nome: "Ereira (Diques)", centro: [40.1605, -8.7050], threshold: 21.5, max: 1800, jusante: true }
+    ];
+
+    zonas.forEach(z => {
+        z.shape = L.circle(z.centro, { color: '#0984e3', weight: 2, fillOpacity: 0, radius: 0 }).addTo(map);
+        L.marker(z.centro, {opacity: 0}).addTo(map).bindTooltip(z.nome, {permanent: true, direction: 'top', className: 'label-style'});
+    });
+
+    var nivelCBR = 19.0;
+    var tempoHoras = 0;
+    var timer = null;
+
+    function atualizarSimulacao() {
+        var caudal = parseInt(document.getElementById('inpFlow').value);
+        var afetados = [];
+        var colapsoDiques = caudal > 2400;
+
+        // Calibração do Professor: 1700 m3/s = 20m em Coimbra
+        // Usamos uma interpolação: 1500m3/s -> 19m | 1700m3/s -> 20m
+        nivelCBR = 19.0 + (caudal - 1500) * (1.0 / 200.0);
+
+        zonas.forEach(z => {
+            let nLocal = nivelCBR;
+            let alagado = false;
+
+            if (z.jusante) {
+                // No Baixo Mondego, o alagamento ocorre se o caudal exceder 2400m3/s (Rotura)
+                // ou se o nível em Coimbra for extremo
+                if (colapsoDiques || nivelCBR > 22.0) {
+                    alagado = true;
+                    nLocal = nivelCBR + 2; // Pressão hidrostática pós-rotura
+                }
+            } else {
+                // Em Coimbra, o transbordo é direto
+                if (nivelCBR > z.threshold) alagado = true;
+            }
+
+            if (alagado) {
+                let expansao = 1 + (tempoHoras / 40);
+                z.shape.setRadius((nLocal - z.threshold) * 800 * expansao);
+                z.shape.setStyle({ fillOpacity: 0.6, color: '#d63031', fillColor: '#ff7675' });
+                afetados.push(z.nome);
+            } else {
+                z.shape.setRadius(0);
+            }
+        });
+
+        // Focos dinâmicos em raio de 16km se houver rotura geral
+        if (colapsoDiques && tempoHoras % 4 === 0) {
+            let lat = 40.10 + (Math.random() * 0.20);
+            let lng = -8.75 + (Math.random() * 0.35);
+            L.circle([lat, lng], { color: '#d63031', weight: 1, fillOpacity: 0.3, radius: 300 }).addTo(map);
+        }
+
+        let alerta = "<b>ESTADO:</b> " + (colapsoDiques ? "ROTURA GERAL DOS DIQUES" : (nivelCBR >= 20 ? "INUNDAÇÃO DA BAIXA" : "DRENAGEM NO LIMITE"));
+        document.getElementById('msg').innerHTML = alerta + "<br>Zonas: " + (afetados.join(" | ") || "Nenhuma");
+        document.getElementById('valLevel').innerText = nivelCBR.toFixed(2) + "m";
+    }
+
+    document.getElementById('btnStart').onclick = function() {
+        if (timer) { clearInterval(timer); timer = null; this.innerText = "RETOMAR"; }
+        else {
+            this.innerText = "PAUSAR";
+            timer = setInterval(() => {
+                tempoHoras++;
+                document.getElementById('valTime').innerText = Math.floor(tempoHoras/24) + "d " + (tempoHoras%24) + "h";
+                atualizarSimulacao();
+            }, 600);
+        }
+    };
+
+    document.getElementById('inpFlow').oninput = function() { document.getElementById('lblFlow').innerText = this.value; };
+</script>
+</body>
+</html>
