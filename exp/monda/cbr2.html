@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>Simulador Hidráulico: Coimbra - Alfarelos - Montemor</title>
+    <title>Simulador Hidráulico Coimbra - Limites Reais</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: #121212; color: white; }
@@ -31,7 +31,7 @@
         </div>
         <div class="slider-box">
             <label>Estado do Sistema:</label>
-            <select id="selDam" style="width:100%; margin-top:10px; padding:5px; background: #333; color: white; border: 1px solid #555;">
+            <select id="selDam" style="width:100%; margin-top:10px; padding:5px; background: #333; color: white;">
                 <option value="1">Diques/Açude Operacionais</option>
                 <option value="0.5">Sobrecarga Parcial</option>
                 <option value="0">Falha Total (Cota Zero)</option>
@@ -42,7 +42,7 @@
             <span id="valTime" class="stats-val">0h</span>
         </div>
         <div class="slider-box">
-            <span>Nível Médio (Rio)</span>
+            <span>Nível do Rio</span>
             <span id="valLevel" class="stats-val">15.00m</span>
         </div>
         <div class="slider-box">
@@ -50,7 +50,7 @@
             <button id="btnReset">RESET</button>
         </div>
     </div>
-    <div id="msg">Sistema de monitorização pronto.</div>
+    <div id="msg">Monitorização iniciada. Limite físico: 22m.</div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -64,7 +64,6 @@
         { nome: "Jusante: Choupal (14.2m)", centro: [40.2185, -8.4480], threshold: 14.2, max: 1200, jusante: true },
         { nome: "Taveiro: Várzea (12.5m)", centro: [40.1850, -8.5000], threshold: 12.5, max: 2000, jusante: true },
         { nome: "Alfarelos: Estação (8.2m)", centro: [40.1555, -8.6145], threshold: 8.2, max: 1300, jusante: true },
-        { nome: "Formoselha: Baixa (7.8m)", centro: [40.1685, -8.5980], threshold: 7.8, max: 1600, jusante: true },
         { nome: "Montemor: Campos (6.5m)", centro: [40.1710, -8.6750], threshold: 6.5, max: 2500, jusante: true },
         { nome: "Montemor: Vila (7.8m)", centro: [40.1745, -8.6830], threshold: 7.8, max: 500, jusante: true }
     ];
@@ -94,7 +93,7 @@
             let nLocal = nivelBase;
             if (z.jusante) {
                 let protecao = 3.0 * statusDam; 
-                nLocal = (nivelBase * (z.threshold / 15.0)) - protecao + (caudal / 4500);
+                nLocal = (nivelBase * (z.threshold / 15.0)) - protecao + (caudal / 5000);
             }
             if (nLocal > z.threshold) {
                 var d = nLocal - z.threshold;
@@ -118,7 +117,12 @@
             timer = setInterval(function() {
                 tempoHoras++;
                 let caudal = parseInt(document.getElementById('inpFlow').value);
-                nivelBase += (caudal - 1400) / 18000;
+                
+                // Subida realista com limite
+                let incremento = (caudal - 1400) / 18000;
+                nivelBase += incremento;
+                if (nivelBase > 22.0) nivelBase = 22.0; // LIMITE MÁXIMO FÍSICO
+
                 document.getElementById('valTime').innerText = formatarTempo(tempoHoras);
                 document.getElementById('valLevel').innerText = Math.max(8, nivelBase).toFixed(2) + "m";
                 atualizarSimulacao();
