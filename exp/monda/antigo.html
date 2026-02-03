@@ -2,25 +2,25 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>Mondego - 3026</title>
+    <title>Mondego - Simulação de Precisão</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #0a0a0f; color: white; }
         #map { height: 60vh; width: 100%; background: #111; }
-        .panel { padding: 15px; background: #161625; display: flex; flex-wrap: wrap; gap: 15px; border-top: 3px solid #e74c3c; }
+        .panel { padding: 15px; background: #161625; display: flex; flex-wrap: wrap; gap: 15px; border-top: 3px solid #27ae60; }
         .controls { flex: 1; min-width: 300px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .slider-box { background: #1f1f2e; padding: 10px; border-radius: 8px; border-left: 4px solid #e74c3c; }
+        .slider-box { background: #1f1f2e; padding: 10px; border-radius: 8px; border-left: 4px solid #27ae60; }
         .monitor-area { flex: 1.5; min-width: 350px; display: flex; flex-direction: column; gap: 10px; }
         .time-display { background: #000; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #3498db; }
         .time-display b { font-family: 'Courier New', monospace; font-size: 1.8em; color: #3498db; }
         .graph-box { background: #1f1f2e; padding: 10px; border-radius: 8px; position: relative; height: 110px; overflow: hidden; }
-        .bar-coimbra { position: absolute; bottom: 0; width: 5px; background: #f1c40f; }
-        .bar-baixo { position: absolute; bottom: 0; width: 5px; background: #3498db; }
-        input[type=range] { width: 100%; accent-color: #e74c3c; cursor: pointer; }
-        button { padding: 12px; border: none; color: white; font-weight: bold; cursor: pointer; border-radius: 4px; width: 100%; }
+        .bar-coimbra { position: absolute; bottom: 0; width: 6px; background: #f1c40f; }
+        .bar-baixo { position: absolute; bottom: 0; width: 6px; background: #3498db; }
+        input[type=range] { width: 100%; accent-color: #27ae60; cursor: pointer; }
+        button { padding: 12px; border: none; color: white; font-weight: bold; cursor: pointer; border-radius: 4px; width: 100%; font-size: 1.1em; }
         #btnRun { background: #27ae60; }
         #btnRun.active { background: #e74c3c; }
-        .label-ponto { background: rgba(0,0,0,0.85); color: #ffeb3b; padding: 2px 5px; border-radius: 3px; font-size: 9px; border: 1px solid #444; pointer-events: none; }
+        .label-ponto { background: rgba(0,0,0,0.85); color: white; padding: 2px 5px; border-radius: 3px; font-size: 10px; border: 1px solid #555; pointer-events: none; }
     </style>
 </head>
 <body>
@@ -29,56 +29,48 @@
 <div class="panel">
     <div class="controls">
         <div class="slider-box">
-            <label>Caudal: <b id="txtFlow" style="color:#f1c40f">2100</b> m³/s</label>
-            <input type="range" id="inpFlow" min="500" max="12000" step="100" value="2100">
+            <label>Caudal (m³/s): <b id="txtFlow" style="color:#f1c40f">2100</b></label>
+            <input type="range" id="inpFlow" min="500" max="10000" step="100" value="2100">
         </div>
         <div class="slider-box">
             <label>Abertura Açude: <b id="txtGates" style="color:#3498db">90</b>%</label>
             <input type="range" id="inpGates" min="0" max="100" value="90">
         </div>
-        <div class="slider-box"><button id="btnRun">INICIAR MONITORIZAÇÃO</button></div>
+        <div class="slider-box"><button id="btnRun">INICIAR (Dados Reais)</button></div>
         <div class="slider-box"><button id="btnReset" style="background:#7f8c8d">LIMPAR</button></div>
     </div>
 
     <div class="monitor-area">
-        <div class="time-display">TEMPO DECORRIDO: <b id="timer">00d 00h</b></div>
+        <div class="time-display">TEMPO DE CHEIA: <b id="timer">00d 00h</b></div>
         <div class="graph-box">
             <div style="font-size: 11px; margin-bottom: 5px; display: flex; justify-content: space-between;">
-                <span><span style="color:#f1c40f">■</span> Cota Coimbra: <b id="valC">15.00</b>m</span>
-                <span><span style="color:#3498db">■</span> Cota Baixo M.: <b id="valB">10.00</b>m</span>
+                <span><span style="color:#f1c40f">■</span> Coimbra: <b id="valC" style="color:#f1c40f">15.00</b>m</span>
+                <span><span style="color:#3498db">■</span> Baixo Mondego: <b id="valB" style="color:#10.00">10.00</b>m</span>
             </div>
-            <div id="bars-container" style="position:relative; height:75px;"></div>
+            <div id="bars-container" style="position:relative; height:75px; border-bottom: 1px solid #444;"></div>
         </div>
     </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    const map = L.map('map').setView([40.1950, -8.4500], 13);
+    const map = L.map('map').setView([40.1850, -8.5000], 12);
     L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png').addTo(map);
 
     const sensores = [
-        // Coimbra
         {id: "Portela", pos: [40.1945, -8.4055], cota: 20.2, reg: "C"},
-        {id: "Rebolim", pos: [40.1885, -8.4140], cota: 18.8, reg: "C"},
-        {id: "Pte Sta Clara", pos: [40.2085, -8.4285], cota: 15.8, reg: "C"},
-        {id: "P. Manuel Braga", pos: [40.2050, -8.4275], cota: 15.6, reg: "C"},
-        {id: "Sta Clara Velha", pos: [40.2015, -8.4335], cota: 15.2, reg: "C"},
-        {id: "Rotunda Almegue", pos: [40.2115, -8.4480], cota: 15.4, reg: "C"},
-        {id: "Sta Cruz (Baixa)", pos: [40.2110, -8.4295], cota: 16.5, reg: "C"},
-        
-        // Baixo Mondego
-        {id: "Bencanta", pos: [40.2080, -8.4680], cota: 14.2, reg: "B"},
-        {id: "Formoselha", pos: [40.1650, -8.5680], cota: 11.8, reg: "B"},
+        {id: "Praia Rebolim", pos: [40.1885, -8.4140], cota: 18.8, reg: "C"},
+        {id: "Pte Santa Clara", pos: [40.2085, -8.4285], cota: 15.8, reg: "C"},
+        {id: "Sta Clara a Velha", pos: [40.2015, -8.4335], cota: 15.2, reg: "C"},
         {id: "Pereira", pos: [40.1610, -8.5860], cota: 11.2, reg: "B"},
         {id: "Alfarelos", pos: [40.1490, -8.6475], cota: 10.2, reg: "B"}
     ];
 
     const emissores = [];
     sensores.forEach(s => {
-        let circ = L.circle(s.pos, { radius: 5, color: '#3498db', fillColor: '#3498db', fillOpacity: 0.35, weight: 1 }).addTo(map);
-        L.circleMarker(s.pos, { radius: 4, color: '#e74c3c', fillColor: '#e74c3c', fillOpacity: 1 }).addTo(map);
-        L.marker(s.pos, { icon: L.divIcon({ className: 'label-ponto', html: s.id, iconAnchor: [35, -12] }) }).addTo(map);
+        let circ = L.circle(s.pos, { radius: 5, color: '#3498db', fillColor: '#3498db', fillOpacity: 0.35 }).addTo(map);
+        L.circleMarker(s.pos, { radius: 5, color: 'red', fillColor: 'red', fillOpacity: 1 }).addTo(map);
+        L.marker(s.pos, { icon: L.divIcon({ className: 'label-ponto', html: s.id, iconAnchor: [40, -12] }) }).addTo(map);
         emissores.push({ obj: circ, ref: s });
     });
 
@@ -91,25 +83,22 @@
         const flow = parseInt(document.getElementById('inpFlow').value);
         const gates = parseInt(document.getElementById('inpGates').value) / 100;
 
-        let targetC = 14.8 + (flow / 1850) * (1.1 - gates);
+        // Física ajustada para os caudais desta semana
+        let targetC = 14.8 + (flow / 1800) * (1.1 - gates);
         hC += (targetC - hC) * 0.03;
 
-        let targetB = 9.0 + (flow / 1400) * (gates + 0.35);
+        let targetB = 9.2 + (flow / 1300) * (gates + 0.3);
         hB += (targetB - hB) * 0.015;
 
-        hC = Math.min(22.5, Math.max(13.5, hC));
-        hB = Math.min(20, Math.max(8, hB));
+        hC = Math.min(22, Math.max(14, hC));
+        hB = Math.min(19, Math.max(8, hB));
 
         emissores.forEach(e => {
             let nivelAt = (e.ref.reg === "C") ? hC : hB;
             if (nivelAt > e.ref.cota) {
                 let diff = nivelAt - e.ref.cota;
-                e.obj.setRadius(5 + (diff * (e.ref.reg === "B" ? 1000 : 350)));
-                e.obj.setStyle({ color: '#e74c3c' }); // Muda para vermelho quando inunda
-            } else { 
-                e.obj.setRadius(5); 
-                e.obj.setStyle({ color: '#3498db' });
-            }
+                e.obj.setRadius(5 + (diff * (e.ref.reg === "B" ? 1200 : 400)));
+            } else { e.obj.setRadius(5); }
         });
 
         document.getElementById('valC').innerText = hC.toFixed(2);
