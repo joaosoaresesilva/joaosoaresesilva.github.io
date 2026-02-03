@@ -2,21 +2,25 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>Mondego - Inércia e Monitorização</title>
+    <title>Mondego - Simulação de Precisão</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        body { margin: 0; font-family: sans-serif; background: #05050a; color: white; overflow-x: hidden; }
-        #map { height: 65vh; width: 100%; background: #111; }
-        .panel { padding: 15px; background: #16213e; border-top: 4px solid #ff4757; display: flex; flex-wrap: wrap; gap: 20px; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #0a0a0f; color: white; }
+        #map { height: 60vh; width: 100%; background: #111; }
+        .panel { padding: 15px; background: #161625; display: flex; flex-wrap: wrap; gap: 15px; border-top: 3px solid #f1c40f; }
         .controls { flex: 1; min-width: 300px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .slider-box { background: #1a1a2e; padding: 10px; border-radius: 8px; border: 1px solid #ff4757; }
-        .monitor { flex: 1; min-width: 300px; background: #1a1a2e; padding: 15px; border-radius: 8px; border: 1px solid #48dbfb; position: relative; height: 120px; }
-        .bar { position: absolute; bottom: 0; width: 4px; border-top-left-radius: 2px; border-top-right-radius: 2px; transition: height 0.3s; }
-        input[type=range] { width: 100%; accent-color: #ff4757; }
-        .stats { font-family: monospace; font-size: 0.9em; margin-bottom: 5px; }
-        button { padding: 10px; border: none; color: white; font-weight: bold; cursor: pointer; border-radius: 4px; width: 100%; }
-        #btnRun { background: #1dd1a1; }
-        #btnReset { background: #ee5253; }
+        .slider-box { background: #1f1f2e; padding: 10px; border-radius: 8px; border-left: 4px solid #f1c40f; }
+        .monitor-area { flex: 1.5; min-width: 350px; display: flex; flex-direction: column; gap: 10px; }
+        .time-display { background: #000; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #3498db; }
+        .time-display b { font-family: 'Courier New', monospace; font-size: 1.8em; color: #3498db; }
+        .graph-box { background: #1f1f2e; padding: 10px; border-radius: 8px; position: relative; height: 110px; overflow: hidden; }
+        .bar-coimbra { position: absolute; bottom: 0; width: 6px; background: #f1c40f; }
+        .bar-baixo { position: absolute; bottom: 0; width: 6px; background: #3498db; }
+        input[type=range] { width: 100%; accent-color: #f1c40f; cursor: pointer; }
+        button { padding: 12px; border: none; color: white; font-weight: bold; cursor: pointer; border-radius: 4px; width: 100%; }
+        #btnRun { background: #27ae60; }
+        #btnRun.active { background: #e74c3c; }
+        .label-ponto { background: rgba(0,0,0,0.85); color: white; padding: 2px 5px; border-radius: 3px; font-size: 10px; border: 1px solid #555; pointer-events: none; }
     </style>
 </head>
 <body>
@@ -25,44 +29,52 @@
 <div class="panel">
     <div class="controls">
         <div class="slider-box">
-            <label>Caudal: <b id="txtFlow">2500</b> m³/s</label>
-            <input type="range" id="inpFlow" min="500" max="10000" step="100" value="2500">
+            <label>Caudal: <b id="txtFlow" style="color:#f1c40f">2500</b> m³/s</label>
+            <input type="range" id="inpFlow" min="500" max="12000" step="100" value="2500">
         </div>
         <div class="slider-box">
-            <label>Abertura Açude: <b id="txtGates">50</b>%</label>
+            <label>Abertura Açude: <b id="txtGates" style="color:#3498db">50</b>%</label>
             <input type="range" id="inpGates" min="0" max="100" value="50">
         </div>
-        <div class="slider-box"><button id="btnRun">INICIAR</button></div>
-        <div class="slider-box"><button id="btnReset">RESET</button></div>
+        <div class="slider-box"><button id="btnRun">INICIAR (1h/seg)</button></div>
+        <div class="slider-box"><button id="btnReset" style="background:#7f8c8d">LIMPAR</button></div>
     </div>
 
-    <div class="monitor" id="graph">
-        <div class="stats">Gráfico Nível (C=Azul, B=Ciano) | Tempo: <span id="txtTime">0d 0h</span></div>
-        <div id="bars-container" style="position:relative; height:80px; width:100%; overflow:hidden;"></div>
+    <div class="monitor-area">
+        <div class="time-display">TEMPO: <b id="timer">00d 00h</b></div>
+        <div class="graph-box">
+            <div style="font-size: 11px; margin-bottom: 5px; display: flex; justify-content: space-between;">
+                <span><span style="color:#f1c40f">■</span> Coimbra: <b id="valC" style="color:#f1c40f">15.0</b>m</span>
+                <span><span style="color:#3498db">■</span> Baixo Mondego: <b id="valB" style="color:#3498db">10.0</b>m</span>
+            </div>
+            <div id="bars-container" style="position:relative; height:75px;"></div>
+        </div>
     </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    const map = L.map('map').setView([40.1750, -8.5500], 12);
+    const map = L.map('map').setView([40.1980, -8.4250], 14);
     L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png').addTo(map);
 
     const sensores = [
-        {pos: [40.2032, -8.4258], cota: 15.8, raioM: 400, reg: "C"}, // Parque Verde
-        {pos: [40.2015, -8.4335], cota: 14.5, raioM: 450, reg: "C"}, // Santa Clara
-        {pos: [40.1610, -8.5860], cota: 11.5, raioM: 3000, reg: "B"}, // Pereira
-        {pos: [40.1490, -8.6475], cota: 10.5, raioM: 4000, reg: "B"}  // Alfarelos
+        {id: "Portela (Entrada)", pos: [40.1945, -8.4055], cota: 20.0, reg: "C"},
+        {id: "Praia do Rebolim", pos: [40.1885, -8.4140], cota: 18.5, reg: "C"},
+        {id: "Portagem / Pte Sta Clara", pos: [40.2085, -8.4285], cota: 15.5, reg: "C"},
+        {id: "Sta Clara a Velha", pos: [40.2015, -8.4335], cota: 14.8, reg: "C"},
+        {id: "Pereira", pos: [40.1610, -8.5860], cota: 11.5, reg: "B"},
+        {id: "Alfarelos", pos: [40.1490, -8.6475], cota: 10.5, reg: "B"}
     ];
 
     const emissores = [];
     sensores.forEach(s => {
-        let circ = L.circle(s.pos, { radius: 10, color: '#00d2ff', fillColor: '#00d2ff', fillOpacity: 0.4 }).addTo(map);
-        L.circleMarker(s.pos, { radius: 6, color: 'red', fillColor: 'red', fillOpacity: 1 }).addTo(map);
+        let circ = L.circle(s.pos, { radius: 5, color: '#3498db', fillColor: '#3498db', fillOpacity: 0.35 }).addTo(map);
+        L.circleMarker(s.pos, { radius: 5, color: 'red', fillColor: 'red', fillOpacity: 1 }).addTo(map);
+        L.marker(s.pos, { icon: L.divIcon({ className: 'label-ponto', html: s.id, iconAnchor: [40, -12] }) }).addTo(map);
         emissores.push({ obj: circ, ref: s });
     });
 
     let hC = 15.0, hB = 10.0, tempo = 0, rodando = false;
-    let historico = [];
 
     document.getElementById('inpFlow').oninput = function() { document.getElementById('txtFlow').innerText = this.value; };
     document.getElementById('inpGates').oninput = function() { document.getElementById('txtGates').innerText = this.value; };
@@ -71,56 +83,49 @@
         const flow = parseInt(document.getElementById('inpFlow').value);
         const gates = parseInt(document.getElementById('inpGates').value) / 100;
 
-        // Tendência imediata em Coimbra
-        let targetC = 14 + (flow / 1000) * (1.2 - gates);
-        hC += (targetC - hC) * 0.05; // Suavização
+        let targetC = 14.5 + (flow / 1400) * (1.1 - gates);
+        hC += (targetC - hC) * 0.02; // Subida muito suave
 
-        // Inércia no Baixo Mondego: a água demora a chegar (atraso de fluxo)
-        let targetB = 8 + (flow / 1200) * (gates + 0.2);
-        hB += (targetB - hB) * 0.02; // Sobe mais devagar que Coimbra
+        let targetB = 8.5 + (flow / 1600) * (gates + 0.35);
+        hB += (targetB - hB) * 0.01; // Jusante ainda mais lento
 
-        hC = Math.min(21.5, Math.max(14, hC));
-        hB = Math.min(18.0, Math.max(8, hB));
+        hC = Math.min(22, Math.max(14, hC));
+        hB = Math.min(19, Math.max(8, hB));
 
         emissores.forEach(e => {
             let nivelAt = (e.ref.reg === "C") ? hC : hB;
             if (nivelAt > e.ref.cota) {
                 let diff = nivelAt - e.ref.cota;
-                e.obj.setRadius(10 + (diff * (e.ref.reg === "B" ? 800 : 300)));
-            } else { e.obj.setRadius(10); }
+                e.obj.setRadius(5 + (diff * (e.ref.reg === "B" ? 800 : 250)));
+            } else { e.obj.setRadius(5); }
         });
 
-        atualizarGrafico();
+        document.getElementById('valC').innerText = hC.toFixed(2);
+        document.getElementById('valB').innerText = hB.toFixed(2);
         tempo++;
-        document.getElementById('txtTime').innerText = `${Math.floor(tempo/24)}d ${tempo%24}h`;
+        document.getElementById('timer').innerText = `${Math.floor(tempo/24).toString().padStart(2,'0')}d ${(tempo%24).toString().padStart(2,'0')}h`;
+        desenharGrafico();
     }
 
-    function atualizarGrafico() {
+    function desenharGrafico() {
         const container = document.getElementById('bars-container');
-        const bC = document.createElement('div');
-        bC.className = 'bar';
-        bC.style.left = (tempo * 6) % container.offsetWidth + 'px';
-        bC.style.height = (hC - 13) * 10 + 'px';
-        bC.style.backgroundColor = '#48dbfb';
-        
-        const bB = document.createElement('div');
-        bB.className = 'bar';
-        bB.style.left = ((tempo * 6) % container.offsetWidth + 2) + 'px';
-        bB.style.height = (hB - 7) * 8 + 'px';
-        bB.style.backgroundColor = '#1dd1a1';
-
-        if (tempo % 50 === 0) container.innerHTML = ''; // Limpa para não pesar
-        container.appendChild(bC);
-        container.appendChild(bB);
+        const x = (tempo * 4) % container.offsetWidth;
+        if (x < 4) container.innerHTML = '';
+        const bC = document.createElement('div'); bC.className = 'bar-coimbra';
+        bC.style.left = x + 'px'; bC.style.height = (hC - 13) * 12 + 'px'; container.appendChild(bC);
+        const bB = document.createElement('div'); bB.className = 'bar-baixo';
+        bB.style.left = (x + 2) + 'px'; bB.style.height = (hB - 7) * 9 + 'px'; container.appendChild(bB);
     }
 
     document.getElementById('btnRun').onclick = function() {
         rodando = !rodando;
         this.innerText = rodando ? "PAUSAR" : "RETOMAR";
+        this.className = rodando ? "active" : "";
     };
     document.getElementById('btnReset').onclick = () => location.reload();
 
-    setInterval(() => { if(rodando) simular(); }, 300);
+    // INTERVALO DE 1 SEGUNDO (1000ms)
+    setInterval(() => { if(rodando) simular(); }, 1000);
 </script>
 </body>
 </html>
