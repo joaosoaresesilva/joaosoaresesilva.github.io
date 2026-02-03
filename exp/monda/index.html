@@ -2,171 +2,217 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>Mondego - Controlo de Cotas e Histórico</title>
+    <title>Mondego - Rede Total e Histórico Completo</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #0a0a0f; color: white; display: flex; flex-direction: column; height: 100vh; }
-        #map { height: 50vh; width: 100%; background: #111; }
-        .main-container { display: flex; flex-wrap: wrap; flex: 1; overflow-y: auto; background: #161625; }
-        .panel { flex: 2; padding: 15px; display: flex; flex-direction: column; gap: 10px; border-right: 1px solid #333; }
-        .sidebar { flex: 1; padding: 15px; background: #1a1a2e; min-width: 250px; }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #0a0a0f; color: white; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        #map { height: 40vh; width: 100%; background: #111; }
         
-        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .slider-box { background: #1f1f2e; padding: 10px; border-radius: 8px; border-left: 4px solid #00d2ff; }
+        #timeDisplay { 
+            position: absolute; top: 10px; right: 10px; z-index: 1000; 
+            background: rgba(0, 0, 0, 0.85); padding: 10px 15px; 
+            border-radius: 8px; border: 1px solid #00d2ff; text-align: right;
+        }
+        #simClock { font-size: 1.4em; color: #00d2ff; font-weight: bold; display: block; }
+
+        .main-container { display: flex; flex: 1; overflow: hidden; background: #161625; }
+        .panel { flex: 1.6; padding: 12px; display: flex; flex-direction: column; gap: 8px; border-right: 1px solid #333; }
+        .sidebar { flex: 1.4; padding: 12px; background: #1a1a2e; overflow-y: auto; }
         
-        .monitor-area { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
-        .time-display { background: #000; padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #00d2ff; display: flex; justify-content: space-around; }
-        .graph-box { background: #1f1f2e; padding: 10px; border-radius: 8px; position: relative; height: 100px; }
+        .control-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+        .slider-box { background: #1f1f2e; padding: 8px; border-radius: 6px; border-left: 4px solid #00d2ff; font-size: 0.85em; }
         
-        .bar-coimbra { position: absolute; bottom: 0; width: 5px; background: #f1c40f; }
-        .bar-baixo { position: absolute; bottom: 0; width: 5px; background: #3498db; }
+        .graph-container { background: #000; border-radius: 6px; border: 1px solid #333; margin-top: 5px; position: relative; flex-grow: 1; display: flex; flex-direction: column; }
+        .graph-area { height: 100px; position: relative; overflow: hidden; width: 100%; border-bottom: 1px solid #222; }
+        .timeline-axis { height: 20px; position: relative; overflow: hidden; width: 100%; background: #050505; font-size: 9px; color: #666; }
         
-        table { width: 100%; font-size: 11px; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #333; padding: 5px; text-align: left; }
-        th { background: #00d2ff; color: black; }
-        .at-risk { color: #e74c3c; font-weight: bold; }
+        .bar-c { position: absolute; bottom: 0; width: 2px; background: #f1c40f; opacity: 0.7; }
+        .bar-b { position: absolute; bottom: 0; width: 2px; background: #3498db; opacity: 0.7; }
+        .time-label { position: absolute; top: 4px; transform: translateX(-50%); white-space: nowrap; }
+
+        table { width: 100%; font-size: 10px; border-collapse: collapse; }
+        th, td { border: 1px solid #333; padding: 6px; text-align: left; }
+        th { background: #333; color: #00d2ff; }
+        .at-risk { background: rgba(255, 71, 87, 0.3); color: #ff4757; font-weight: bold; }
         
-        input[type=range] { width: 100%; accent-color: #00d2ff; cursor: pointer; }
-        button { padding: 10px; border: none; color: white; font-weight: bold; cursor: pointer; border-radius: 4px; width: 100%; }
-        #btnRun { background: #27ae60; }
-        #btnRun.active { background: #e74c3c; }
+        select { background: #1a1a2e; color: #fff; border: 1px solid #8e44ad; padding: 5px; border-radius: 4px; width: 100%; font-size: 0.85em;}
+        .sensor-tag { font-size: 9px; font-weight: bold; text-shadow: 1px 1px #000; color: #fff; }
     </style>
 </head>
 <body>
 
+<div id="timeDisplay">
+    <span id="simClock">--:--:--</span>
+    <small id="elapsed">T+ 0 min</small>
+</div>
+
 <div id="map"></div>
+
 <div class="main-container">
     <div class="panel">
-        <div class="controls">
+        <div class="control-row">
             <div class="slider-box" style="border-left-color: #f1c40f;">
-                <label>Ajuste Cota Inicial (Coimbra): <b id="txtInitC">15.42</b>m</label>
+                <label>Cota Inicial: <b id="txtInitC">15.42</b>m</label>
                 <input type="range" id="inpInitC" min="13.5" max="18.5" step="0.01" value="15.42">
             </div>
             <div class="slider-box">
                 <label>Caudal: <b id="txtFlow">2100</b> m³/s</label>
-                <input type="range" id="inpFlow" min="500" max="10000" step="100" value="2100">
+                <input type="range" id="inpFlow" min="500" max="12000" step="100" value="2100">
             </div>
-            <div class="slider-box">
-                <label>Abertura Açude: <b id="txtGates">90</b>%</label>
+            <div class="slider-box" style="border-left-color: #e67e22;">
+                <label>Açude: <b id="txtGates">90</b>%</label>
                 <input type="range" id="inpGates" min="0" max="100" value="90">
             </div>
-            <div class="slider-box"><button id="btnRun">INICIAR</button></div>
         </div>
 
-        <div class="monitor-area">
-            <div class="time-display">
-                <span>TEMPO: <b id="timer" style="color:#00d2ff">00d 00h</b></span>
-                <span>COIMBRA: <b id="valC" style="color:#f1c40f">15.42</b>m</span>
-            </div>
-            <div class="graph-box" id="bars-container"></div>
+        <div style="background: #251a35; padding: 10px; border-radius: 6px;">
+            <label style="font-size: 0.8em; color: #9b59b6;">CENÁRIOS HISTÓRICOS E TEMPESTADES:</label>
+            <select id="selHist">
+                <option value="default">-- Selecione um evento --</option>
+                <option value="h_kristine">Tempestade Kristine (Jan 2026)</option>
+                <option value="h_caetano">Tempestade Caetano (Nov 2024)</option>
+                <option value="h_kirk">Tempestade Kirk (Out 2024)</option>
+                <option value="h2019">Tempestade Elsa (Dez 2019)</option>
+                <option value="h2001">Cheia de 2001 (Histórico Extremo)</option>
+            </select>
+        </div>
+        
+        <button id="btnRun" style="background: #2ecc71; color: white; padding: 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%;">INICIAR MONITORIZAÇÃO</button>
+
+        <div class="graph-container">
+            <div class="graph-area" id="graphArea"></div>
+            <div class="timeline-axis" id="timelineArea"></div>
         </div>
     </div>
 
     <div class="sidebar">
-        <h4 style="margin-top:0; color:#00d2ff;">Registo de Máximos</h4>
-        <table>
-            <thead><tr><th>Local</th><th>Cota Máx.</th><th>Estado</th></tr></thead>
-            <tbody id="logsTable"></tbody>
+        <h4 style="margin: 0 0 10px 0; color:#00d2ff; font-size: 0.9em; border-bottom: 1px solid #333; padding-bottom: 5px;">📡 REDE DE SENSORES COMPLETA</h4>
+        <table id="mainTable">
+            <thead><tr><th>Localização</th><th>Cota Crítica</th><th>Nível</th><th>Estado</th></tr></thead>
+            <tbody id="tableBody"></tbody>
         </table>
     </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    const map = L.map('map').setView([40.2015, -8.4335], 14);
+    const map = L.map('map').setView([40.1800, -8.5500], 11);
     L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png').addTo(map);
 
     const sensores = [
         {id: "Portela", pos: [40.1945, -8.4055], cota: 20.2, reg: "C"},
+        {id: "EP Boavista", pos: [40.1915, -8.4125], cota: 15.1, reg: "C"},
+        {id: "Parque Verde", pos: [40.2035, -8.4275], cota: 14.8, reg: "C"},
         {id: "Pte Sta Clara", pos: [40.2085, -8.4285], cota: 15.8, reg: "C"},
         {id: "Sta Clara Velha", pos: [40.2015, -8.4335], cota: 15.2, reg: "C"},
-        {id: "Rotunda Almegue", pos: [40.2115, -8.4480], cota: 15.4, reg: "C"},
-        {id: "Pereira", pos: [40.1610, -8.5860], cota: 11.2, reg: "B"}
+        {id: "Choupal", pos: [40.2220, -8.4480], cota: 14.8, reg: "C"},
+        {id: "Taveiro", pos: [40.1910, -8.5060], cota: 14.0, reg: "C"},
+        {id: "Ameal", pos: [40.1750, -8.5350], cota: 13.2, reg: "B"},
+        {id: "Arzila", pos: [40.1650, -8.5550], cota: 12.5, reg: "B"},
+        {id: "Pereira", pos: [40.1610, -8.5860], cota: 11.2, reg: "B"},
+        {id: "Formoselha", pos: [40.1550, -8.6250], cota: 10.8, reg: "B"},
+        {id: "Montemor", pos: [40.1730, -8.6830], cota: 10.5, reg: "B"},
+        {id: "Ereira", pos: [40.1420, -8.6950], cota: 9.8, reg: "B"}
     ];
 
-    const emissores = [];
+    let visualMarkers = {};
+    let hC = 15.42, hB = 10.55, tempo = 0, rodando = false;
+    let simTime = new Date();
+
     sensores.forEach(s => {
-        let circ = L.circle(s.pos, { radius: 10, color: '#3498db', weight: 1 }).addTo(map);
-        L.marker(s.pos, { icon: L.divIcon({ className: 'label-ponto', html: s.id, iconAnchor: [30, -10] }) }).addTo(map);
-        emissores.push({ obj: circ, ref: s, max: 0 });
+        L.circleMarker(s.pos, { radius: 3, color: '#000', fillColor: '#fff', fillOpacity: 1, weight: 1 }).addTo(map);
+        const circle = L.circle(s.pos, { radius: 0, color: '#ff4757', weight: 2, fillOpacity: 0.4 }).addTo(map);
+        const label = L.marker(s.pos, { icon: L.divIcon({ className: 'sensor-tag', html: `<span id="tag-${s.id.replace(/\s+/g, '')}" style="display:none">${s.id}</span>`, iconAnchor: [-10, 10] }) }).addTo(map);
+        visualMarkers[s.id] = { circle, label };
     });
 
-    let hC = 15.42, hB = 10.55, tempo = 0, rodando = false;
-
-    // Controlos de UI
-    document.getElementById('inpInitC').oninput = function() {
-        if(!rodando) {
-            hC = parseFloat(this.value);
-            document.getElementById('txtInitC').innerText = hC.toFixed(2);
-            document.getElementById('valC').innerText = hC.toFixed(2);
-        }
+    document.getElementById('selHist').onchange = function() {
+        const val = this.value;
+        if(val === "h_kristine") { setParams(15.5, 2600, 85); }
+        else if(val === "h_caetano") { setParams(15.2, 2100, 75); }
+        else if(val === "h_kirk") { setParams(15.1, 1800, 70); }
+        else if(val === "h2019") { setParams(15.8, 5100, 100); }
+        else if(val === "h2001") { setParams(16.5, 7200, 100); }
     };
-    document.getElementById('inpFlow').oninput = function() { document.getElementById('txtFlow').innerText = this.value; };
-    document.getElementById('inpGates').oninput = function() { document.getElementById('txtGates').innerText = this.value; };
+
+    function setParams(c, f, g) {
+        hC = c; document.getElementById('inpInitC').value = c; document.getElementById('txtInitC').innerText = c;
+        document.getElementById('inpFlow').value = f; document.getElementById('txtFlow').innerText = f;
+        document.getElementById('inpGates').value = g; document.getElementById('txtGates').innerText = g;
+        updateUI();
+    }
+
+    function updateUI() {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+        sensores.forEach(s => {
+            let nivel = (s.reg === "C") ? hC : hB;
+            let diff = nivel - s.cota;
+            let visual = visualMarkers[s.id];
+            let tag = document.getElementById(`tag-${s.id.replace(/\s+/g, '')}`);
+            let row = tbody.insertRow();
+            if (diff > 0) {
+                row.className = 'at-risk';
+                visual.circle.setRadius(20 + diff * 600);
+                if(tag) tag.style.display = 'block';
+                row.insertCell(0).innerText = s.id;
+                row.insertCell(1).innerText = s.cota + "m";
+                row.insertCell(2).innerText = nivel.toFixed(2) + "m";
+                row.insertCell(3).innerText = "⚠ INUNDADO";
+            } else {
+                visual.circle.setRadius(0);
+                if(tag) tag.style.display = 'none';
+                row.insertCell(0).innerText = s.id; row.insertCell(1).innerText = s.cota + "m";
+                row.insertCell(2).innerText = nivel.toFixed(2) + "m"; row.insertCell(3).innerText = "OK";
+            }
+        });
+        document.getElementById('simClock').innerText = simTime.toLocaleTimeString('pt-PT');
+        document.getElementById('elapsed').innerText = `T+ ${tempo} min`;
+    }
 
     function simular() {
         const flow = parseInt(document.getElementById('inpFlow').value);
         const gates = parseInt(document.getElementById('inpGates').value) / 100;
-
-        let targetC = 14.8 + (flow / 1850) * (1.1 - gates);
-        hC += (targetC - hC) * 0.03;
-        let targetB = 9.0 + (flow / 1400) * (gates + 0.35);
-        hB += (targetB - hB) * 0.015;
-
-        updateVisuals();
+        hC += ( (14.8 + (flow / 1850) * (1.1 - gates)) - hC ) * 0.03;
+        hB += ( (9.0 + (flow / 1400) * (gates + 0.4)) - hB ) * 0.015;
+        simTime.setMinutes(simTime.getMinutes() + 1);
         tempo++;
-        document.getElementById('timer').innerText = `${Math.floor(tempo/24).toString().padStart(2,'0')}d ${(tempo%24).toString().padStart(2,'0')}h`;
+        updateUI();
         desenharGrafico();
     }
 
-    function updateVisuals() {
-        const tableBody = document.getElementById('logsTable');
-        tableBody.innerHTML = '';
-
-        emissores.forEach(e => {
-            let nivelAt = (e.ref.reg === "C") ? hC : hB;
-            if (nivelAt > e.max) e.max = nivelAt;
-
-            let diff = nivelAt - e.ref.cota;
-            if (diff > 0) {
-                e.obj.setRadius(10 + (diff * 400));
-                e.obj.setStyle({ color: '#e74c3c', fillOpacity: 0.5 });
-            } else {
-                e.obj.setRadius(10);
-                e.obj.setStyle({ color: '#3498db', fillOpacity: 0.2 });
-            }
-
-            // Atualiza Tabela
-            let row = tableBody.insertRow();
-            row.insertCell(0).innerText = e.ref.id;
-            row.insertCell(1).innerText = e.max.toFixed(2) + "m";
-            let status = row.insertCell(2);
-            if (e.max > e.ref.cota) { status.innerText = "INUNDADO"; status.className = "at-risk"; }
-            else { status.innerText = "SEGURO"; }
-        });
-        document.getElementById('valC').innerText = hC.toFixed(2);
-    }
-
     function desenharGrafico() {
-        const container = document.getElementById('bars-container');
-        const x = (tempo * 4) % container.offsetWidth;
-        if (x < 4) container.innerHTML = '';
-        const bC = document.createElement('div');
-        bC.className = 'bar-coimbra';
-        bC.style.left = x + 'px';
-        bC.style.height = (hC - 13) * 15 + 'px';
-        container.appendChild(bC);
+        const graphArea = document.getElementById('graphArea');
+        const timelineArea = document.getElementById('timelineArea');
+        const x = (tempo * 2) % graphArea.offsetWidth;
+        if (x < 2) { graphArea.innerHTML = ''; timelineArea.innerHTML = ''; }
+
+        const bc = document.createElement('div'); bc.className = 'bar-c'; bc.style.left = x + 'px'; bc.style.height = (hC - 13) * 12 + 'px';
+        graphArea.appendChild(bc);
+
+        const bb = document.createElement('div'); bb.className = 'bar-b'; bb.style.left = x + 'px'; bb.style.height = (hB - 7) * 8 + 'px';
+        graphArea.appendChild(bb);
+
+        if (tempo % 15 === 0) {
+            const tl = document.createElement('div'); tl.className = 'time-label'; tl.style.left = x + 'px';
+            tl.innerText = simTime.getHours().toString().padStart(2,'0') + ":" + simTime.getMinutes().toString().padStart(2,'0');
+            timelineArea.appendChild(tl);
+        }
     }
 
     document.getElementById('btnRun').onclick = function() {
         rodando = !rodando;
-        this.innerText = rodando ? "PAUSAR" : "RETOMAR";
-        this.className = rodando ? "active" : "";
-        document.getElementById('inpInitC').disabled = rodando;
+        if(rodando && tempo === 0) simTime = new Date();
+        this.innerText = rodando ? "PAUSAR" : "REATIVAR";
+        this.style.background = rodando ? "#e74c3c" : "#2ecc71";
     };
 
+    document.getElementById('inpInitC').oninput = function() { hC = parseFloat(this.value); document.getElementById('txtInitC').innerText = hC.toFixed(2); updateUI(); };
+    document.getElementById('inpFlow').oninput = function() { document.getElementById('txtFlow').innerText = this.value; };
+    document.getElementById('inpGates').oninput = function() { document.getElementById('txtGates').innerText = this.value; };
+
     setInterval(() => { if(rodando) simular(); }, 1000);
-    updateVisuals();
+    updateUI();
 </script>
 </body>
 </html>
