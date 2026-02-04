@@ -192,10 +192,10 @@ function simular() {
     let abertura = parseInt(gatesInput.value) / 100;
     document.getElementById('txtGates').innerText = gatesInput.value;
 
-    let alvoHC = 13.0 + (flow / 2000) + ((1 - abertura) * 5.0); 
+    let alvoHC = 14.0 + (flow / 1200) + ((1 - abertura) * 5.5); 
     hC += (alvoHC - hC) * 0.15; 
 
-    let alvoHB = 8.5 + (flow / 2500) + (abertura * 6.5);
+    let alvoHB = 8.0 + (flow / 1500) + (abertura * 4.5);
     hB += (alvoHB - hB) * 0.1;
 
     simTime.setMinutes(simTime.getMinutes() + 1);
