@@ -96,32 +96,30 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    const map = L.map('map').setView([40.1800, -8.6000], 11); 
+    const map = L.map('map').setView([40.1850, -8.5300], 12); 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-const sensores = [
-    // --- PONTOS HISTÓRICOS CENTENÁRIOS ---
-    {id: "MOSTEIRO STA CLARA", pos: [40.2018, -8.4340], cota: 13.5, reg: "C"}, // O ponto mais crítico do Mondego
-    {id: "BAIXA (P. COMÉRCIO)", pos: [40.2092, -8.4298], cota: 14.2, reg: "C"}, // Inundações frequentes pré-barragens
-    {id: "MOSTEIRO STA CRUZ", pos: [40.2108, -8.4285], cota: 15.5, reg: "C"}, // Inundação via canais subterrâneos
-    {id: "CAMPOS DO BOLÃO", pos: [40.2150, -8.4650], cota: 13.0, reg: "B"}, // Bacia de receção natural
-    {id: "MONTEMOR (VILA)", pos: [40.1745, -8.6815], cota: 10.2, reg: "B"}, // Zona fustigada no Baixo Mondego
-    {id: "PEREIRA (LINHA)", pos: [40.1585, -8.5910], cota: 11.0, reg: "B"}, // Corte da Linha do Norte
-    {id: "FIGUEIRA (SALINAS)", pos: [40.1450, -8.8250], cota: 4.5, reg: "B"}, // Efeito de maré viva + cheia
-
-    // --- SENSORES DE MONITORIZAÇÃO ATUAL ---
+    const sensores = [
     {id: "PORTELA", pos: [40.1945, -8.4055], cota: 20.2, reg: "C"},
-    {id: "ETA BOAVISTA", pos: [40.1895, -8.4190], cota: 15.1, reg: "C"}, 
+    {id: "ETA BOAVISTA", pos: [40.19001, -8.42154], cota: 15.1, reg: "C"}, 
+    {id: "STA CLARA VELHA", pos: [40.2018, -8.4340], cota: 15.0, reg: "C"}, 
     {id: "ESTADIO UNIV.", pos: [40.2045, -8.4345], cota: 14.5, reg: "C"},
     {id: "PARQUE VERDE", pos: [40.2035, -8.4275], cota: 14.8, reg: "C"},
     {id: "PTE STA CLARA", pos: [40.2085, -8.4285], cota: 15.8, reg: "C"},
+    {id: "PTE FERRO", pos: [40.2105, -8.4320], cota: 15.5, reg: "C"},
+    {id: "IC2 VIADUTO", pos: [40.2160, -8.4410], cota: 16.2, reg: "C"},
     {id: "CHOUPAL", pos: [40.2220, -8.4480], cota: 14.8, reg: "C"},
+    
+    // --- BAIXO MONDEGO (REGIAO B) ---
     {id: "TAVEIRO", pos: [40.1910, -8.5060], cota: 14.0, reg: "C"},
     {id: "AMEAL", pos: [40.1750, -8.5350], cota: 13.2, reg: "B"},
     {id: "ARZILA", pos: [40.1650, -8.5550], cota: 12.5, reg: "B"},
+    {id: "PEREIRA", pos: [40.1610, -8.5860], cota: 11.2, reg: "B"},
     {id: "FORMOSELHA", pos: [40.1550, -8.6250], cota: 10.8, reg: "B"},
+    {id: "MONTEMOR", pos: [40.1730, -8.6830], cota: 10.5, reg: "B"},
+    {id: "VALAS EREIRA", pos: [40.1450, -8.7050], cota: 9.2, reg: "B"},
     {id: "EREIRA", pos: [40.1420, -8.6950], cota: 9.8, reg: "B"}
-];
+    ];
 
     let visualMarkers = {};
     let hC = 15.42, hB = 10.55, tempo = 0, rodando = false;
