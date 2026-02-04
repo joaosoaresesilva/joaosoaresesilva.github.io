@@ -56,7 +56,7 @@
 <div class="main-container">
     <div class="panel">
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
-            <div class="slider-box">COTA RIO: <b id="txtInitC">15.42</b>m<input type="range" id="inpInitC" min="13.5" max="23.5" step="0.01" value="15.42"></div>
+            <div class="slider-box">COTA RIO: <b id="txtInitC">15.42</b>m<input type="range" id="inpInitC" min="13.5" max="23" step="0.01" value="15.42"></div>
             <div class="slider-box">CAUDAL: <b id="txtFlow">2100</b><input type="range" id="inpFlow" min="500" max="12000" step="100" value="2100"></div>
             <div class="slider-box">AÇUDE: <b id="txtGates">90</b>%<input type="range" id="inpGates" min="0" max="100" value="90"></div>
         </div>
@@ -122,6 +122,7 @@
         {id: " DOCAS RIO ", pos: [40.202632, -8.426271], cota: 19.0, reg: "C"},
         {id: " CENTO DE EMPREGO COIMBRA ", pos: [40.216553, -8.436634], cota: 21.0, reg: "C"},
         {id: " R. DO GORGULHÃO 11-3  ", pos: [40.216701, -8.456282], cota: 26.0, reg: "C"},
+        {id: "ALFARELOS (ESTAÇÃO)", pos: [40.1530, -8.6420], cota: 9.5, reg: "B"},
     ];
 
     let visualMarkers = {};
@@ -173,40 +174,30 @@ function simular() {
     let mode = document.querySelector('input[name="iaMode"]:checked').value;
     let msg = document.getElementById('aiMsg');
 
-    // 1. LÓGICA DO PILOTO (IA):
-    // Agora, para salvar Coimbra, a IA "PUXA" o slider para o 100 (Abertura Máxima)
     if (mode === "baixa") {
-        if (hC > 14.2) { 
-            msg.innerText = "IA: Nível Crítico! Abrindo comportas para escoar Coimbra...";
-            // Incrementa a abertura para escoar
+        // Gatilho alterado para 19.0m (onde começa o risco real na tua lista de sensores)
+        if (hC > 19.0) { 
+            msg.innerText = "IA: Risco de Inundação na Baixa! Abrindo comportas...";
             gatesInput.value = Math.min(100, parseInt(gatesInput.value) + 5); 
         } else {
-            msg.innerText = "IA: Nível estabilizado.";
+            msg.innerText = "IA: Nível controlado (Abaixo da cota de alerta).";
         }
     } else if (mode === "total") {
-        if (hC > 15.0) {
-            gatesInput.value = Math.min(100, parseInt(gatesInput.value) + 3);
-            msg.innerText = "IA: Prioridade Coimbra (Abrindo)";
-        } else if (hB > 12.0) {
-            gatesInput.value = Math.max(0, parseInt(gatesInput.value) - 3);
-            msg.innerText = "IA: Prioridade Baixo Mondego (Fechando)";
-        }
+        // Equilíbrio dinâmico
+        if (hC > 20.0) gatesInput.value = Math.min(100, parseInt(gatesInput.value) + 3);
+        else if (hB > 12.0) gatesInput.value = Math.max(0, parseInt(gatesInput.value) - 3);
+        msg.innerText = "IA: Gestão de impacto distribuído.";
     }
 
-    // 2. FÍSICA CORRIGIDA:
     let abertura = parseInt(gatesInput.value) / 100;
     document.getElementById('txtGates').innerText = gatesInput.value;
 
-    // COIMBRA: O nível baixa quando a abertura aumenta (1 - abertura)
-    // Se abertura = 1 (100%), o termo (1-1)*5 desaparece e hC desce.
     let alvoHC = 13.0 + (flow / 2000) + ((1 - abertura) * 5.0); 
-    hC += (alvoHC - hC) * 0.15; // Velocidade de resposta
+    hC += (alvoHC - hC) * 0.15; 
 
-    // BAIXO MONDEGO: O nível sobe quando a abertura aumenta (recebe a água)
     let alvoHB = 8.5 + (flow / 2500) + (abertura * 6.5);
     hB += (alvoHB - hB) * 0.1;
 
-    // 3. ATUALIZAÇÃO DE TEMPO
     simTime.setMinutes(simTime.getMinutes() + 1);
     tempo++;
     updateUI();
