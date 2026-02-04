@@ -104,7 +104,7 @@
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
     const sensores = [
-        {id: "MOSTEIRO STA CLARA - BARREIRA", pos: [40.2018, -8.4340], cota: 19.0, reg: "C"},
+        {id: "MOSTEIRO STA CLARA", pos: [40.2018, -8.4340], cota: 17.0, reg: "C"},
         {id: "BAIXA (P. COMÉRCIO)", pos: [40.2092, -8.4298], cota: 20.0, reg: "C"},
         {id: "MOSTEIRO STA CRUZ", pos: [40.2108, -8.4285], cota: 19.0, reg: "C"},
         {id: "PORTELA", pos: [40.1945, -8.4055], cota: 20.2, reg: "C"},
@@ -130,31 +130,26 @@
     let simTime = new Date();
 
 sensores.forEach(s => {
-    // 1. CÍRCULO DE INUNDAÇÃO (Invisível até haver cheia)
+    // 1. O CÍRCULO DE ALERTA (Fica por baixo)
     const circle = L.circle(s.pos, { 
         radius: 0, 
-        color: '#ff0000', 
-        weight: 1, 
-        opacity: 0.4, 
+        color: '#888888', 
+        weight: 1.2, 
+        opacity: 0.5, 
         fillColor: '#f1c40f', 
         fillOpacity: 0.2 
     }).addTo(map);
 
-    // 2. O CENTRO (MARCADOR DE ALTA VISIBILIDADE COM NOME)
-    // Criamos um ícone HTML que contém um ponto preto e o nome da rua
-    const labelIcon = L.divIcon({
-        className: 'custom-label',
-        html: `<div style="display: flex; align-items: center;">
-                 <div style="width: 8px; height: 8px; background: #00ff00; border: 2px solid black; border-radius: 50%;"></div>
-                 <span style="color: white; font-weight: bold; font-size: 10px; margin-left: 5px; text-shadow: 2px 2px 2px black; white-space: nowrap;">
-                    ${s.id}
-                 </span>
-               </div>`,
-        iconSize: [100, 20],
-        iconAnchor: [4, 10]
-    });
-
-    L.marker(s.pos, { icon: labelIcon, interactive: false, zIndexOffset: 1000 }).addTo(map);
+    // 2. O SENSOR (Fica por cima)
+    // Usamos um L.circleMarker mas com propriedades que o tornam um "ponto técnico"
+    L.circleMarker(s.pos, {
+        radius: 4,
+        weight: 2,
+        color: '#ffffff',      // Aro branco para brilhar no cinza
+        fillColor: '#00d2ff',  // Centro azul ciano (cor de tecnologia)
+        fillOpacity: 1,
+        pane: 'markerPane'     // Força o sensor a ficar na camada de cima
+    }).addTo(map);
 
     visualMarkers[s.id] = { circle };
 });
