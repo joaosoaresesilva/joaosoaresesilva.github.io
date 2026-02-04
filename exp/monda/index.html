@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>SISTEMA MONDEGO - ESC 25cm</title>
+    <title>SISTEMA MONDEGO - ESC 25cm + AUTO-PILOT</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { margin: 0; font-family: 'Courier New', monospace; background: #050505; color: #d0d0d0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -21,11 +21,17 @@
         button { padding: 12px; border: 1px solid #444; font-weight: bold; cursor: pointer; font-family: inherit; transition: 0.3s; width: 100%; }
         #btnRun { background: transparent; color: #2ecc71; border-color: #2ecc71; }
         #btnRun.active { background: #e74c3c; color: white; border-color: #e74c3c; }
-        .graph-container { background: #000; border: 1px solid #333; margin-top: 5px; position: relative; flex-grow: 1; display: flex; flex-direction: column; }
+        .graph-container { background: #000; border: 1px solid #333; margin-top: 5px; position: relative; height: 120px; display: flex; flex-direction: column; }
         .graph-area { height: 100px; position: relative; overflow: hidden; width: 100%; }
         .bar-c { position: absolute; bottom: 0; width: 2px; background: #f1c40f; }
         .bar-b { position: absolute; bottom: 0; width: 2px; background: #00d2ff; }
-        .timeline-axis { height: 20px; background: #000; font-size: 10px; color: #555; position: relative; border-top: 1px solid #222; }
+        
+        /* Nova Secção Auto-Pilot */
+        .auto-pilot-box { background: #1a1a1a; padding: 12px; border: 1px dashed #00d2ff; margin-top: 5px; display: flex; align-items: center; justify-content: space-between; }
+        .status-led { width: 10px; height: 10px; border-radius: 50%; background: #333; display: inline-block; margin-right: 5px; }
+        .status-led.on { background: #00d2ff; box-shadow: 0 0 8px #00d2ff; animation: blink 1s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
         table { width: 100%; font-size: 11px; border-collapse: collapse; }
         th { border-bottom: 2px solid #444; padding: 8px; text-align: left; color: #00d2ff; }
         td { padding: 8px; border-bottom: 1px solid #222; }
@@ -82,7 +88,15 @@
 
         <div class="graph-container">
             <div class="graph-area" id="graphArea"></div>
-            <div class="timeline-axis" id="timelineArea"></div>
+            <div style="height: 20px; background: #000; font-size: 10px; color: #555; position: relative; border-top: 1px solid #222;" id="timelineArea"></div>
+        </div>
+
+        <div class="auto-pilot-box">
+            <div>
+                <span id="ledAuto" class="status-led"></span>
+                <span style="font-size: 0.8em; color: #00d2ff; font-weight: bold;">IA AUTO-PILOT: GESTÃO DE COMPORTAS</span>
+            </div>
+            <button id="btnAuto" style="width: auto; padding: 5px 15px; font-size: 0.7em; background: #00d2ff; color: #000; border: none;">ATIVAR</button>
         </div>
     </div>
 
@@ -122,27 +136,46 @@
     ];
 
     let visualMarkers = {};
-    let hC = 15.42, hB = 10.55, tempo = 0, rodando = false;
+    let hC = 15.42, hB = 10.55, tempo = 0, rodando = false, autoPilot = false;
     let simTime = new Date();
 
     sensores.forEach(s => {
         L.circleMarker(s.pos, { radius: 2, color: '#00d2ff', fillColor: '#00d2ff', fillOpacity: 1 }).addTo(map);
-        
-        const circle = L.circle(s.pos, { 
-            radius: 0, 
-            color: '#888888', 
-            weight: 1.2,        
-            opacity: 0.6,
-            fillColor: '#f1c40f',
-            fillOpacity: 0.15 
-        }).addTo(map);
-
-        const label = L.marker(s.pos, { 
-            icon: L.divIcon({ className: 'sensor-tag', html: `<span id="tag-${s.id.replace(/\s+/g, '')}" style="display:none">⚠ ALERTA INUNDAÇÃO</span>`, iconAnchor: [-10, 10] }) 
-        }).addTo(map);
-
+        const circle = L.circle(s.pos, { radius: 0, color: '#888888', weight: 1.2, opacity: 0.6, fillColor: '#f1c40f', fillOpacity: 0.15 }).addTo(map);
+        const label = L.marker(s.pos, { icon: L.divIcon({ className: 'sensor-tag', html: `<span id="tag-${s.id.replace(/\s+/g, '')}" style="display:none">⚠ ALERTA INUNDAÇÃO</span>`, iconAnchor: [-10, 10] }) }).addTo(map);
         visualMarkers[s.id] = { circle, label };
     });
+
+    // Lógica do Auto-Pilot
+    function runAutoPilot() {
+        if (!autoPilot) return;
+        
+        let severeCount = 0;
+        sensores.forEach(s => {
+            let nivel = (s.reg === "C") ? hC : hB;
+            if ((nivel - s.cota) > 1.0) severeCount++;
+        });
+
+        const currentGates = parseInt(document.getElementById('inpGates').value);
+        if (severeCount > 0 && currentGates > 0) {
+            // Se houver pontos vermelhos, abre o açude gradualmente
+            let newVal = Math.max(0, currentGates - 2);
+            document.getElementById('inpGates').value = newVal;
+            document.getElementById('txtGates').innerText = newVal;
+        } else if (severeCount === 0 && currentGates < 90) {
+            // Se estiver seguro, fecha para manter espelho de água
+            let newVal = Math.min(90, currentGates + 1);
+            document.getElementById('inpGates').value = newVal;
+            document.getElementById('txtGates').innerText = newVal;
+        }
+    }
+
+    document.getElementById('btnAuto').onclick = function() {
+        autoPilot = !autoPilot;
+        this.innerText = autoPilot ? "DESATIVAR" : "ATIVAR";
+        this.style.background = autoPilot ? "#e74c3c" : "#00d2ff";
+        document.getElementById('ledAuto').className = autoPilot ? "status-led on" : "status-led";
+    };
 
     document.getElementById('selHist').onchange = function() {
         const val = this.value;
@@ -173,8 +206,6 @@
             if (diff > 0) {
                 visual.circle.setRadius(20 + diff * 600);
                 if(tagSpan) tagSpan.style.display = 'block';
-                
-                // REGRA DINÂMICA DE COR
                 if (diff > 1.0) {
                     row.className = 'severe-risk';
                     visual.circle.setStyle({ color: '#e74c3c', fillColor: '#e74c3c', fillOpacity: 0.3, weight: 1.5 });
@@ -182,7 +213,6 @@
                     row.className = 'at-risk';
                     visual.circle.setStyle({ color: '#888888', fillColor: '#f1c40f', fillOpacity: 0.15, weight: 1.2 });
                 }
-
                 row.insertCell(0).innerText = s.id;
                 row.insertCell(1).innerText = s.cota + "M";
                 row.insertCell(2).innerText = nivel.toFixed(2) + "M";
@@ -199,6 +229,7 @@
     }
 
     function simular() {
+        if (autoPilot) runAutoPilot();
         const flow = parseInt(document.getElementById('inpFlow').value);
         const gates = parseInt(document.getElementById('inpGates').value) / 100;
         hC += ( (14.8 + (flow / 1850) * (1.1 - gates)) - hC ) * 0.03;
