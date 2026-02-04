@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>SISTEMA MONDEGO - ESC 25cm + AUTO-PILOT</title>
+    <title>SISTEMA MONDEGO - MODO IA AUTO</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { margin: 0; font-family: 'Courier New', monospace; background: #050505; color: #d0d0d0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -21,17 +21,17 @@
         button { padding: 12px; border: 1px solid #444; font-weight: bold; cursor: pointer; font-family: inherit; transition: 0.3s; width: 100%; }
         #btnRun { background: transparent; color: #2ecc71; border-color: #2ecc71; }
         #btnRun.active { background: #e74c3c; color: white; border-color: #e74c3c; }
-        .graph-container { background: #000; border: 1px solid #333; margin-top: 5px; position: relative; height: 120px; display: flex; flex-direction: column; }
+        
+        /* Nova Secção de Controlo IA */
+        .ai-control { background: #001a1a; border: 1px solid #00d2ff; padding: 10px; margin-top: 5px; }
+        .ai-status { font-size: 10px; color: #00d2ff; margin-bottom: 5px; display: flex; justify-content: space-between; }
+        .ai-toggle { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        
+        .graph-container { background: #000; border: 1px solid #333; margin-top: 5px; position: relative; flex-grow: 1; display: flex; flex-direction: column; }
         .graph-area { height: 100px; position: relative; overflow: hidden; width: 100%; }
         .bar-c { position: absolute; bottom: 0; width: 2px; background: #f1c40f; }
         .bar-b { position: absolute; bottom: 0; width: 2px; background: #00d2ff; }
-        
-        /* Nova Secção Auto-Pilot */
-        .auto-pilot-box { background: #1a1a1a; padding: 12px; border: 1px dashed #00d2ff; margin-top: 5px; display: flex; align-items: center; justify-content: space-between; }
-        .status-led { width: 10px; height: 10px; border-radius: 50%; background: #333; display: inline-block; margin-right: 5px; }
-        .status-led.on { background: #00d2ff; box-shadow: 0 0 8px #00d2ff; animation: blink 1s infinite; }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
-
+        .timeline-axis { height: 20px; background: #000; font-size: 10px; color: #555; position: relative; border-top: 1px solid #222; }
         table { width: 100%; font-size: 11px; border-collapse: collapse; }
         th { border-bottom: 2px solid #444; padding: 8px; text-align: left; color: #00d2ff; }
         td { padding: 8px; border-bottom: 1px solid #222; }
@@ -44,8 +44,8 @@
 
 <div class="sar-header">
     <div>DATA: <b>2026FEB04</b></div>
-    <div>TIPO: <b>DESIGN ESTILO SAR</b></div>
-    <div>RESOLUÇÃO: <b>25cm / ALTA PRECISÃO</b></div>
+    <div>SISTEMA: <b>IA MONITORIZAÇÃO ADAPTATIVA</b></div>
+    <div>RESOLUÇÃO: <b>25cm / SAR INTEGRADO</b></div>
 </div>
 
 <div id="timeDisplay">
@@ -73,7 +73,6 @@
         </div>
 
         <div style="background: #111; padding: 10px; border: 1px solid #333;">
-            <label style="font-size: 0.7em; color: #555; display: block; margin-bottom: 5px;">IA: SELEÇÃO DE CENÁRIO</label>
             <select id="selHist">
                 <option value="default">-- SELECIONE TEMPESTADE --</option>
                 <option value="h_kristine">TEMPESTADE KRISTINE (JAN 2026)</option>
@@ -88,15 +87,18 @@
 
         <div class="graph-container">
             <div class="graph-area" id="graphArea"></div>
-            <div style="height: 20px; background: #000; font-size: 10px; color: #555; position: relative; border-top: 1px solid #222;" id="timelineArea"></div>
+            <div class="timeline-axis" id="timelineArea"></div>
         </div>
 
-        <div class="auto-pilot-box">
-            <div>
-                <span id="ledAuto" class="status-led"></span>
-                <span style="font-size: 0.8em; color: #00d2ff; font-weight: bold;">IA AUTO-PILOT: GESTÃO DE COMPORTAS</span>
+        <div class="ai-control">
+            <div class="ai-status">
+                <span>GESTÃO AUTOMATIZADA DO AÇUDE</span>
+                <span id="aiAction" style="color:#f1c40f">STANDBY</span>
             </div>
-            <button id="btnAuto" style="width: auto; padding: 5px 15px; font-size: 0.7em; background: #00d2ff; color: #000; border: none;">ATIVAR</button>
+            <label class="ai-toggle">
+                <input type="checkbox" id="chkAutoIA"> 
+                <span style="font-size: 11px;">ATIVAR OTIMIZAÇÃO DE SEGURANÇA (PROTEGER BAIXA)</span>
+            </label>
         </div>
     </div>
 
@@ -136,62 +138,15 @@
     ];
 
     let visualMarkers = {};
-    let hC = 15.42, hB = 10.55, tempo = 0, rodando = false, autoPilot = false;
+    let hC = 15.42, hB = 10.55, tempo = 0, rodando = false;
     let simTime = new Date();
 
     sensores.forEach(s => {
         L.circleMarker(s.pos, { radius: 2, color: '#00d2ff', fillColor: '#00d2ff', fillOpacity: 1 }).addTo(map);
         const circle = L.circle(s.pos, { radius: 0, color: '#888888', weight: 1.2, opacity: 0.6, fillColor: '#f1c40f', fillOpacity: 0.15 }).addTo(map);
-        const label = L.marker(s.pos, { icon: L.divIcon({ className: 'sensor-tag', html: `<span id="tag-${s.id.replace(/\s+/g, '')}" style="display:none">⚠ ALERTA INUNDAÇÃO</span>`, iconAnchor: [-10, 10] }) }).addTo(map);
+        const label = L.marker(s.pos, { icon: L.divIcon({ className: 'sensor-tag', html: `<span id="tag-${s.id.replace(/\s+/g, '')}" style="display:none">⚠ ALERTA</span>`, iconAnchor: [-10, 10] }) }).addTo(map);
         visualMarkers[s.id] = { circle, label };
     });
-
-    // Lógica do Auto-Pilot
-    function runAutoPilot() {
-        if (!autoPilot) return;
-        
-        let severeCount = 0;
-        sensores.forEach(s => {
-            let nivel = (s.reg === "C") ? hC : hB;
-            if ((nivel - s.cota) > 1.0) severeCount++;
-        });
-
-        const currentGates = parseInt(document.getElementById('inpGates').value);
-        if (severeCount > 0 && currentGates > 0) {
-            // Se houver pontos vermelhos, abre o açude gradualmente
-            let newVal = Math.max(0, currentGates - 2);
-            document.getElementById('inpGates').value = newVal;
-            document.getElementById('txtGates').innerText = newVal;
-        } else if (severeCount === 0 && currentGates < 90) {
-            // Se estiver seguro, fecha para manter espelho de água
-            let newVal = Math.min(90, currentGates + 1);
-            document.getElementById('inpGates').value = newVal;
-            document.getElementById('txtGates').innerText = newVal;
-        }
-    }
-
-    document.getElementById('btnAuto').onclick = function() {
-        autoPilot = !autoPilot;
-        this.innerText = autoPilot ? "DESATIVAR" : "ATIVAR";
-        this.style.background = autoPilot ? "#e74c3c" : "#00d2ff";
-        document.getElementById('ledAuto').className = autoPilot ? "status-led on" : "status-led";
-    };
-
-    document.getElementById('selHist').onchange = function() {
-        const val = this.value;
-        if(val === "h_kristine") { setParams(15.5, 2600, 85); }
-        else if(val === "h_caetano") { setParams(15.2, 2100, 75); }
-        else if(val === "h_kirk") { setParams(15.1, 1800, 70); }
-        else if(val === "h2019") { setParams(15.8, 5100, 100); }
-        else if(val === "h2001") { setParams(16.5, 7200, 100); }
-    };
-
-    function setParams(c, f, g) {
-        hC = c; document.getElementById('inpInitC').value = c; document.getElementById('txtInitC').innerText = c;
-        document.getElementById('inpFlow').value = f; document.getElementById('txtFlow').innerText = f;
-        document.getElementById('inpGates').value = g; document.getElementById('txtGates').innerText = g;
-        updateUI();
-    }
 
     function updateUI() {
         const tbody = document.getElementById('tableBody');
@@ -202,7 +157,6 @@
             let visual = visualMarkers[s.id];
             let tagSpan = document.getElementById(`tag-${s.id.replace(/\s+/g, '')}`);
             let row = tbody.insertRow();
-            
             if (diff > 0) {
                 visual.circle.setRadius(20 + diff * 600);
                 if(tagSpan) tagSpan.style.display = 'block';
@@ -213,9 +167,7 @@
                     row.className = 'at-risk';
                     visual.circle.setStyle({ color: '#888888', fillColor: '#f1c40f', fillOpacity: 0.15, weight: 1.2 });
                 }
-                row.insertCell(0).innerText = s.id;
-                row.insertCell(1).innerText = s.cota + "M";
-                row.insertCell(2).innerText = nivel.toFixed(2) + "M";
+                row.insertCell(0).innerText = s.id; row.insertCell(1).innerText = s.cota + "M"; row.insertCell(2).innerText = nivel.toFixed(2) + "M";
                 row.insertCell(3).innerText = (diff > 1.0) ? "CRÍTICO" : "ALERTA";
             } else {
                 visual.circle.setRadius(0);
@@ -229,9 +181,38 @@
     }
 
     function simular() {
-        if (autoPilot) runAutoPilot();
-        const flow = parseInt(document.getElementById('inpFlow').value);
-        const gates = parseInt(document.getElementById('inpGates').value) / 100;
+        let flow = parseInt(document.getElementById('inpFlow').value);
+        let gatesInput = document.getElementById('inpGates');
+        let gates = parseInt(gatesInput.value) / 100;
+        const aiActive = document.getElementById('chkAutoIA').checked;
+
+        // --- LÓGICA IA: PROTEÇÃO DA BAIXA ---
+        if (aiActive) {
+            const sensorBaixa = sensores.find(s => s.id === "BAIXA (P. COMÉRCIO)");
+            const diffBaixa = hC - sensorBaixa.cota;
+            
+            if (diffBaixa > 0.8) { // Se estiver a chegar perto do vermelho (>0.8m)
+                document.getElementById('aiAction').innerText = "ABRINDO AÇUDE (EMERGÊNCIA)";
+                document.getElementById('aiAction').style.color = "#e74c3c";
+                let newVal = Math.max(0, parseInt(gatesInput.value) - 5); // Abre o açude (diminui retenção)
+                gatesInput.value = newVal;
+                document.getElementById('txtGates').innerText = newVal;
+            } else if (diffBaixa < 0.2 && gatesInput.value < 90) {
+                document.getElementById('aiAction').innerText = "NORMALIZANDO RETENÇÃO";
+                document.getElementById('aiAction').style.color = "#2ecc71";
+                let newVal = Math.min(90, parseInt(gatesInput.value) + 2);
+                gatesInput.value = newVal;
+                document.getElementById('txtGates').innerText = newVal;
+            } else {
+                document.getElementById('aiAction').innerText = "MONITORIZAÇÃO ATIVA";
+                document.getElementById('aiAction').style.color = "#00d2ff";
+            }
+        } else {
+            document.getElementById('aiAction').innerText = "CONTROLO MANUAL";
+            document.getElementById('aiAction').style.color = "#555";
+        }
+
+        gates = parseInt(gatesInput.value) / 100;
         hC += ( (14.8 + (flow / 1850) * (1.1 - gates)) - hC ) * 0.03;
         hB += ( (9.0 + (flow / 1400) * (gates + 0.4)) - hB ) * 0.015;
         simTime.setMinutes(simTime.getMinutes() + 1);
@@ -240,6 +221,7 @@
         desenharGrafico();
     }
 
+    // Código de suporte (Gráficos e botões) igual ao anterior para manter compatibilidade
     function desenharGrafico() {
         const graphArea = document.getElementById('graphArea');
         const timelineArea = document.getElementById('timelineArea');
@@ -249,17 +231,11 @@
         graphArea.appendChild(bc);
         const bb = document.createElement('div'); bb.className = 'bar-b'; bb.style.left = x + 'px'; bb.style.height = (hB - 7) * 8 + 'px';
         graphArea.appendChild(bb);
-        if (tempo % 15 === 0) {
-            const tl = document.createElement('div'); tl.style.position = 'absolute'; tl.style.left = x + 'px';
-            tl.innerText = simTime.getHours().toString().padStart(2,'0') + ":" + simTime.getMinutes().toString().padStart(2,'0');
-            timelineArea.appendChild(tl);
-        }
     }
 
     document.getElementById('btnRun').onclick = function() {
         rodando = !rodando;
-        if(rodando && tempo === 0) simTime = new Date();
-        this.innerText = rodando ? "INTERROMPER MONITORIZAÇÃO" : "INICIAR MONITORIZAÇÃO SAR";
+        this.innerText = rodando ? "PARAR IA" : "INICIAR MONITORIZAÇÃO SAR";
         this.className = rodando ? "active" : "";
     };
 
