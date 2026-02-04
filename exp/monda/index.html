@@ -167,51 +167,51 @@
         document.getElementById('elapsed').innerText = `T+ ${tempo} MIN`;
     }
 
-    function simular() {
-        let flow = parseInt(document.getElementById('inpFlow').value);
-        let gatesInput = document.getElementById('inpGates');
-        let selectedMode = document.querySelector('input[name="iaMode"]:checked').value;
-        let msg = document.getElementById('aiMsg');
+function simular() {
+    let flow = parseInt(document.getElementById('inpFlow').value);
+    let gatesInput = document.getElementById('inpGates');
+    let mode = document.querySelector('input[name="iaMode"]:checked').value;
+    let msg = document.getElementById('aiMsg');
 
-        if (selectedMode === "baixa") {
-            const baixaNivel = hC - 14.2; 
-            if (baixaNivel > 0.7) {
-                msg.innerText = "IA: Abrindo comportas para salvar Baixa...";
-                gatesInput.value = Math.max(0, gatesInput.value - 4);
-            } else if (baixaNivel < 0.2) {
-                gatesInput.value = Math.min(90, parseInt(gatesInput.value) + 1);
-            }
-        } 
-        else if (selectedMode === "total") {
-            let diffBaixa = hC - 14.2;
-            if (diffBaixa > 0.9) { 
-                gatesInput.value = Math.max(0, gatesInput.value - 5);
-                msg.innerText = "IA: Proteção Crítica Total!";
-            } else {
-                if (hC > hB + 4) {
-                    gatesInput.value = Math.max(10, gatesInput.value - 2);
-                    msg.innerText = "IA: Equilibrando Bacia...";
-                } else if (hB > hC - 3) {
-                    gatesInput.value = Math.min(95, parseInt(gatesInput.value) + 2);
-                    msg.innerText = "IA: Retendo Caudal Superior...";
-                }
-            }
+    // 1. LÓGICA DO PILOTO (IA):
+    // Agora, para salvar Coimbra, a IA "PUXA" o slider para o 100 (Abertura Máxima)
+    if (mode === "baixa") {
+        if (hC > 14.2) { 
+            msg.innerText = "IA: Nível Crítico! Abrindo comportas para escoar Coimbra...";
+            // Incrementa a abertura para escoar
+            gatesInput.value = Math.min(100, parseInt(gatesInput.value) + 5); 
         } else {
-            msg.innerText = "CONTROLO MANUAL ATIVO";
+            msg.innerText = "IA: Nível estabilizado.";
         }
-
-        let gates = parseInt(gatesInput.value) / 100;
-        document.getElementById('txtGates').innerText = gatesInput.value;
-
-        hC += ( (14.8 + (flow / 1850) * (1.1 - gates)) - hC ) * 0.03;
-        hB += ( (9.0 + (flow / 1400) * (gates + 0.4)) - hB ) * 0.015;
-        
-        simTime.setMinutes(simTime.getMinutes() + 1);
-        tempo++;
-        updateUI();
-        desenharGrafico();
+    } else if (mode === "total") {
+        if (hC > 15.0) {
+            gatesInput.value = Math.min(100, parseInt(gatesInput.value) + 3);
+            msg.innerText = "IA: Prioridade Coimbra (Abrindo)";
+        } else if (hB > 12.0) {
+            gatesInput.value = Math.max(0, parseInt(gatesInput.value) - 3);
+            msg.innerText = "IA: Prioridade Baixo Mondego (Fechando)";
+        }
     }
 
+    // 2. FÍSICA CORRIGIDA:
+    let abertura = parseInt(gatesInput.value) / 100;
+    document.getElementById('txtGates').innerText = gatesInput.value;
+
+    // COIMBRA: O nível baixa quando a abertura aumenta (1 - abertura)
+    // Se abertura = 1 (100%), o termo (1-1)*5 desaparece e hC desce.
+    let alvoHC = 13.0 + (flow / 2500) + ((1 - abertura) * 5.5); 
+    hC += (alvoHC - hC) * 0.15; // Velocidade de resposta
+
+    // BAIXO MONDEGO: O nível sobe quando a abertura aumenta (recebe a água)
+    let alvoHB = 8.5 + (flow / 3500) + (abertura * 6.0);
+    hB += (alvoHB - hB) * 0.1;
+
+    // 3. ATUALIZAÇÃO DE TEMPO
+    simTime.setMinutes(simTime.getMinutes() + 1);
+    tempo++;
+    updateUI();
+    desenharGrafico();
+}
     function desenharGrafico() {
         const area = document.getElementById('graphArea');
         const x = (tempo * 2) % area.offsetWidth;
