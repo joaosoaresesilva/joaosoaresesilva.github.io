@@ -18,13 +18,13 @@
         .slider-box b { color: #f1c40f; }
         input[type=range] { width: 100%; accent-color: #f1c40f; }
         
-        /* Nova Secção de Automação */
+        /* Nova Secção de Automação com cores brancas */
         .automation-hub { background: #001a1a; border: 1px solid #00d2ff; padding: 12px; border-radius: 4px; }
-        .hub-title { font-size: 10px; color: #00d2ff; font-weight: bold; margin-bottom: 10px; text-transform: uppercase; border-bottom: 1px solid #004d4d; padding-bottom: 4px; }
-        .mode-option { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 11px; padding: 6px; border-radius: 3px; transition: 0.3s; }
-        .mode-option:hover { background: rgba(0, 210, 255, 0.1); }
+        .hub-title { font-size: 10px; color: #ffffff; font-weight: bold; margin-bottom: 10px; text-transform: uppercase; border-bottom: 1px solid #004d4d; padding-bottom: 4px; }
+        .mode-option { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 11px; padding: 6px; border-radius: 3px; transition: 0.3s; color: #ffffff; }
+        .mode-option:hover { background: rgba(255, 255, 255, 0.1); }
         .mode-option input { cursor: pointer; }
-        .status-msg { font-size: 10px; color: #f1c40f; margin-top: 5px; font-style: italic; }
+        .status-msg { font-size: 10px; color: #ffffff; margin-top: 5px; font-style: italic; opacity: 0.8; }
 
         .graph-container { background: #000; border: 1px solid #333; height: 100px; position: relative; display: flex; flex-direction: column; }
         .graph-area { flex: 1; position: relative; overflow: hidden; }
@@ -36,7 +36,6 @@
         td { padding: 8px; border-bottom: 1px solid #222; }
         .at-risk { background: rgba(241, 196, 15, 0.1); color: #f1c40f; }
         .severe-risk { background: rgba(231, 76, 60, 0.15); color: #e74c3c; font-weight: bold; }
-        .sensor-tag { font-size: 10px; font-weight: bold; color: #f1c40f; text-shadow: 2px 2px #000; }
     </style>
 </head>
 <body>
@@ -76,18 +75,18 @@
             
             <label class="mode-option">
                 <input type="radio" name="iaMode" value="baixa"> 
-                <span style="color: #f1c40f;">PILOTO: PROTEÇÃO DA BAIXA (Coimbra)</span>
+                <span>PILOTO: PROTEÇÃO DA BAIXA (Coimbra)</span>
             </label>
             
             <label class="mode-option">
                 <input type="radio" name="iaMode" value="total"> 
-                <span style="color: #2ecc71;">PILOTO: MINIMIZAR IMPACTO TOTAL (Reduzir Vermelhos)</span>
+                <span>PILOTO: MINIMIZAR IMPACTO TOTAL (Reduzir Vermelhos)</span>
             </label>
 
             <div id="aiMsg" class="status-msg">Aguardando comando do utilizador...</div>
         </div>
         
-        <button id="btnRun" style="background: transparent; color: #2ecc71; border-color: #2ecc71;">INICIAR MONITORIZAÇÃO</button>
+        <button id="btnRun" style="background: transparent; color: #2ecc71; border-color: #2ecc71; padding: 12px; font-weight: bold; cursor: pointer; font-family: inherit;">INICIAR MONITORIZAÇÃO</button>
     </div>
 
     <div class="sidebar">
@@ -138,7 +137,6 @@
     function updateUI() {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = '';
-        let countRed = 0;
         
         sensores.forEach(s => {
             let nivel = (s.reg === "C") ? hC : hB;
@@ -149,7 +147,6 @@
             if (diff > 0) {
                 visual.circle.setRadius(20 + diff * 600);
                 if (diff > 1.0) {
-                    countRed++;
                     row.className = 'severe-risk';
                     visual.circle.setStyle({ color: '#e74c3c', fillColor: '#e74c3c', fillOpacity: 0.3 });
                 } else {
@@ -164,8 +161,10 @@
                 row.insertCell(2).innerText = nivel.toFixed(2) + "M"; row.insertCell(3).innerText = "OK";
             }
         });
+        
+        // CORREÇÃO: Atualização do tempo decorrido e relógio
         document.getElementById('simClock').innerText = simTime.toLocaleTimeString('pt-PT');
-        return countRed;
+        document.getElementById('elapsed').innerText = `T+ ${tempo} MIN`;
     }
 
     function simular() {
@@ -174,32 +173,27 @@
         let selectedMode = document.querySelector('input[name="iaMode"]:checked').value;
         let msg = document.getElementById('aiMsg');
 
-        // --- LÓGICA DE PILOTO AUTOMÁTICO ---
         if (selectedMode === "baixa") {
             const baixaNivel = hC - 14.2; 
-            if (baixaNivel > 0.7) { // Se a Baixa corre risco de vermelho
-                msg.innerText = "ALGORITMO BAIXA: Aliviando pressão em Coimbra...";
+            if (baixaNivel > 0.7) {
+                msg.innerText = "IA: Abrindo comportas para salvar Baixa...";
                 gatesInput.value = Math.max(0, gatesInput.value - 4);
             } else if (baixaNivel < 0.2) {
                 gatesInput.value = Math.min(90, parseInt(gatesInput.value) + 1);
             }
         } 
         else if (selectedMode === "total") {
-            // Algoritmo para minimizar círculos vermelhos totais
-            // Ele testa se abrir ou fechar o açude aumenta o somatório de risco
             let diffBaixa = hC - 14.2;
             if (diffBaixa > 0.9) { 
-                // Prioridade absoluta: Baixa nunca pode ficar vermelha
                 gatesInput.value = Math.max(0, gatesInput.value - 5);
-                msg.innerText = "ALGORITMO TOTAL: Protegendo Baixa (Crítico)";
+                msg.innerText = "IA: Proteção Crítica Total!";
             } else {
-                // Equilíbrio: Tentar manter hC e hB estáveis
-                if (hC > hB + 4) { // Coimbra muito alta em relação ao Baixo Mondego
+                if (hC > hB + 4) {
                     gatesInput.value = Math.max(10, gatesInput.value - 2);
-                    msg.innerText = "ALGORITMO TOTAL: Distribuindo caudal para jusante";
-                } else if (hB > hC - 3) { // Baixo Mondego a sofrer demais
+                    msg.innerText = "IA: Equilibrando Bacia...";
+                } else if (hB > hC - 3) {
                     gatesInput.value = Math.min(95, parseInt(gatesInput.value) + 2);
-                    msg.innerText = "ALGORITMO TOTAL: Retendo água para proteger Baixo Mondego";
+                    msg.innerText = "IA: Retendo Caudal Superior...";
                 }
             }
         } else {
@@ -209,7 +203,6 @@
         let gates = parseInt(gatesInput.value) / 100;
         document.getElementById('txtGates').innerText = gatesInput.value;
 
-        // Física Simplificada do Rio
         hC += ( (14.8 + (flow / 1850) * (1.1 - gates)) - hC ) * 0.03;
         hB += ( (9.0 + (flow / 1400) * (gates + 0.4)) - hB ) * 0.015;
         
