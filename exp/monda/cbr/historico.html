@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>SISTEMA - GESTÃO ADAPTATIVA</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; font-family: 'Courier New', monospace; background: #050505; color: #d0d0d0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        #map { height: 35vh; width: 100%; background: #111; border-bottom: 2px solid #333; }
+        .sar-header { background: rgba(0,0,0,0.9); padding: 5px 20px; display: flex; justify-content: space-between; font-size: 12px; border-bottom: 1px solid #444; color: #aaa; }
+        .sar-header b { color: #00d2ff; }
+        #timeDisplay { position: absolute; top: 50px; right: 20px; z-index: 1000; background: rgba(10, 10, 10, 0.9); padding: 10px; border: 1px solid #f1c40f; color: #f1c40f; text-align: right; }
+        #simClock { font-size: 1.6em; font-weight: bold; display: block; }
+        .main-container { display: flex; flex: 1; overflow: hidden; background: #0a0a0a; }
+        .panel { flex: 1.6; padding: 15px; display: flex; flex-direction: column; gap: 8px; border-right: 1px solid #222; }
+        .sidebar { flex: 1.4; padding: 15px; background: #050505; overflow-y: auto; }
+        .slider-box { background: #111; padding: 8px; border: 1px solid #333; font-size: 0.8em; }
+        .slider-box b { color: #f1c40f; }
+        input[type=range] { width: 100%; accent-color: #f1c40f; }
+        
+        .automation-hub { background: #001a1a; border: 1px solid #00d2ff; padding: 12px; border-radius: 4px; }
+        .hub-title { font-size: 10px; color: #ffffff; font-weight: bold; margin-bottom: 10px; text-transform: uppercase; border-bottom: 1px solid #004d4d; padding-bottom: 4px; }
+        .mode-option { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 11px; padding: 6px; border-radius: 3px; transition: 0.3s; color: #ffffff; }
+        .mode-option:hover { background: rgba(255, 255, 255, 0.1); }
+        .status-msg { font-size: 10px; color: #ffffff; margin-top: 5px; font-style: italic; opacity: 0.8; }
+
+        .graph-container { background: #000; border: 1px solid #333; height: 100px; position: relative; display: flex; flex-direction: column; }
+        .graph-area { flex: 1; position: relative; overflow: hidden; }
+        .bar-c { position: absolute; bottom: 0; width: 2px; background: #f1c40f; }
+        .bar-b { position: absolute; bottom: 0; width: 2px; background: #00d2ff; }
+        
+        table { width: 100%; font-size: 11px; border-collapse: collapse; }
+        th { border-bottom: 2px solid #444; padding: 8px; text-align: left; color: #00d2ff; }
+        td { padding: 8px; border-bottom: 1px solid #222; }
+        .at-risk { background: rgba(241, 196, 15, 0.1); color: #f1c40f; }
+        .severe-risk { background: rgba(231, 76, 60, 0.15); color: #e74c3c; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="sar-header">
+    <div>DADOS: <b>2026FEB04</b></div>
+    <div>ALGORITMO: <b>PILOTO AUTOMÁTICO ADAPTATIVO</b></div>
+    <div>FOCO: <b>CALIBRAÇÃO HISTÓRICA (2600 m³/s)</b></div>
+</div>
+
+<div id="timeDisplay">
+    <span id="simClock">--:--:--</span>
+    <small id="elapsed">T+ 0 MIN</small>
+</div>
+
+<div id="map"></div>
+
+<div class="main-container">
+    <div class="panel">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+            <div class="slider-box">COTA_RIO: <b id="txtInitC">15.42</b>m<input type="range" id="inpInitC" min="13.5" max="23" step="0.01" value="15.42"></div>
+            <div class="slider-box">CAUDAL: <b id="txtFlow">2100</b><input type="range" id="inpFlow" min="500" max="12000" step="100" value="2100"></div>
+            <div class="slider-box">AÇUDE: <b id="txtGates">90</b>%<input type="range" id="inpGates" min="0" max="100" value="90"></div>
+        </div>
+
+        <div class="graph-container">
+            <div class="graph-area" id="graphArea"></div>
+        </div>
+
+        <div class="automation-hub">
+            <div class="hub-title">Gestão de Crise Calibrada</div>
+            <label class="mode-option"><input type="radio" name="iaMode" value="manual" checked> <span>MODO MANUAL</span></label>
+            <label class="mode-option"><input type="radio" name="iaMode" value="baixa"> <span>PILOTO: PROTEÇÃO DA BAIXA</span></label>
+            <label class="mode-option"><input type="radio" name="iaMode" value="total"> <span>PILOTO: IMPACTO TOTAL</span></label>
+            <div id="aiMsg" class="status-msg">Aguardando comando...</div>
+        </div>
+        
+        <button id="btnRun" style="background: transparent; color: #2ecc71; border-color: #2ecc71; padding: 12px; font-weight: bold; cursor: pointer; font-family: inherit;">INICIAR MONITORIZAÇÃO</button>
+    </div>
+
+    <div class="sidebar">
+        <h4 style="margin: 0 0 10px 0; color:#f1c40f; font-size: 0.9em;">📡 SENSORES DE COTA</h4>
+        <table id="mainTable">
+            <thead><tr><th>LOCAL</th><th>COTA</th><th>NÍVEL</th><th>ESTADO</th></tr></thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const map = L.map('map').setView([40.1850, -8.5500], 12); 
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    const sensores = [
+        {id: "M. STA CLARA", pos: [40.2018, -8.4340], cota: 19.0, reg: "C"},
+        {id: "BAIXA (PORTAGEM)", pos: [40.2092, -8.4298], cota: 21.0, reg: "C"},
+        {id: "M. STA CRUZ", pos: [40.2108, -8.4285], cota: 19.0, reg: "C"},
+        {id: "ESTADIO UNIV.", pos: [40.2045, -8.4345], cota: 21.0, reg: "C"},
+        {id: "PARQUE VERDE", pos: [40.2035, -8.4275], cota: 20.0, reg: "C"},
+        {id: "PTE STA CLARA", pos: [40.2085, -8.4285], cota: 23.0, reg: "C"},
+        {id: "CHOUPAL", pos: [40.2220, -8.4480], cota: 14.8, reg: "C"}, 
+        {id: "R. ADELINO VEIGA", pos: [40.209079, -8.43199], cota: 20.0, reg: "C"},
+        {id: "R. FERREIRA BORGES", pos: [40.20918, -8.42912], cota: 20.0, reg: "C"},
+        {id: "DOCAS RIO", pos: [40.202632, -8.426271], cota: 19.0, reg: "C"},
+        {id: "R. DO GORGULHÃO", pos: [40.216701, -8.456282], cota: 16.0, reg: "C"},
+        {id: "ALFARELOS (ESTAÇÃO)", pos: [40.1530, -8.6420], cota: 9.5, reg: "B"},
+    ];
+
+    let visualMarkers = {};
+    let hC = 15.42, hB = 10.55, tempo = 0, rodando = false;
+    let simTime = new Date();
+
+    sensores.forEach(s => {
+        const circle = L.circle(s.pos, { radius: 0, color: '#ff0000', weight: 1, opacity: 0.4, fillColor: '#f1c40f', fillOpacity: 0.2 }).addTo(map);
+        const labelIcon = L.divIcon({
+            className: 'custom-label',
+            html: `<div style="display: flex; align-items: center;"><div style="width: 8px; height: 8px; background: #00ff00; border: 2px solid black; border-radius: 50%;"></div><span style="color: white; font-weight: bold; font-size: 10px; margin-left: 5px; text-shadow: 2px 2px 2px black; white-space: nowrap;">${s.id}</span></div>`,
+            iconSize: [100, 20], iconAnchor: [4, 10]
+        });
+        L.marker(s.pos, { icon: labelIcon, interactive: false, zIndexOffset: 1000 }).addTo(map);
+        visualMarkers[s.id] = { circle };
+    });
+
+    function updateUI() {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+        sensores.forEach(s => {
+            let nivel = (s.reg === "C") ? hC : hB;
+            let diff = nivel - s.cota;
+            let visual = visualMarkers[s.id];
+            let row = tbody.insertRow();
+            if (diff > 0) {
+                visual.circle.setRadius(20 + diff * 600);
+                if (diff > 1.0) { row.className = 'severe-risk'; visual.circle.setStyle({ color: '#e74c3c', fillColor: '#e74c3c', fillOpacity: 0.3 }); }
+                else { row.className = 'at-risk'; visual.circle.setStyle({ color: '#888888', fillColor: '#f1c40f', fillOpacity: 0.15 }); }
+                row.insertCell(0).innerText = s.id; row.insertCell(1).innerText = s.cota + "M"; row.insertCell(2).innerText = nivel.toFixed(2) + "M"; row.insertCell(3).innerText = (diff > 1.0) ? "CRÍTICO" : "ALERTA";
+            } else {
+                visual.circle.setRadius(0);
+                row.insertCell(0).innerText = s.id; row.insertCell(1).innerText = s.cota + "M"; row.insertCell(2).innerText = nivel.toFixed(2) + "M"; row.insertCell(3).innerText = "OK";
+            }
+        });
+        document.getElementById('simClock').innerText = simTime.toLocaleTimeString('pt-PT');
+        document.getElementById('elapsed').innerText = `T+ ${tempo} MIN`;
+    }
+
+    function simular() {
+        let flow = parseInt(document.getElementById('inpFlow').value);
+        let gatesInput = document.getElementById('inpGates');
+        let mode = document.querySelector('input[name="iaMode"]:checked').value;
+        let msg = document.getElementById('aiMsg');
+
+        if (mode === "baixa") {
+            if (hC > 19.5) { msg.innerText = "IA: Abrindo Açude (Prioridade Coimbra)"; gatesInput.value = Math.min(100, parseInt(gatesInput.value) + 5); }
+        } else if (mode === "total") {
+            if (hC > 20.5) gatesInput.value = Math.min(100, parseInt(gatesInput.value) + 4);
+            else if (hB > 14.0) gatesInput.value = Math.max(0, parseInt(gatesInput.value) - 2);
+        }
+
+        let abertura = parseInt(gatesInput.value) / 100;
+        document.getElementById('txtGates').innerText = gatesInput.value;
+
+        // FÓRMULAS CALIBRADAS PARA REALISMO HISTÓRICO
+        let alvoHC = 14.0 + (flow / 1200) + ((1 - abertura) * 5.5); 
+        hC += (alvoHC - hC) * 0.15; 
+
+        let alvoHB = 8.0 + (flow / 1500) + (abertura * 4.5);
+        hB += (alvoHB - hB) * 0.1;
+
+        simTime.setMinutes(simTime.getMinutes() + 1);
+        tempo++;
+        updateUI();
+        desenharGrafico();
+    }
+
+    function desenharGrafico() {
+        const area = document.getElementById('graphArea');
+        const x = (tempo * 2) % area.offsetWidth;
+        if (x < 2) area.innerHTML = '';
+        const bc = document.createElement('div'); bc.className = 'bar-c'; bc.style.left = x + 'px'; bc.style.height = Math.max(0, (hC - 13) * 8) + 'px'; area.appendChild(bc);
+        const bb = document.createElement('div'); bb.className = 'bar-b'; bb.style.left = x + 'px'; bb.style.height = Math.max(0, (hB - 7) * 6) + 'px'; area.appendChild(bb);
+    }
+
+    document.getElementById('btnRun').onclick = function() {
+        rodando = !rodando;
+        this.innerText = rodando ? "INTERROMPER" : "INICIAR MONITORIZAÇÃO";
+        this.style.color = rodando ? "#e74c3c" : "#2ecc71";
+    };
+
+    document.getElementById('inpInitC').oninput = function() { hC = parseFloat(this.value); document.getElementById('txtInitC').innerText = hC.toFixed(2); updateUI(); };
+    document.getElementById('inpFlow').oninput = function() { document.getElementById('txtFlow').innerText = this.value; };
+    document.getElementById('inpGates').oninput = function() { document.getElementById('txtGates').innerText = this.value; };
+
+    setInterval(() => { if(rodando) simular(); }, 1000);
+    updateUI();
+</script>
+</body>
+</html>
