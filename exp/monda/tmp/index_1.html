@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>SISTEMA MONDEGO - ESC 25cm</title>
+    <title>SISTEMA MONDEGO - MODO SAR 25cm</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { margin: 0; font-family: 'Courier New', monospace; background: #050505; color: #d0d0d0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -30,7 +30,7 @@
         th { border-bottom: 2px solid #444; padding: 8px; text-align: left; color: #00d2ff; }
         td { padding: 8px; border-bottom: 1px solid #222; }
         .at-risk { background: rgba(241, 196, 15, 0.1); color: #f1c40f; font-weight: bold; }
-        .severe-risk { background: rgba(231, 76, 60, 0.15); color: #e74c3c; font-weight: bold; }
+        .danger { color: #e74c3c !important; }
         .sensor-tag { font-size: 10px; font-weight: bold; color: #f1c40f; text-shadow: 2px 2px #000; white-space: nowrap; }
     </style>
 </head>
@@ -38,8 +38,8 @@
 
 <div class="sar-header">
     <div>DATA: <b>2026FEB04</b></div>
-    <div>TIPO: <b>DESIGN ESTILO SAR</b></div>
-    <div>RESOLUÇÃO: <b>25cm / ALTA PRECISÃO</b></div>
+    <div>TIPO: <b>SAR (DYNAMICS ON)</b></div>
+    <div>RESOLUÇÃO: <b>25cm / LIGHT OVERLAY</b></div>
 </div>
 
 <div id="timeDisplay">
@@ -74,7 +74,7 @@
                 <option value="h_caetano">TEMPESTADE CAETANO (NOV 2024)</option>
                 <option value="h_kirk">TEMPESTADE KIRK (OUT 2024)</option>
                 <option value="h2019">TEMPESTADE ELSA (DEZ 2019)</option>
-                <option value="h2001">CHEIA HISTÓRICA 2001</option>
+                <option value="h2001">CHEIA HISTÓRICA 2001 (CRÍTICO)</option>
             </select>
         </div>
         
@@ -97,7 +97,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    const map = L.map('map').setView([40.1850, -8.6000], 11); 
+    const map = L.map('map').setView([40.1800, -8.6000], 11); 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
     const sensores = [
@@ -128,22 +128,63 @@
     sensores.forEach(s => {
         L.circleMarker(s.pos, { radius: 2, color: '#00d2ff', fillColor: '#00d2ff', fillOpacity: 1 }).addTo(map);
         
+        // Círculo com contorno leve por defeito
         const circle = L.circle(s.pos, { 
             radius: 0, 
             color: '#888888', 
-            weight: 1.2,        
+            weight: 1.2, 
             opacity: 0.6,
             fillColor: '#f1c40f',
             fillOpacity: 0.15 
         }).addTo(map);
 
         const label = L.marker(s.pos, { 
-            icon: L.divIcon({ className: 'sensor-tag', html: `<span id="tag-${s.id.replace(/\s+/g, '')}" style="display:none">⚠ ALERTA INUNDAÇÃO</span>`, iconAnchor: [-10, 10] }) 
+            icon: L.divIcon({ className: 'sensor-tag', html: `<span id="tag-${s.id.replace(/\s+|\.|\(|\)/g, '')}" style="display:none">⚠ ALERTA</span>`, iconAnchor: [-10, 10] }) 
         }).addTo(map);
 
         visualMarkers[s.id] = { circle, label };
     });
 
+    function updateUI() {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+        sensores.forEach(s => {
+            let nivel = (s.reg === "C") ? hC : hB;
+            let diff = nivel - s.cota;
+            let visual = visualMarkers[s.id];
+            let tagSpan = document.getElementById(`tag-${s.id.replace(/\s+|\.|\(|\)/g, '')}`);
+            let row = tbody.insertRow();
+            
+            if (diff > 0) {
+                row.className = 'at-risk';
+                visual.circle.setRadius(20 + diff * 600);
+                if(tagSpan) tagSpan.style.display = 'block';
+                
+                // REGRA DINÂMICA DE COR
+                if(diff > 1.5) {
+                    visual.circle.setStyle({ color: '#e74c3c', weight: 2, fillOpacity: 0.25 }); // Vermelho para Severo
+                    row.classList.add('danger');
+                    row.insertCell(3).innerText = "SEVERE FLOOD";
+                } else {
+                    visual.circle.setStyle({ color: '#888888', weight: 1.2, fillOpacity: 0.15 }); // Cinza para Moderado
+                    row.insertCell(3).innerText = "MODERATE";
+                }
+
+                row.insertCell(0).innerText = s.id;
+                row.insertCell(1).innerText = s.cota + "M";
+                row.insertCell(2).innerText = nivel.toFixed(2) + "M";
+            } else {
+                visual.circle.setRadius(0);
+                if(tagSpan) tagSpan.style.display = 'none';
+                row.insertCell(0).innerText = s.id; row.insertCell(1).innerText = s.cota + "M";
+                row.insertCell(2).innerText = nivel.toFixed(2) + "M"; row.insertCell(3).innerText = "NOMINAL";
+            }
+        });
+        document.getElementById('simClock').innerText = simTime.toLocaleTimeString('pt-PT');
+        document.getElementById('elapsed').innerText = `T+ ${tempo} MIN`;
+    }
+
+    // --- FUNÇÕES DE SIMULAÇÃO (MANTIDAS) ---
     document.getElementById('selHist').onchange = function() {
         const val = this.value;
         if(val === "h_kristine") { setParams(15.5, 2600, 85); }
@@ -158,44 +199,6 @@
         document.getElementById('inpFlow').value = f; document.getElementById('txtFlow').innerText = f;
         document.getElementById('inpGates').value = g; document.getElementById('txtGates').innerText = g;
         updateUI();
-    }
-
-    function updateUI() {
-        const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '';
-        sensores.forEach(s => {
-            let nivel = (s.reg === "C") ? hC : hB;
-            let diff = nivel - s.cota;
-            let visual = visualMarkers[s.id];
-            let tagSpan = document.getElementById(`tag-${s.id.replace(/\s+/g, '')}`);
-            let row = tbody.insertRow();
-            
-            if (diff > 0) {
-                visual.circle.setRadius(20 + diff * 600);
-                if(tagSpan) tagSpan.style.display = 'block';
-                
-                // REGRA DINÂMICA DE COR
-                if (diff > 1.0) {
-                    row.className = 'severe-risk';
-                    visual.circle.setStyle({ color: '#e74c3c', fillColor: '#e74c3c', fillOpacity: 0.3, weight: 1.5 });
-                } else {
-                    row.className = 'at-risk';
-                    visual.circle.setStyle({ color: '#888888', fillColor: '#f1c40f', fillOpacity: 0.15, weight: 1.2 });
-                }
-
-                row.insertCell(0).innerText = s.id;
-                row.insertCell(1).innerText = s.cota + "M";
-                row.insertCell(2).innerText = nivel.toFixed(2) + "M";
-                row.insertCell(3).innerText = (diff > 1.0) ? "CRÍTICO" : "ALERTA";
-            } else {
-                visual.circle.setRadius(0);
-                if(tagSpan) tagSpan.style.display = 'none';
-                row.insertCell(0).innerText = s.id; row.insertCell(1).innerText = s.cota + "M";
-                row.insertCell(2).innerText = nivel.toFixed(2) + "M"; row.insertCell(3).innerText = "NOMINAL";
-            }
-        });
-        document.getElementById('simClock').innerText = simTime.toLocaleTimeString('pt-PT');
-        document.getElementById('elapsed').innerText = `T+ ${tempo} MIN`;
     }
 
     function simular() {
@@ -218,17 +221,12 @@
         graphArea.appendChild(bc);
         const bb = document.createElement('div'); bb.className = 'bar-b'; bb.style.left = x + 'px'; bb.style.height = (hB - 7) * 8 + 'px';
         graphArea.appendChild(bb);
-        if (tempo % 15 === 0) {
-            const tl = document.createElement('div'); tl.style.position = 'absolute'; tl.style.left = x + 'px';
-            tl.innerText = simTime.getHours().toString().padStart(2,'0') + ":" + simTime.getMinutes().toString().padStart(2,'0');
-            timelineArea.appendChild(tl);
-        }
     }
 
     document.getElementById('btnRun').onclick = function() {
         rodando = !rodando;
         if(rodando && tempo === 0) simTime = new Date();
-        this.innerText = rodando ? "INTERROMPER MONITORIZAÇÃO" : "INICIAR MONITORIZAÇÃO SAR";
+        this.innerText = rodando ? "INTERROMPER VARREDURA" : "INICIAR MONITORIZAÇÃO";
         this.className = rodando ? "active" : "";
     };
 

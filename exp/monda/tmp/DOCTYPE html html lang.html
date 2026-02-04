@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>SISTEMA MONDEGO - ESC 25cm</title>
+    <title>MONDEGO - CAUDAL</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { margin: 0; font-family: 'Courier New', monospace; background: #050505; color: #d0d0d0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -30,7 +30,6 @@
         th { border-bottom: 2px solid #444; padding: 8px; text-align: left; color: #00d2ff; }
         td { padding: 8px; border-bottom: 1px solid #222; }
         .at-risk { background: rgba(241, 196, 15, 0.1); color: #f1c40f; font-weight: bold; }
-        .severe-risk { background: rgba(231, 76, 60, 0.15); color: #e74c3c; font-weight: bold; }
         .sensor-tag { font-size: 10px; font-weight: bold; color: #f1c40f; text-shadow: 2px 2px #000; white-space: nowrap; }
     </style>
 </head>
@@ -38,8 +37,8 @@
 
 <div class="sar-header">
     <div>DATA: <b>2026FEB04</b></div>
-    <div>TIPO: <b>DESIGN ESTILO SAR</b></div>
-    <div>RESOLUÇÃO: <b>25cm / ALTA PRECISÃO</b></div>
+    <div>TIPO: <b>CINZENTO</b></div>
+    <div>RESOLUÇÃO: <b>X25</b></div>
 </div>
 
 <div id="timeDisplay">
@@ -69,7 +68,7 @@
         <div style="background: #111; padding: 10px; border: 1px solid #333;">
             <label style="font-size: 0.7em; color: #555; display: block; margin-bottom: 5px;">IA: SELEÇÃO DE CENÁRIO</label>
             <select id="selHist">
-                <option value="default">-- SELECIONE TEMPESTADE --</option>
+                <option value="default">-- SELECIONE CENÁRIO --</option>
                 <option value="h_kristine">TEMPESTADE KRISTINE (JAN 2026)</option>
                 <option value="h_caetano">TEMPESTADE CAETANO (NOV 2024)</option>
                 <option value="h_kirk">TEMPESTADE KIRK (OUT 2024)</option>
@@ -78,7 +77,7 @@
             </select>
         </div>
         
-        <button id="btnRun">INICIAR MONITORIZAÇÃO SAR</button>
+        <button id="btnRun">INICIAR MONITORIZAÇÃO</button>
 
         <div class="graph-container">
             <div class="graph-area" id="graphArea"></div>
@@ -87,7 +86,7 @@
     </div>
 
     <div class="sidebar">
-        <h4 style="margin: 0 0 10px 0; color:#f1c40f; font-size: 0.9em;">📡 RELATÓRIO DE SENSORES</h4>
+        <h4 style="margin: 0 0 10px 0; color:#f1c40f; font-size: 0.9em;">📡 RELATÓRIO DE SENSORES HISTÓRICOS</h4>
         <table id="mainTable">
             <thead><tr><th>LOCAL</th><th>COTA CRIT.</th><th>NÍVEL</th><th>ESTADO</th></tr></thead>
             <tbody id="tableBody"></tbody>
@@ -97,7 +96,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    const map = L.map('map').setView([40.1850, -8.6000], 11); 
+    const map = L.map('map').setView([40.1800, -8.6000], 11);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
     const sensores = [
@@ -128,19 +127,19 @@
     sensores.forEach(s => {
         L.circleMarker(s.pos, { radius: 2, color: '#00d2ff', fillColor: '#00d2ff', fillOpacity: 1 }).addTo(map);
         
+        // AJUSTE: Círculos mais leves e finos
         const circle = L.circle(s.pos, { 
             radius: 0, 
-            color: '#888888', 
-            weight: 1.2,        
-            opacity: 0.6,
+            color: '#999999', // Cinzento suave
+            weight: 1,        // Linha fina
+            opacity: 0.9,     // Contorno semitransparente
             fillColor: '#f1c40f',
-            fillOpacity: 0.15 
+            fillOpacity: 0.20 // Preenchimento muito leve
         }).addTo(map);
 
         const label = L.marker(s.pos, { 
-            icon: L.divIcon({ className: 'sensor-tag', html: `<span id="tag-${s.id.replace(/\s+/g, '')}" style="display:none">⚠ ALERTA INUNDAÇÃO</span>`, iconAnchor: [-10, 10] }) 
+            icon: L.divIcon({ className: 'sensor-tag', html: `<span id="tag-${s.id.replace(/\s+/g, '')}" style="display:none">⚠ CRÍTICO</span>`, iconAnchor: [-10, 10] }) 
         }).addTo(map);
-
         visualMarkers[s.id] = { circle, label };
     });
 
@@ -171,22 +170,13 @@
             let row = tbody.insertRow();
             
             if (diff > 0) {
+                row.className = 'at-risk';
                 visual.circle.setRadius(20 + diff * 600);
                 if(tagSpan) tagSpan.style.display = 'block';
-                
-                // REGRA DINÂMICA DE COR
-                if (diff > 1.0) {
-                    row.className = 'severe-risk';
-                    visual.circle.setStyle({ color: '#e74c3c', fillColor: '#e74c3c', fillOpacity: 0.3, weight: 1.5 });
-                } else {
-                    row.className = 'at-risk';
-                    visual.circle.setStyle({ color: '#888888', fillColor: '#f1c40f', fillOpacity: 0.15, weight: 1.2 });
-                }
-
                 row.insertCell(0).innerText = s.id;
                 row.insertCell(1).innerText = s.cota + "M";
                 row.insertCell(2).innerText = nivel.toFixed(2) + "M";
-                row.insertCell(3).innerText = (diff > 1.0) ? "CRÍTICO" : "ALERTA";
+                row.insertCell(3).innerText = "ALERTA";
             } else {
                 visual.circle.setRadius(0);
                 if(tagSpan) tagSpan.style.display = 'none';
@@ -228,7 +218,7 @@
     document.getElementById('btnRun').onclick = function() {
         rodando = !rodando;
         if(rodando && tempo === 0) simTime = new Date();
-        this.innerText = rodando ? "INTERROMPER MONITORIZAÇÃO" : "INICIAR MONITORIZAÇÃO SAR";
+        this.innerText = rodando ? "PARAR VARREDURA" : "INICIAR MONITORIZAÇÃO";
         this.className = rodando ? "active" : "";
     };
 
