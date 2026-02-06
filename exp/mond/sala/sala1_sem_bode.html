@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>MONDEGO SIMPLES - CONTROLO DIRETO</title>
+    <style>
+        body { margin: 0; font-family: sans-serif; background: #111; color: white; display: flex; height: 100vh; }
+        .sidebar { width: 300px; padding: 20px; background: #1a1a1a; border-right: 2px solid #333; }
+        .main { flex: 1; padding: 20px; position: relative; display: flex; flex-direction: column; }
+        .rio-container { flex: 1; background: #000; border: 2px solid #444; position: relative; overflow: hidden; border-radius: 8px; }
+        .agua { position: absolute; bottom: 0; width: 100%; background: linear-gradient(to top, #004466, #00d2ff); transition: height 0.3s ease; }
+        .cidade { position: absolute; bottom: 150px; width: 100%; border-top: 4px dashed #ff4757; color: #ff4757; text-align: right; padding-right: 10px; font-weight: bold; }
+        .card { background: #222; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        .btn { width: 100%; padding: 15px; background: #27ae60; border: none; color: white; font-weight: bold; cursor: pointer; border-radius: 5px; }
+        .btn.active { background: #ff4757; }
+        .status { font-size: 2em; font-weight: bold; color: #00d2ff; }
+        .danger { color: #ff4757; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>COMANDO AÇUDE</h2>
+    <div class="card">
+        <label>Cenário de Cheia:</label>
+        <select id="scenario" style="width:100%; padding:8px; margin-top:5px;">
+            <option value="2000">Cheia Elsa (2.200 m3/s)</option>
+            <option value="4000">Cheia Histórica (4.000 m3/s)</option>
+        </select>
+    </div>
+    
+    <div class="card">
+        <label>Posição do Açude: <span id="valG">100</span>%</label>
+        <input type="range" id="iG" min="0" max="100" value="100" style="width:100%;">
+        <p style="font-size: 0.8em; color: #888;">0% = Aberto | 100% = Fechado</p>
+    </div>
+
+    <button id="runBtn" class="btn">INICIAR RIO</button>
+</div>
+
+<div class="main">
+    <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <div>ESTADO: <span id="estadoTxt">PARADO</span></div>
+        <div class="status">NÍVEL: <span id="valN">15.0</span>m</div>
+    </div>
+
+    <div class="rio-container">
+        <div class="cidade">LIMITE DA BAIXA (20.0m)</div>
+        <div id="visualAgua" class="agua" style="height: 30%;"></div>
+    </div>
+</div>
+
+<script>
+    let nivel = 15.0;
+    let isRunning = false;
+
+    const runBtn = document.getElementById('runBtn');
+    const visualAgua = document.getElementById('visualAgua');
+    const valN = document.getElementById('valN');
+    const valG = document.getElementById('valG');
+    const iG = document.getElementById('iG');
+
+    runBtn.onclick = () => {
+        isRunning = !isRunning;
+        runBtn.innerText = isRunning ? "PARAR SIMULAÇÃO" : "INICIAR RIO";
+        runBtn.classList.toggle('active');
+        document.getElementById('estadoTxt').innerText = isRunning ? "EM CURSO" : "PARADO";
+    };
+
+    function simular() {
+        if (!isRunning) return;
+
+        let flow = parseInt(document.getElementById('scenario').value);
+        let gates = parseInt(iG.value);
+        valG.innerText = gates;
+
+        // Lógica Simplificada:
+        // O nível sobe com o Caudal (flow) e com o fecho do Açude (gates)
+        // O nível desce se o Açude abrir (gates baixo)
+        let entrada = flow / 1000; // Quanto entra
+        let saida = (105 - gates) / 10; // Quanto o açude deixa sair
+        
+        let delta = (entrada - saida) * 0.05;
+        nivel += delta;
+
+        // Limites mínimos
+        if (nivel < 14) nivel = 14;
+
+        // Atualizar Visual
+        valN.innerText = nivel.toFixed(1);
+        let alturaPx = (nivel - 14) * 30; // Escala visual
+        visualAgua.style.height = alturaPx + "px";
+
+        // Cor de Alerta
+        if (nivel >= 20) {
+            valN.classList.add('danger');
+            visualAgua.style.background = "#ff4757";
+        } else {
+            valN.classList.remove('danger');
+            visualAgua.style.background = "linear-gradient(to top, #004466, #00d2ff)";
+        }
+    }
+
+    setInterval(simular, 100);
+</script>
+
+</body>
+</html>

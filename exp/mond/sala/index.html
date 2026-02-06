@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MONITORIZAÇÃO 24H - SISTEMA MONDEGO</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #0b0e14; color: #e0e0e0; display: flex; flex-direction: column; align-items: center; }
+        .dashboard { width: 1000px; background: #161b22; padding: 25px; border-radius: 12px; border: 1px solid #30363d; margin-top: 20px; }
+        .controls { display: flex; justify-content: space-around; background: #0d1117; padding: 20px; border-radius: 8px; border: 1px solid #30363d; margin-bottom: 20px; align-items: center; }
+        .value-display { font-family: monospace; font-size: 1.5em; color: #58a6ff; }
+        .status-bar { text-align: center; font-weight: bold; padding: 10px; margin-bottom: 10px; border-radius: 4px; }
+        button { padding: 10px 20px; cursor: pointer; background: #238636; color: white; border: none; border-radius: 6px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+    <h2>Painel de Controlo Hidrológico (Janela de 24h)</h2>
+    
+    <div class="status-bar" id="statusBox" style="background: #1c2128;">
+        HORA DO SISTEMA: <span id="clock">00:00</span> | ESTADO: <span id="txtEstado">NOMINAL</span>
+    </div>
+
+    <div class="controls">
+        <div>
+            <label>ABERTURA AÇUDE: <b id="gVal">20</b>%</label><br>
+            <input type="range" id="gateCtrl" min="0" max="100" value="20" style="width: 200px;">
+        </div>
+        <div style="text-align: center;">
+            <small>MARÉ (FIGUEIRA DA FOZ)</small>
+            <div id="mareDisplay" style="color: #d29922; font-weight: bold;">--</div>
+        </div>
+        <button id="stormBtn">LANÇAR DESCARGA AGUIEIRA (6h de pico)</button>
+    </div>
+
+    <canvas id="hidrogramaReal"></canvas>
+</div>
+
+<script>
+    const ctx = document.getElementById('hidrogramaReal').getContext('2d');
+    
+    // CONFIGURAÇÃO DO TEMPO (24 Horas)
+    // 96 pontos = 15 minutos por ponto (96 * 15 / 60 = 24h)
+    let totalPontos = 96;
+    let labelsHoras = [];
+    for(let i=0; i<totalPontos; i++) {
+        let h = Math.floor(i / 4);
+        let m = (i % 4) * 15;
+        labelsHoras.push(`${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`);
+    }
+
+    // Inicialização de Dados
+    let qIn = new Array(totalPontos).fill(200);
+    let qOut = new Array(totalPontos).fill(200);
+    let hCoimbra = new Array(totalPontos).fill(15.5);
+    let hMare = new Array(totalPontos).fill(15.0);
+    
+    let currentTick = 0;
+    let gateAperture = 0.2;
+    const tau = 20; // 20 pontos * 15min = 5 Horas de atraso real entre Aguieira e Coimbra
+    const area = 8000;
+
+    const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labelsHoras,
+            datasets: [
+                { label: 'Saída Aguieira (m³/s)', data: qIn, borderColor: '#ff9f43', tension: 0.3, pointRadius: 0 },
+                { label: 'Descarga Açude (m³/s)', data: qOut, borderColor: '#58a6ff', tension: 0.3, pointRadius: 0 },
+                { label: 'Cota Coimbra (m)', data: hCoimbra, borderColor: '#f85149', yAxisID: 'y1', borderWidth: 3, pointRadius: 0 },
+                { label: 'Nível Maré (m)', data: hMare, borderColor: '#444', borderDash: [5,5], yAxisID: 'y1', pointRadius: 0 }
+            ]
+        },
+        options: {
+            animation: false,
+            scales: {
+                y: { title: {display: true, text: 'Caudal (m³/s)'}, min: 0, max: 3500 },
+                y1: { position: 'right', title: {display: true, text: 'Nível (m)'}, min: 13, max: 24 }
+            }
+        }
+    });
+
+    function processarSimulacao() {
+        // 1. Atualizar Relógio (cada ciclo = 15 minutos virtuais)
+        currentTick = (currentTick + 1) % totalPontos;
+        document.getElementById('clock').innerText = labelsHoras[currentTick];
+
+        // 2. Simular Maré Real (Ciclo de 12h)
+        // Usamos uma frequência que completa 2 ciclos em 96 pontos
+        let nivelMare = 15.0 + Math.sin((currentTick / totalPontos) * Math.PI * 4) * 1.5;
+        
+        // 3. Logística de Montante (Qin)
+        let novoQin = qIn[qIn.length - 1];
+        
+        // 4. Física do Açude com Resistência de Maré
+        let hAtual = hCoimbra[hCoimbra.length - 1];
+        let diffPressao = Math.max(0.1, hAtual - nivelMare);
+        let descargaEfetiva = gateAperture * 2500 * Math.sqrt(diffPressao / 3);
+
+        // 5. Equação Diferencial de Coimbra (Atraso de 5h)
+        // Buscamos o caudal que saiu da Aguieira há 20 pontos atrás (5 horas)
+        let qChegada = qIn[qIn.length - tau] || qIn[0];
+        let deltaH = (qChegada - descargaEfetiva) / area;
+        let novoH = hAtual + deltaH;
+
+        // Atualizar Arrays (Mantendo Janela de 24h)
+        qIn.shift(); qIn.push(novoQin);
+        qOut.shift(); qOut.push(descargaEfetiva);
+        hCoimbra.shift(); hCoimbra.push(novoH);
+        hMare.shift(); hMare.push(nivelMare);
+
+        // UI Updates
+        document.getElementById('mareDisplay').innerText = nivelMare.toFixed(2) + "m (" + (nivelMare > 15 ? "CHEIA" : "VAZANTE") + ")";
+        
+        if(novoH > 20) {
+            document.getElementById('statusBox').style.background = "#490b0b";
+            document.getElementById('txtEstado').innerText = "CRÍTICO: INUNDAÇÃO";
+        } else {
+            document.getElementById('statusBox').style.background = "#1c2128";
+            document.getElementById('txtEstado').innerText = "NOMINAL";
+        }
+
+        chart.update('none');
+    }
+
+    // Controles
+    document.getElementById('gateCtrl').oninput = function() {
+        gateAperture = this.value / 100;
+        document.getElementById('gVal').innerText = this.value;
+    };
+
+    document.getElementById('stormBtn').onclick = function() {
+        // Simula uma tempestade que dura 6 horas (24 pontos no gráfico)
+        let start = qIn.length - 1;
+        for(let i=0; i<24; i++) {
+            qIn[start - i] = 2200;
+        }
+    };
+
+    // Correr a simulação (cada 500ms representa 15min reais no gráfico)
+    setInterval(processarSimulacao, 500);
+</script>
+</body>
+</html>
