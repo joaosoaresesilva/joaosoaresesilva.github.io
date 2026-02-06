@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Simulador de Caudal Mondego - Telecom Approach</title>
+    <style>
+        body { font-family: sans-serif; background: #f0f4f8; display: flex; flex-direction: column; align-items: center; }
+        .container { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 800px; margin-top: 20px; }
+        .river-system { display: flex; justify-content: space-between; align-items: flex-end; height: 200px; background: #e3f2fd; padding: 20px; border-bottom: 5px solid #1976d2; position: relative; }
+        .node { width: 100px; background: #64b5f6; transition: height 0.5s; border: 2px solid #1565c0; text-align: center; color: white; font-weight: bold; position: relative; }
+        .node span { position: absolute; top: -25px; color: #333; width: 100%; left: 0; }
+        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        .status { margin-top: 20px; padding: 15px; border-radius: 8px; font-weight: bold; text-align: center; }
+        .safe { background: #c8e6c9; color: #2e7d32; }
+        .danger { background: #ffcdd2; color: #c62828; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0.5; } }
+    </style>
+</head>
+<body>
+
+<h2>Gestão de Caudal (Rede Mondego)</h2>
+
+<div class="container">
+    <div class="river-system">
+        <div id="aguieira" class="node" style="height: 40%;"><span>Aguieira (Fonte)</span></div>
+        <div style="width: 50px; border-bottom: 2px dashed #90caf9;"></div>
+        <div id="coimbra" class="node" style="height: 30%;"><span>Coimbra (Buffer)</span></div>
+        <div style="width: 50px; border-bottom: 2px dashed #90caf9;"></div>
+        <div id="alfarelos" class="node" style="height: 35%;"><span>Alfarelos (Sink)</span></div>
+        <div id="mare-indicator" style="position: absolute; right: 0; bottom: 0; width: 20px; background: #1a237e; opacity: 0.5;"></div>
+    </div>
+
+    <div class="controls">
+        <div>
+            <label>Débito Aguieira (Entrada): <span id="val-in">50</span></label>
+            <input type="range" id="input-flow" min="0" max="100" value="50">
+        </div>
+        <div>
+            <label>Nível da Maré (Resistência): <span id="val-mare">Low</span></label>
+            <input type="range" id="mare-level" min="0" max="100" value="20">
+        </div>
+    </div>
+
+    <div id="status-box" class="status safe">SISTEMA ESTÁVEL: Fluxo Laminar</div>
+
+    <div style="margin-top: 10px; font-size: 0.8em; color: #666;">
+        <b>Lógica de Telecomunicações:</b> O sistema reduz o débito na Aguieira automaticamente quando deteta "backpressure" (maré alta + nível em Alfarelos crítico).
+    </div>
+</div>
+
+<script>
+    const aguieira = document.getElementById('aguieira');
+    const coimbra = document.getElementById('coimbra');
+    const alfarelos = document.getElementById('alfarelos');
+    const inputFlow = document.getElementById('input-flow');
+    const mareLevel = document.getElementById('mare-level');
+    const statusBox = document.getElementById('status-box');
+
+    let hCoimbra = 30;
+    let hAlfarelos = 35;
+
+    function updateSystem() {
+        let qIn = parseInt(inputFlow.value);
+        let resistance = parseInt(mareLevel.value) / 2;
+        
+        // Simulação de Auto-regulação (O Coração do Algoritmo)
+        if (hAlfarelos > 70) {
+            // Sinal de Congestionamento enviado para a Aguieira
+            qIn = qIn * 0.4; 
+            statusBox.innerText = "AVISO: Backpressure Detetado! Reduzindo Débito na Fonte.";
+            statusBox.className = "status danger";
+        } else {
+            statusBox.innerText = "SISTEMA ESTÁVEL: Fluxo Laminar";
+            statusBox.className = "status safe";
+        }
+
+        // Equações de Fluxo Simplificadas
+        hCoimbra += (qIn - hCoimbra) * 0.1;
+        hAlfarelos += (hCoimbra - (40 - resistance)) * 0.1;
+
+        // Limites Físicos
+        hCoimbra = Math.max(10, Math.min(100, hCoimbra));
+        hAlfarelos = Math.max(10, Math.min(100, hAlfarelos));
+
+        // Atualização Visual
+        aguieira.style.height = qIn + "%";
+        coimbra.style.height = hCoimbra + "%";
+        alfarelos.style.height = hAlfarelos + "%";
+        document.getElementById('mare-indicator').style.height = (resistance * 2) + "%";
+        
+        document.getElementById('val-in').innerText = Math.round(qIn);
+        document.getElementById('val-mare').innerText = resistance > 30 ? "ALTA" : "BAIXA";
+
+        requestAnimationFrame(updateSystem);
+    }
+
+    updateSystem();
+</script>
+
+</body>
+</html>
