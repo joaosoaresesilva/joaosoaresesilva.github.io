@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>MONDEGO DSP v7: Cascata de Sinais Coimbra-Alfarelos</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #0d1117; color: #c9d1d9; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .dashboard { width: 1150px; background: #161b22; padding: 25px; border-radius: 12px; border: 1px solid #30363d; }
+        .controls { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin: 20px 0; background: #0d1117; padding: 20px; border-radius: 8px; border: 1px solid #30363d; }
+        .btn-auto { width: 100%; padding: 12px; font-weight: bold; cursor: pointer; border-radius: 6px; border: none; transition: 0.3s; }
+        .auto-on { background: #238636; color: white; box-shadow: 0 0 10px #238636; }
+        .auto-off { background: #30363d; color: white; }
+        .indicator { font-size: 1.1em; color: #58a6ff; font-family: monospace; font-weight: bold; }
+        .label-small { font-size: 0.75em; color: #8b949e; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+    <h2>Cascata de Sinais: Aguieira ➔ Coimbra ➔ Alfarelos</h2>
+    
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; background: #0d1117; padding: 15px; border-radius: 8px;">
+        <div style="text-align:center"><span class="label-small">Sinal In (Aguieira)</span><br><span id="qIn_txt" class="indicator">250</span> <small>m³/s</small></div>
+        <div style="text-align:center"><span class="label-small">Saída 1 (Coimbra)</span><br><span id="hC_txt" class="indicator">15.50</span> <small>m</small></div>
+        <div style="text-align:center"><span class="label-small">Saída 2 (Alfarelos)</span><br><span id="hA_txt" class="indicator">9.50</span> <small>m</small></div>
+        <div style="text-align:center"><span class="label-small">Ruído (Maré)</span><br><span id="mare_txt" class="indicator">15.00</span> <small>m</small></div>
+    </div>
+
+    <div class="controls">
+        <div>
+            <label class="label-small">Amplitude Aguieira</label>
+            <input type="range" id="qInCtrl" min="200" max="2800" value="250" style="width: 100%;">
+        </div>
+        <div style="text-align: center;">
+            <button id="btnAuto" class="btn-auto auto-off">FILTRO PREDITIVO CASCATA: OFF</button>
+        </div>
+        <div>
+            <label class="label-small">Compensação Açude (%)</label>
+            <input type="range" id="gateCtrl" min="0" max="100" value="20" style="width: 100%;">
+        </div>
+    </div>
+
+    <canvas id="mainChart" height="110"></canvas>
+</div>
+
+<script>
+    const ctx = document.getElementById('mainChart').getContext('2d');
+    const totalSamples = 120; // Aumentado para ver mais histórico
+    let labels = Array.from({length: totalSamples}, (_, i) => i);
+    
+    let signalIn = new Array(totalSamples).fill(250);
+    let signalOutC = new Array(totalSamples).fill(15.5);
+    let signalOutA = new Array(totalSamples).fill(9.5);
+    let signalTide = new Array(totalSamples).fill(15);
+    let signalGate = new Array(totalSamples).fill(20);
+    
+    let tick = 0, gatePos = 0.2, autoMode = false, qAmplitude = 250;
+
+    const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                { label: 'Aguieira (In)', data: signalIn, borderColor: '#ff9f43', pointRadius: 0, borderWidth: 1 },
+                { label: 'Coimbra (m)', data: signalOutC, borderColor: '#f85149', yAxisID: 'y1', pointRadius: 0, borderWidth: 3 },
+                { label: 'Alfarelos (m)', data: signalOutA, borderColor: '#3fb950', yAxisID: 'y1', pointRadius: 0, borderWidth: 2 },
+                { label: 'Maré (m)', data: signalTide, borderColor: '#777', borderDash: [5, 5], yAxisID: 'y1', pointRadius: 0, borderWidth: 1 }
+            ]
+        },
+        options: { 
+            animation: false, 
+            scales: { 
+                y: { min: 0, max: 3000 }, 
+                y1: { position: 'right', min: 8, max: 22 } 
+            } 
+        }
+    });
+
+    function aplicarFiltro(mareAtual) {
+        let sinalAguieira = signalIn[signalIn.length - 1];
+        let hC = signalOutC[signalOutC.length - 1];
+        let hA = signalOutA[signalOutA.length - 1];
+        
+        let alvo = 20;
+
+        // Lógica Multivariável:
+        // 1. Se a Aguieira sobe, abre para vaziamento preventivo de Coimbra
+        if (sinalAguieira > 800) alvo = 30 + (sinalAguieira - 800) * 0.1;
+
+        // 2. Se Coimbra ultrapassa 18.5m, prioridade total à cidade (abre tudo)
+        if (hC > 18.5) alvo = 100;
+
+        // 3. Se Alfarelos está em perigo (>11.0m) E Coimbra está segura (<17.5m)
+        // O filtro atua como "buffer", fechando um pouco para reter água em Coimbra
+        if (hA > 11.0 && hC < 17.5 && sinalAguieira < 1800) {
+            alvo = 35; // Fecha parcialmente para salvar Alfarelos
+        }
+
+        // 4. Compensação de Maré (Impedância de Saída)
+        if (mareAtual > 15.8 && hC > 18.0) alvo = Math.min(100, alvo + 15);
+
+        let erro = (alvo/100) - gatePos;
+        gatePos += erro * 0.25; 
+        document.getElementById('gateCtrl').value = Math.round(gatePos * 100);
+    }
+
+    function simular() {
+        tick++;
+        let currentTide = 15.0 + Math.sin(tick * 0.1) * 1.5; 
+        let sIn = qAmplitude + Math.sin(tick * 0.3) * (qAmplitude > 600 ? 30 : 5);
+        
+        if(autoMode) aplicarFiltro(currentTide);
+
+        // --- MODELO COIMBRA ---
+        let hC_prev = signalOutC[signalOutC.length - 1];
+        let qC_chegada = signalIn[signalIn.length - 20]; // Atraso Aguieira -> Coimbra
+        let qC_saida = gatePos * 5000 * Math.sqrt(Math.max(0.1, hC_prev - currentTide) / 1.1);
+        let nHC = hC_prev + (qC_chegada - qC_saida) / 9500;
+        if(nHC < 14.1) nHC = 14.1;
+
+        // --- MODELO ALFARELOS ---
+        let hA_prev = signalOutA[signalOutA.length - 1];
+        let qA_chegada = qC_saida; // O que sai de Coimbra entra em Alfarelos (simplificado)
+        // Atraso Coimbra -> Alfarelos (8 amostras / aprox 2h)
+        let qA_atrasada = new Array(8).fill(qA_chegada); 
+        // Nota: Para fins de script, usamos o valor de qC_saida de há 8 iterações
+        let qA_real = tick > 10 ? signalGate[signalGate.length - 8] * 4000 : qA_chegada;
+
+        // Escoamento de Alfarelos para o Mar (afetado pela maré)
+        let qA_saida = 200 * Math.sqrt(Math.max(0.1, hA_prev - (currentTide - 6))); 
+        let nHA = hA_prev + (qA_real - qA_saida) / 18000;
+        if(nHA < 8.5) nHA = 8.5;
+
+        // Memória
+        signalIn.shift(); signalIn.push(sIn);
+        signalOutC.shift(); signalOutC.push(nHC);
+        signalOutA.shift(); signalOutA.push(nHA);
+        signalTide.shift(); signalTide.push(currentTide);
+        signalGate.shift(); signalGate.push(gatePos); // Guardar abertura para cálculo de Alfarelos
+
+        // UI
+        document.getElementById('hC_txt').innerText = nHC.toFixed(2);
+        document.getElementById('hA_txt').innerText = nHA.toFixed(2);
+        document.getElementById('mare_txt').innerText = currentTide.toFixed(2);
+        document.getElementById('qIn_txt').innerText = Math.round(sIn);
+        
+        chart.update('none');
+    }
+
+    document.getElementById('qInCtrl').oninput = function() { qAmplitude = parseInt(this.value); };
+    document.getElementById('gateCtrl').oninput = function() { if(!autoMode) gatePos = this.value / 100; };
+    document.getElementById('btnAuto').onclick = function() { 
+        autoMode = !autoMode; 
+        this.className = "btn-auto " + (autoMode ? "auto-on" : "auto-off");
+        this.innerText = autoMode ? "SISTEMA INTEGRADO: ON" : "SISTEMA INTEGRADO: OFF";
+    };
+
+    setInterval(simular, 400);
+</script>
+</body>
+</html>

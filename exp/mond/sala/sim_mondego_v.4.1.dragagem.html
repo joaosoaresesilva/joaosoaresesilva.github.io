@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>SISTEMA DE DECISÃO MONDEGO: Coimbra Salva</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #0b0e14; color: #e0e0e0; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 20px; }
+        .dashboard { width: 1100px; background: #161b22; padding: 25px; border-radius: 12px; border: 1px solid #30363d; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .flood-zones { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .zone-card { background: #0d1117; padding: 15px; border-radius: 8px; border: 1px solid #30363d; position: relative; height: 110px; overflow: hidden; }
+        .water-fill { position: absolute; bottom: 0; left: 0; width: 100%; background: #58a6ff; transition: height 0.4s ease; opacity: 0.6; }
+        .danger-fill { background: #f85149 !important; }
+        .zone-label { position: relative; z-index: 2; font-weight: bold; font-size: 0.9em; }
+        .controls { display: grid; grid-template-columns: 1.2fr 1fr 1.2fr; gap: 20px; background: #0d1117; padding: 20px; border-radius: 8px; border: 1px solid #30363d; margin-bottom: 20px; align-items: center; }
+        .panel-aguieira { border: 1px solid #ff9f43; padding: 10px; border-radius: 6px; }
+        .panel-acude { border: 1px solid #58a6ff; padding: 10px; border-radius: 6px; }
+        .btn-auto { width: 100%; padding: 15px; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; transition: 0.3s; }
+        .auto-off { background: #30363d; color: white; }
+        .auto-on { background: #238636; color: white; box-shadow: 0 0 15px rgba(35, 134, 54, 0.4); }
+        h2 { margin-top: 0; color: #58a6ff; }
+        .value-bold { color: #d29922; font-family: monospace; font-size: 1.2em; }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+        <div>
+            <h2>Gestão Hidráulica: Estratégia Coimbra</h2>
+            <small style="color: #8b949e;">Prioridade: Proteção Urbana e Infraestruturas</small>
+        </div>
+        <div id="clock" style="font-family: monospace; font-size: 1.8em; color: #58a6ff;">00:00</div>
+    </div>
+
+    <div class="flood-zones">
+        <div class="zone-card">
+            <div class="zone-label">COIMBRA (Baixa)<br>Cota: <span id="hC_txt">15.50</span>m / Crítico: 20.0m</div>
+            <div id="fillCoimbra" class="water-fill"></div>
+        </div>
+        <div class="zone-card">
+            <div class="zone-label">ALFARELOS (Agrícola)<br>Cota: <span id="hA_txt">9.50</span>m / Crítico: 11.5m</div>
+            <div id="fillAlfarelos" class="water-fill"></div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="panel-aguieira">
+            <label style="color: #ff9f43;">AGUIEIRA (Descarga Emergência)</label>
+            <input type="range" id="qInCtrl" min="200" max="3000" value="250" style="width: 100%;">
+            <div>Caudal: <b id="qInVal" class="value-bold">250</b> m³/s</div>
+        </div>
+        <div style="text-align: center;">
+            <button id="btnAuto" class="btn-auto auto-off">PILOTO AUTOMÁTICO: OFF</button>
+            <div style="margin-top:10px; font-size: 0.8em; color: #8b949e;">MARÉ: <span id="mareStatus">---</span></div>
+        </div>
+        <div class="panel-acude">
+            <label style="color: #58a6ff;">AÇUDE (Comportas)</label>
+            <input type="range" id="gateCtrl" min="0" max="100" value="20" style="width: 100%;">
+            <div>Abertura: <b id="gVal" class="value-bold">20</b>%</div>
+        </div>
+    </div>
+
+    <canvas id="mainChart"></canvas>
+</div>
+
+<script>
+    const ctx = document.getElementById('mainChart').getContext('2d');
+    const totalPontos = 96; 
+    let labelsHoras = [];
+    for(let i=0; i<totalPontos; i++) {
+        let h = Math.floor(i / 4).toString().padStart(2,'0');
+        let m = ((i % 4) * 15).toString().padStart(2,'0');
+        labelsHoras.push(`${h}:${m}`);
+    }
+
+    let qIn = new Array(totalPontos).fill(250);
+    let qOutCoimbra = new Array(totalPontos).fill(250);
+    let hCoimbra = new Array(totalPontos).fill(15.5);
+    let hAlfarelos = new Array(totalPontos).fill(9.5);
+    let hMare = new Array(totalPontos).fill(15.0);
+    
+    let tick = 0;
+    let gateAperture = 0.2;
+    let autoMode = false;
+    let qInManual = 250;
+
+    const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labelsHoras,
+            datasets: [
+                { label: 'Caudal Aguieira', data: qIn, borderColor: '#ff9f43', pointRadius: 0 },
+                { label: 'Cota Coimbra (m)', data: hCoimbra, borderColor: '#f85149', yAxisID: 'y1', borderWidth: 3, pointRadius: 0 },
+                { label: 'Cota Alfarelos (m)', data: hAlfarelos, borderColor: '#3fb950', yAxisID: 'y1', borderWidth: 2, pointRadius: 0 },
+                { label: 'Maré (m)', data: hMare, borderColor: '#444', borderDash: [3,3], yAxisID: 'y1', pointRadius: 0 }
+            ]
+        },
+        options: { animation: false, scales: { y: { min: 0, max: 3500 }, y1: { position: 'right', min: 8, max: 24 } } }
+    });
+
+    function logicaIA(hC, hA, qFuturo) {
+        let alvo = 0.2;
+
+        // ESTRATÉGIA AGRESSIVA: 
+        // 1. Se a descarga sobe, abre tudo IMEDIATAMENTE (Pré-vaziamento)
+        if (qFuturo >= 800) alvo = 0.0;
+        
+        // 2. Se a cota urbana sobe, ignora Alfarelos e foca na cidade
+        if (hC > 18.0) alvo = 0.0;
+
+        // 3. Só tenta salvar Alfarelos se a cidade estiver "fria" (<17m)
+        if (hA > 11.2 && hC < 17.0) alvo = 0.4;
+
+        gateAperture += (alvo - gateAperture) * 0.2;
+        document.getElementById('gateCtrl').value = gateAperture * 100;
+        document.getElementById('gVal').innerText = Math.round(gateAperture * 100);
+    }
+
+    function simular() {
+        tick = (tick + 1) % totalPontos;
+        document.getElementById('clock').innerText = labelsHoras[tick];
+
+        let nM = 15.0 + Math.sin((tick / totalPontos) * Math.PI * 4) * 1.5;
+        let hC = hCoimbra[hCoimbra.length - 1];
+        let hA = hAlfarelos[hAlfarelos.length - 1];
+
+        if (autoMode) logicaIA(hC, hA, qInManual);
+
+        // Física ajustada: Vazão aumentada para simular dragagem/eficiência
+        let descC = gateAperture * 3200 * Math.sqrt(Math.max(0.1, hC - nM) / 1.8);
+        let qC_Coimbra = qIn[qIn.length - 20] || qIn[0];
+        let nHC = hC + (qC_Coimbra - descC) / 7500;
+
+        let qC_Alfarelos = qOutCoimbra[qOutCoimbra.length - 8] || qOutCoimbra[0];
+        let nHA = hA + (qC_Alfarelos - 190 * Math.sqrt(Math.max(0.1, hA - 8.5))) / 16000;
+
+        // Updates
+        qIn.shift(); qIn.push(qInManual);
+        qOutCoimbra.shift(); qOutCoimbra.push(descC);
+        hCoimbra.shift(); hCoimbra.push(nHC);
+        hAlfarelos.shift(); hAlfarelos.push(nHA);
+        hMare.shift(); hMare.push(nM);
+
+        // UI
+        document.getElementById('hC_txt').innerText = nHC.toFixed(2);
+        document.getElementById('hA_txt').innerText = nHA.toFixed(2);
+        document.getElementById('mareStatus').innerText = nM > 15 ? "CHEIA ↑" : "BAIXA ↓";
+        document.getElementById('fillCoimbra').style.height = Math.max(0, (nHC - 14) * 16) + "%";
+        document.getElementById('fillAlfarelos').style.height = Math.max(0, (nHA - 8.5) * 33) + "%";
+        
+        document.getElementById('fillCoimbra').classList.toggle('danger-fill', nHC >= 20);
+        document.getElementById('fillAlfarelos').classList.toggle('danger-fill', nHA >= 11.5);
+
+        chart.update('none');
+    }
+
+    document.getElementById('qInCtrl').oninput = function() {
+        qInManual = parseInt(this.value);
+        document.getElementById('qInVal').innerText = qInManual;
+    };
+    document.getElementById('gateCtrl').oninput = function() {
+        if(!autoMode) gateAperture = this.value / 100;
+        document.getElementById('gVal').innerText = this.value;
+    };
+    document.getElementById('btnAuto').onclick = function() {
+        autoMode = !autoMode;
+        this.innerText = autoMode ? "PILOTO AUTOMÁTICO: ON" : "PILOTO AUTOMÁTICO: OFF";
+        this.className = "btn-auto " + (autoMode ? "auto-on" : "auto-off");
+    };
+
+    setInterval(simular, 500);
+</script>
+</body>
+</html>

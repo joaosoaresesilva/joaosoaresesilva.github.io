@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>MONDEGO SMART CONTROL: Sistema Integrado</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #0b0e14; color: #e0e0e0; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .dashboard { width: 1100px; background: #161b22; padding: 25px; border-radius: 12px; border: 1px solid #30363d; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .flood-zones { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .zone-card { background: #0d1117; padding: 15px; border-radius: 8px; border: 1px solid #30363d; position: relative; height: 110px; overflow: hidden; }
+        .water-fill { position: absolute; bottom: 0; left: 0; width: 100%; background: #58a6ff; transition: height 0.4s ease; opacity: 0.6; }
+        .danger-fill { background: #f85149 !important; }
+        .controls { display: grid; grid-template-columns: 1.2fr 1fr 1.2fr; gap: 20px; background: #0d1117; padding: 20px; border-radius: 8px; border: 1px solid #30363d; margin-bottom: 20px; align-items: center; }
+        .btn-auto { width: 100%; padding: 15px; font-weight: bold; border-radius: 6px; border: none; cursor: pointer; transition: 0.3s; }
+        .auto-on { background: #238636; color: white; box-shadow: 0 0 15px rgba(35,134,54,0.4); }
+        .auto-off { background: #30363d; color: white; }
+        .value-bold { color: #d29922; font-family: monospace; font-size: 1.2em; }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h2>Gestão Preditiva Multivariável</h2>
+        <div id="clock" style="font-family: monospace; font-size: 1.8em; color: #58a6ff;">00:00</div>
+    </div>
+
+    <div class="flood-zones">
+        <div class="zone-card">
+            <div class="zone-label">COIMBRA (Urbano)<br>Nível: <span id="hC_txt">15.50</span>m / Limite: 20.0m</div>
+            <div id="fillCoimbra" class="water-fill"></div>
+        </div>
+        <div class="zone-card">
+            <div class="zone-label">ALFARELOS (Agrícola)<br>Nível: <span id="hA_txt">9.50</span>m / Limite: 11.5m</div>
+            <div id="fillAlfarelos" class="water-fill"></div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div style="border: 1px solid #ff9f43; padding: 10px; border-radius: 6px;">
+            <label style="color: #ff9f43;">AGUIEIRA (Montante)</label>
+            <input type="range" id="qInCtrl" min="200" max="3000" value="250" style="width: 100%;">
+            <div>Caudal: <b id="qInVal" class="value-bold">250</b> m³/s</div>
+        </div>
+        <div style="text-align: center;">
+            <button id="btnAuto" class="btn-auto auto-off">PILOTO AUTO (SISTEMA INTEGRADO): OFF</button>
+            <div style="margin-top:10px; font-size: 0.8em; color: #8b949e;">MARÉ: <span id="mareStatus">---</span></div>
+        </div>
+        <div style="border: 1px solid #58a6ff; padding: 10px; border-radius: 6px;">
+            <label style="color: #58a6ff;">AÇUDE (Comportas)</label>
+            <input type="range" id="gateCtrl" min="0" max="100" value="20" style="width: 100%;">
+            <div>Abertura: <b id="gVal" class="value-bold">20</b>%</div>
+        </div>
+    </div>
+
+    <canvas id="mainChart"></canvas>
+</div>
+
+<script>
+    const ctx = document.getElementById('mainChart').getContext('2d');
+    const totalPontos = 96; 
+    let labelsHoras = [], qIn = new Array(totalPontos).fill(250), qOutC = new Array(totalPontos).fill(250);
+    let hCoimbra = new Array(totalPontos).fill(15.5), hAlfarelos = new Array(totalPontos).fill(9.5), hMare = new Array(totalPontos).fill(15.0);
+    
+    for(let i=0; i<totalPontos; i++) {
+        let h = Math.floor(i / 4).toString().padStart(2,'0');
+        let m = ((i % 4) * 15).toString().padStart(2,'0');
+        labelsHoras.push(`${h}:${m}`);
+    }
+
+    let tick = 0, gateAperture = 0.2, autoMode = false, qInManual = 250;
+
+    const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labelsHoras,
+            datasets: [
+                { label: 'Aguieira (m3/s)', data: qIn, borderColor: '#ff9f43', pointRadius: 0 },
+                { label: 'Coimbra (m)', data: hCoimbra, borderColor: '#f85149', yAxisID: 'y1', borderWidth: 3, pointRadius: 0 },
+                { label: 'Alfarelos (m)', data: hAlfarelos, borderColor: '#3fb950', yAxisID: 'y1', borderWidth: 2, pointRadius: 0 },
+                { label: 'Maré (m)', data: hMare, borderColor: '#444', borderDash: [3,3], yAxisID: 'y1', pointRadius: 0 }
+            ]
+        },
+        options: { animation: false, scales: { y: { min: 0, max: 3500 }, y1: { position: 'right', min: 8, max: 24 } } }
+    });
+
+    // --- CÉREBRO INTEGRADO ---
+    function logicaIA(hC, hA, qFuturo, nM) {
+        let alvo = 20; // Base
+
+        // 1. RECORRE ÀS VARIÁVEIS: Se Aguieira > 800 OU Coimbra > 18.5 OU Maré alta > 16
+        // O sistema abre progressivamente para garantir escoamento.
+        if (qFuturo >= 1000 || hC > 18.2) {
+            alvo = 100; // Abertura Máxima
+        } else if (qFuturo > 600) {
+            alvo = 60; // Antecipação moderada
+        }
+
+        // 2. EQUILÍBRIO COM ALFARELOS: 
+        // Só fecha para proteger Alfarelos se Coimbra tiver margem segura
+        if (hA > 11.2 && hC < 17.5 && qFuturo < 1500) {
+            alvo = 40; 
+        }
+
+        // Aplicação
+        let atual = gateAperture * 100;
+        gateAperture = (atual + (alvo - atual) * 0.2) / 100;
+        document.getElementById('gateCtrl').value = Math.round(gateAperture * 100);
+        document.getElementById('gVal').innerText = Math.round(gateAperture * 100);
+    }
+
+    function simular() {
+        tick = (tick + 1) % totalPontos;
+        document.getElementById('clock').innerText = labelsHoras[tick];
+        let nM = 15.0 + Math.sin((tick / totalPontos) * Math.PI * 4) * 1.5;
+        let hC = hCoimbra[hCoimbra.length - 1];
+        let hA = hAlfarelos[hAlfarelos.length - 1];
+
+        if (autoMode) logicaIA(hC, hA, qInManual, nM);
+
+        // Física: Capacidade de 1400m3/s a 100% de abertura com maré média
+        let descC = gateAperture * 4800 * Math.sqrt(Math.max(0.1, hC - nM) / 1.1);
+        let nHC = hC + (qIn[qIn.length - 20] - descC) / 8500;
+        let nHA = hA + (qOutC[qOutC.length - 8] - 210 * Math.sqrt(Math.max(0.1, hA - 8.5))) / 17000;
+
+        qIn.shift(); qIn.push(qInManual);
+        qOutC.shift(); qOutC.push(descC);
+        hCoimbra.shift(); hCoimbra.push(nHC);
+        hAlfarelos.shift(); hAlfarelos.push(nHA);
+        hMare.shift(); hMare.push(nM);
+
+        document.getElementById('hC_txt').innerText = nHC.toFixed(2);
+        document.getElementById('hA_txt').innerText = nHA.toFixed(2);
+        document.getElementById('fillCoimbra').style.height = Math.max(0, (nHC - 14) * 16) + "%";
+        document.getElementById('fillAlfarelos').style.height = Math.max(0, (nHA - 8.5) * 33) + "%";
+        document.getElementById('fillCoimbra').classList.toggle('danger-fill', nHC >= 20);
+        document.getElementById('fillAlfarelos').classList.toggle('danger-fill', nHA >= 11.5);
+        document.getElementById('mareStatus').innerText = nM > 15 ? "CHEIA ↑" : "BAIXA ↓";
+
+        chart.update('none');
+    }
+
+    document.getElementById('qInCtrl').oninput = function() { qInManual = parseInt(this.value); document.getElementById('qInVal').innerText = qInManual; };
+    document.getElementById('gateCtrl').oninput = function() { if(!autoMode) { gateAperture = this.value / 100; document.getElementById('gVal').innerText = this.value; } };
+    document.getElementById('btnAuto').onclick = function() { autoMode = !autoMode; this.innerText = autoMode ? "SISTEMA INTEGRADO: ON" : "SISTEMA INTEGRADO: OFF"; this.className = "btn-auto " + (autoMode ? "auto-on" : "auto-off"); };
+
+    setInterval(simular, 500);
+</script>
+</body>
+</html>
