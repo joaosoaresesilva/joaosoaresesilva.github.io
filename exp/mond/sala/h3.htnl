@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Monitorização em Tempo Real - Sistema Mondego</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Courier New', Courier, monospace; background: #0d1117; color: #58a6ff; margin: 20px; }
+        .dashboard { max-width: 1000px; margin: auto; border: 2px solid #30363d; padding: 20px; border-radius: 10px; }
+        .metrics { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 1.2em; }
+        .metric-box { background: #161b22; padding: 15px; border: 1px solid #30363d; border-radius: 5px; text-align: center; flex: 1; margin: 0 5px; }
+        .warning { color: #f85149; animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+        #log { font-size: 0.8em; color: #8b949e; height: 100px; overflow-y: scroll; background: #010409; padding: 10px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+    <h2>CENTRO DE CONTROLO HIDRÁULICO: BAIXO MONDEGO</h2>
+    
+    <div class="metrics">
+        <div class="metric-box">Tempo: <br><span id="timer">00:00</span>h</div>
+        <div class="metric-box">Aguieira: <br><span id="valAguieira">0</span> m³/s</div>
+        <div class="metric-box">Alfarelos: <br><span id="valAlfarelos">0</span> m³/s</div>
+        <div class="metric-box">Risco: <br><span id="riskLevel">ESTÁVEL</span></div>
+    </div>
+
+    <canvas id="realTimeChart"></canvas>
+    
+    <div id="log">Iniciando monitorização de tempestade...</div>
+</div>
+
+<script>
+const ctx = document.getElementById('realTimeChart').getContext('2d');
+let timeStep = 0;
+const totalSteps = 96; // 48 horas
+const dataAguieira = [];
+const dataAlfarelos = [];
+const labels = [];
+
+const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'Descarga Aguieira',
+            data: dataAguieira,
+            borderColor: '#f85149',
+            borderWidth: 2,
+            pointRadius: 0
+        }, {
+            label: 'Caudal em Alfarelos (Controlado)',
+            data: dataAlfarelos,
+            borderColor: '#3fb950',
+            backgroundColor: 'rgba(63, 185, 80, 0.1)',
+            fill: true,
+            pointRadius: 0
+        }]
+    },
+    options: {
+        animation: false,
+        scales: {
+            y: { min: 0, max: 2500, grid: { color: '#30363d' } },
+            x: { grid: { color: '#30363d' } }
+        }
+    }
+});
+
+function atualizarSimulacao() {
+    if (timeStep >= totalSteps) return;
+
+    let hora = timeStep * 0.5;
+    let qIn = 200 + 2000 * Math.exp(-Math.pow(hora - 20, 2) / 50); // Pico às 20h
+    
+    // Lógica de controlo automático do Açude
+    let limite = 1200;
+    let qOut = qIn > limite ? limite + (qIn - limite) * 0.1 : qIn;
+
+    // Atualizar Dados
+    labels.push(hora + "h");
+    dataAguieira.push(qIn);
+    dataAlfarelos.push(qOut);
+
+    // Interface
+    document.getElementById('timer').innerText = hora.toFixed(1);
+    document.getElementById('valAguieira').innerText = Math.round(qIn);
+    document.getElementById('valAlfarelos').innerText = Math.round(qOut);
+    
+    const log = document.getElementById('log');
+    if (qIn > 1500) {
+        document.getElementById('riskLevel').innerText = "CRÍTICO";
+        document.getElementById('riskLevel').className = "warning";
+        log.innerHTML += `[${hora}h] ALERTA: Caudal na Aguieira excede capacidade de Alfarelos!<br>`;
+    }
+
+    chart.update();
+    timeStep++;
+    setTimeout(atualizarSimulacao, 100); // Velocidade da simulação
+}
+
+atualizarSimulacao();
+</script>
+</body>
+</html>
