@@ -71,22 +71,22 @@
         
         
         // ZONA A (Montante / Baixa de Coimbra)
-        {id: "MOSTEIRO STA CLARA-VELHA(SUL)", pos: [40.2018, -8.4340], cota: 19.2, dist: 0.1, reg: "A", hist: true}, // Corrigido para nível do pátio
-        {id: "ESTAÇÃO COIMBRA-A (VELHA)", pos: [40.2111, -8.4337], cota: 20.2, dist: 0.1, reg: "A", hist: true},
-        {id: "PRAÇA DO COMÉRCIO", pos: [40.2092, -8.4298], cota: 20.8, dist: 0.2, reg: "A", hist: true},
+        {id: "MOSTEIRO STA CLARA-VELHA(SUL)", pos: [40.2018, -8.4340], cota: 19.0, dist: 0.1, reg: "A", hist: true}, // Corrigido para nível do pátio
+        {id: "ESTAÇÃO COIMBRA-A (VELHA)", pos: [40.2111, -8.4337], cota: 20.0, dist: 0.1, reg: "A", hist: true},
+        {id: "PRAÇA DO COMÉRCIO", pos: [40.2092, -8.4298], cota: 20.0, dist: 0.2, reg: "A", hist: true},
         {id: "HOTEL ASTÓRIA / PORTAGEM", pos: [40.2088, -8.4315], cota: 20.5, dist: 0.2, reg: "A", hist: true},
-        {id: "EXPLORATÓRIO / P. VERDE", pos: [40.1985, -8.4315], cota: 19.8, dist: 0.5, reg: "A", hist: true},
+        {id: "EXPLORATÓRIO / P. VERDE", pos: [40.1985, -8.4315], cota: 19.0, dist: 0.5, reg: "A", hist: true},
         {id: "ESTÁDIO UNIVERSITÁRIO", pos: [40.2045, -8.4345], cota: 20.8, dist: 0.4, reg: "A", hist: false},
         {id: "RUA DA SOFIA", pos: [40.2125, -8.4310], cota: 22.0, dist: 0.5, reg: "A", hist: true},
-        {id: "PARQUE DR. MANUEL BRAGA", pos: [40.2055, -8.4290], cota: 20.1, dist: 0.3, reg: "A", hist: true},
+        {id: "PARQUE DR. MANUEL BRAGA", pos: [40.2055, -8.4290], cota: 20.0, dist: 0.3, reg: "A", hist: true},
         
         // ZONAS CRÍTICAS ADICIONAIS (COIMBRA)
-        {id: "URSINHO (PARQUE VERDE)", pos: [40.2015, -8.4282], cota: 19.8, dist: 0.8, reg: "A", hist: true},
-        {id: "AAC - DESPORTOS NÁUTICOS", pos: [40.2000, -8.4287], cota: 19.6, dist: 0.7, reg: "A", hist: true},
+        {id: "URSINHO (PARQUE VERDE)", pos: [40.2015, -8.4282], cota: 19.0, dist: 0.8, reg: "A", hist: true},
+        {id: "AAC - DESPORTOS NÁUTICOS", pos: [40.2000, -8.4287], cota: 19.0, dist: 0.7, reg: "A", hist: true},
         {id: "SMTUC (OFICINAS)", pos: [40.1950, -8.4365], cota: 20.0, dist: 1.2, reg: "A", hist: true},
         {id: "ESCOLAS GUARDA INGLESA", pos: [40.1975, -8.4355], cota: 20.2, dist: 1.0, reg: "A", hist: true},
         {id: "REBOLIM (PRAIA FLUVIAL)", pos: [40.1895, -8.4050], cota: 23.5, dist: 2.5, reg: "A", hist: true},
-        {id: "PISCINAS CHOUPALINHO", pos: [40.1995, -8.4305], cota: 19.8, dist: 0.7, reg: "A", hist: true},
+        {id: "PISCINAS CHOUPALINHO", pos: [40.1995, -8.4305], cota: 19.0, dist: 0.7, reg: "A", hist: true},
         
         
         //{id: "MOSTEIRO STA CLARA-VELHA(SUL)", pos: [40.2018, -8.4340], cota: 17.5, dist: 0.1, reg: "A", hist: true},
@@ -136,48 +136,63 @@
             const data = await res.json();
             const flowM = data.contents.match(/(\d+[.,]?\d*)\s*m3\/s/);
             const cotaM = data.contents.match(/(\d+[.,]\d+)\s*m(?!\d|\/|3)/);
+            
             if (flowM) apaQ = parseFloat(flowM[1].replace(',', '.'));
-            if (cotaM) apaH = parseFloat(cotaM[1].replace(',', '.'));
+            if (cotaM) {
+                apaH = parseFloat(cotaM[1].replace(',', '.'));
+            }
             document.getElementById('syncStatus').innerText = "OK: " + new Date().toLocaleTimeString();
         } catch (e) {
             document.getElementById('syncStatus').innerText = "OFFLINE (SIMULAÇÃO)";
-            if(apaQ === 0) { apaQ = 1450; apaH = 15.80; }
+            // Valores de segurança caso o site falhe
+            if(apaQ === 0) { apaQ = 1450; apaH = 20.10; } 
         }
     }
 
-    function update() {
+function update() {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = '';
         
-        // Salto Hidráulico: hB (Jusante) sobe com o caudal Q
+        // Mantemos o cálculo de jusante (hB) para o resto do distrito
         let salto = Math.max(0.3, 5.8 - (apaQ / 1100)); 
         hB = apaH - salto;
 
-        document.getElementById('valFlow').innerText = (apaQ + (Math.random()*3)).toFixed(0);
-        document.getElementById('valCota').innerText = (apaH + (Math.random()*0.01)).toFixed(2);
+        document.getElementById('valFlow').innerText = apaQ.toFixed(0);
+        document.getElementById('valCota').innerText = apaH.toFixed(2);
         document.getElementById('valCotaB').innerText = hB.toFixed(2);
 
         let mare = Math.sin(Date.now() / 3600000) * 1.5;
 
         localidades.forEach(l => {
-            let base = l.reg === "A" ? apaH : hB;
-            // Propagação: Decréscimo pela distância + Empurrão do Caudal + Resistência da Maré
-            let hFinal = base - (l.dist * 0.045) + (apaQ/1850)*(1+(l.dist/35)) + (mare*(l.dist/45));
-            let diff = hFinal - l.cota;
+            let hFinal;
             
+            if (l.reg === "A") {
+                // Para Coimbra (Zona A), o nível é a Cota APA + pequena influência do caudal
+                // Praticamente elimina a perda por distância para bater certo com a realidade
+                hFinal = apaH + (apaQ / 4000); 
+            } else {
+                // Para o Baixo Mondego (Zona B), mantém a propagação com distância e maré
+                hFinal = hB - (l.dist * 0.045) + (apaQ/1850)*(1+(l.dist/35)) + (mare*(l.dist/45));
+            }
+
+            let diff = hFinal - l.cota;
             let row = tbody.insertRow();
             if (diff > 0) row.className = 'severe-risk';
             
-            let histPrefix = l.hist ? '<span class="historic-tag">HISTÓRICO</span>' : '';
+            let histPrefix = l.hist ? '<span class="historic-tag">H</span>' : '';
             row.insertCell(0).innerHTML = histPrefix + l.id;
             row.insertCell(1).innerText = l.cota.toFixed(1) + "m";
-            row.insertCell(2).innerText = hFinal.toFixed(2) + "m";
+            row.insertCell(2).innerText = hFinal.toFixed(2) + "m"; // Aqui verá o valor próximo da APA
             row.insertCell(3).innerText = diff > 0 ? "⚠️ ALAGADO" : "✓ SECO";
 
             markers[l.id].setRadius(250 + (Math.max(0, diff)*600));
-            markers[l.id].setStyle({color: diff > 0 ? '#e74c3c' : (l.hist ? '#f1c40f' : '#00d2ff')});
             
-            logData += `${new Date().getTime()},${l.id},${hFinal.toFixed(2)},${diff>0?1:0}\n`;
+            // Lógica de cores que pediste antes: 20=Verde, 21=Roxo, Outros=Vermelho/Azul
+            let corCirculo = l.hist ? '#f1c40f' : '#00d2ff';
+            if (l.cota >= 20.0 && l.cota < 21.0) corCirculo = '#00ff00';
+            else if (l.cota >= 21.0 && l.cota < 22.0) corCirculo = '#800080';
+            
+            markers[l.id].setStyle({color: diff > 0 ? '#e74c3c' : corCirculo});
         });
     }
 
