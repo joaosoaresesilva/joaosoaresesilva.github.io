@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>MONDEGO DIGITAL TWIN - PROPAGAÇÃO APA</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; font-family: 'Courier New', monospace; background: #050505; color: #d0d0d0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        #map { height: 35vh; width: 100%; background: #000; filter: grayscale(1) contrast(1.2) brightness(0.8); border-bottom: 2px solid #333; }
+        .sar-header { background: rgba(0,0,0,0.9); padding: 8px 20px; display: flex; justify-content: space-between; font-size: 11px; border-bottom: 1px solid #444; color: #aaa; }
+        .sar-header b { color: #f1c40f; }
+        #timeDisplay { position: absolute; top: 60px; right: 20px; z-index: 1000; background: rgba(10, 10, 10, 0.9); padding: 12px; border: 1px solid #00d2ff; color: #00d2ff; text-align: right; }
+        .main-container { display: flex; flex: 1; overflow: hidden; }
+        .panel { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 15px; border-right: 1px solid #222; background: #0a0a0a; }
+        .sidebar { flex: 2; padding: 15px; background: #050505; overflow-y: auto; }
+        .data-card { background: #111; padding: 15px; border-left: 4px solid #f1c40f; }
+        .data-card h3 { margin: 0 0 10px 0; font-size: 12px; color: #f1c40f; }
+        .value-display { font-size: 1.8em; font-weight: bold; color: #fff; }
+        table { width: 100%; font-size: 11px; border-collapse: collapse; }
+        th { border-bottom: 2px solid #444; padding: 8px; text-align: left; color: #00d2ff; position: sticky; top: 0; background: #050505; }
+        td { padding: 8px; border-bottom: 1px solid #222; }
+        .at-risk { background: rgba(241, 196, 15, 0.1); color: #f1c40f; }
+        .severe-risk { background: rgba(231, 76, 60, 0.15); color: #e74c3c; font-weight: bold; }
+        #btnSync { background: #00d2ff; color: #000; border: none; padding: 10px; font-weight: bold; cursor: pointer; width: 100%; }
+        .status-pulse { height: 10px; width: 10px; background: #2ecc71; border-radius: 50%; display: inline-block; margin-right: 5px; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div class="sar-header">
+    <div><span class="status-pulse"></span>FONTE: <b>AGÊNCIA PORTUGUESA DO AMBIENTE (REAL-TIME)</b></div>
+    <div>MARÉ (FIGUEIRA): <b id="txtMare">0.00m</b></div>
+    <div>SISTEMA: <b>MODELO DE PROPAGAÇÃO HIDRÁULICA 2026</b></div>
+</div>
+
+<div id="timeDisplay">
+    <small>ÚLTIMA LEITURA APA</small>
+    <span id="simClock" style="font-size: 1.4em; font-weight: bold; display: block;">--:--:--</span>
+</div>
+
+<div id="map"></div>
+
+<div class="main-container">
+    <div class="panel">
+        <div class="data-card">
+            <h3>CAUDAL (Q)</h3>
+            <div id="valFlow" class="value-display">---</div> <small>m³/s</small>
+        </div>
+        <div class="data-card">
+            <h3>COTA REFERÊNCIA (H)</h3>
+            <div id="valCota" class="value-display">---</div> <small>m (Coimbra Açude)</small>
+        </div>
+        <button id="btnSync">FORÇAR ATUALIZAÇÃO APA</button>
+        <p style="font-size: 10px; color: #666;">Nota: Este modelo calcula a propagação da onda de cheia baseada na morfologia do leito e influência da maré, sem considerar intervenções mecânicas no Açude-Ponte.</p>
+    </div>
+
+    <div class="sidebar">
+        <table id="mainTable">
+            <thead>
+                <tr><th>LOCALIDADE</th><th>COTA REF</th><th>NÍVEL ESTIMADO</th><th>RISCO</th></tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const map = L.map('map', {zoomControl: false}).setView([40.1850, -8.6000], 11); 
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    const localidades = [
+        {id: "PTE STA CLARA", pos: [40.2085, -8.4285], cota: 23.0, dist: 0},
+        {id: "BAIXA (P. COMÉRCIO)", pos: [40.2092, -8.4298], cota: 21.0, dist: 0.2},
+        {id: "ESTADIO UNIV.", pos: [40.2045, -8.4345], cota: 21.0, dist: 0.5},
+        {id: "MOSTEIRO STA CLARA", pos: [40.2018, -8.4340], cota: 19.0, dist: 0.8},
+        {id: "CHOUPAL", pos: [40.2220, -8.4480], cota: 14.8, dist: 2.5},
+        {id: "TAVEIRO", pos: [40.1910, -8.5060], cota: 14.0, dist: 7.0},
+        {id: "AMEAL", pos: [40.1750, -8.5350], cota: 13.2, dist: 10.5},
+        {id: "ARZILA", pos: [40.1650, -8.5550], cota: 12.5, dist: 13.0},
+        {id: "MONTEMOR (VILA)", pos: [40.1745, -8.6815], cota: 10.2, dist: 22.0},
+        {id: "EREIRA", pos: [40.1420, -8.6950], cota: 9.8, dist: 25.0},
+        {id: "FIGUEIRA (SALINAS)", pos: [40.1450, -8.8250], cota: 4.5, dist: 40.0}
+    ];
+
+    let currentQ = 0, currentH = 0, tempo = 0;
+    let markers = {};
+
+    localidades.forEach(l => {
+        markers[l.id] = L.circle(l.pos, {radius: 200, color: '#00d2ff', weight: 1, fillOpacity: 0.2}).addTo(map);
+    });
+
+    async function updateFromAPA() {
+        try {
+            const res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://infoagua.apambiente.pt/pt/cheias/cheia-detalhe/1627743374'));
+            const json = await res.json();
+            
+            const flowMatch = json.contents.match(/(\d+[.,]?\d*)\s*m3\/s/);
+            const cotaMatch = json.contents.match(/(\d+[.,]\d+)\s*m(?!\d|\/|3)/);
+            
+            if (flowMatch) currentQ = parseFloat(flowMatch[1].replace(',', '.'));
+            if (cotaMatch) currentH = parseFloat(cotaMatch[1].replace(',', '.'));
+            
+            document.getElementById('valFlow').innerText = currentQ;
+            document.getElementById('valCota').innerText = currentH.toFixed(2);
+            document.getElementById('simClock').innerText = new Date().toLocaleTimeString();
+            
+            calculatePropagation();
+        } catch (e) { console.error("Erro APA"); }
+    }
+
+    function calculatePropagation() {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+        
+        // Efeito Maré (Senoidal simplificado)
+        let nivelMare = Math.sin(Date.now() / 3600000) * 1.5; 
+        document.getElementById('txtMare').innerText = nivelMare.toFixed(2) + "m";
+
+        localidades.forEach(l => {
+            // MODELO DE PROPAGAÇÃO:
+            // A cota em cada ponto é a cota de Coimbra (H) menos a perda de carga pela distância,
+            // somada ao efeito do caudal (Q) e à influência da maré (que aumenta com a distância à foz).
+            
+            let perdaCarga = l.dist * 0.05; // Declive médio do Mondego
+            let efeitoCaudal = (currentQ / 2000) * (1 + (l.dist / 50)); 
+            let efeitoMareLocal = nivelMare * (l.dist / 40); // Maré afeta mais a jusante
+            
+            let hEstimado = currentH - perdaCarga + efeitoCaudal + efeitoMareLocal;
+            let diff = hEstimado - l.cota;
+            
+            let row = tbody.insertRow();
+            let status = "OK";
+            if (diff > 1.0) { 
+                status = "CRÍTICO"; row.className = 'severe-risk'; 
+                markers[l.id].setStyle({color: '#e74c3c', fillOpacity: 0.5});
+            } else if (diff > 0) { 
+                status = "ALERTA"; row.className = 'at-risk';
+                markers[l.id].setStyle({color: '#f1c40f', fillOpacity: 0.4});
+            } else {
+                markers[l.id].setStyle({color: '#00d2ff', fillOpacity: 0.1});
+            }
+
+            row.insertCell(0).innerText = l.id;
+            row.insertCell(1).innerText = l.cota.toFixed(1) + "m";
+            row.insertCell(2).innerText = hEstimado.toFixed(2) + "m";
+            row.insertCell(3).innerText = status;
+        });
+    }
+
+    document.getElementById('btnSync').onclick = updateFromAPA;
+    
+    // Atualização automática a cada 5 minutos (tempo real APA)
+    updateFromAPA();
+    setInterval(updateFromAPA, 300000);
+    // Recalcular propagação a cada minuto (para a maré)
+    setInterval(calculatePropagation, 60000);
+
+</script>
+</body>
+</html>

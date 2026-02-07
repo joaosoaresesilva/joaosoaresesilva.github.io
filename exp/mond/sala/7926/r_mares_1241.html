@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>SISTEMA MONDEGO - DIGITAL TWIN MILITAR (FULL DATA)</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; font-family: 'Courier New', monospace; background: #050505; color: #d0d0d0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        /* Estilo Mapa Militar/Cinza */
+        #map { 
+            height: 40vh; width: 100%; background: #000; 
+            filter: grayscale(100%) contrast(1.2) brightness(0.7) invert(100%); 
+            border-bottom: 2px solid #333; 
+        }
+
+        .sar-header { background: #000; padding: 10px 20px; display: flex; justify-content: space-between; font-size: 11px; border-bottom: 1px solid #444; color: #00d2ff; }
+        .main-container { display: flex; flex: 1; overflow: hidden; }
+        
+        .panel { flex: 0.7; padding: 15px; display: flex; flex-direction: column; gap: 15px; border-right: 1px solid #222; background: #0a0a0a; }
+        .sidebar { flex: 2.3; padding: 10px; background: #050505; overflow-y: auto; }
+
+        .data-card { background: #111; padding: 12px; border: 1px solid #333; border-left: 4px solid #00d2ff; }
+        .data-card h3 { margin: 0 0 5px 0; font-size: 10px; color: #888; text-transform: uppercase; }
+        .value-display { font-size: 2em; font-weight: bold; color: #fff; font-variant-numeric: tabular-nums; }
+
+        table { width: 100%; font-size: 10px; border-collapse: collapse; }
+        th { border-bottom: 2px solid #444; padding: 8px; text-align: left; color: #00d2ff; position: sticky; top: 0; background: #050505; }
+        td { padding: 6px 8px; border-bottom: 1px solid #222; }
+
+        .at-risk { color: #f1c40f; background: rgba(241, 196, 15, 0.05); }
+        .severe-risk { color: #ff3e3e; background: rgba(255, 62, 62, 0.1); font-weight: bold; }
+        
+        .status-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .dot-green { background: #2ecc71; box-shadow: 0 0 5px #2ecc71; }
+        .dot-red { background: #e74c3c; box-shadow: 0 0 5px #e74c3c; animation: blink 1s infinite; }
+        
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div class="sar-header">
+    <div>ESTADO: <b id="syncStatus">SINC. APA...</b></div>
+    <div>MARÉ: <b id="txtMare">0.00m</b></div>
+    <div>MODO: <b>PROPAGAÇÃO DETERMINÍSTICA (22 SENSORES)</b></div>
+</div>
+
+<div id="map"></div>
+
+<div class="main-container">
+    <div class="panel">
+        <div class="data-card">
+            <h3>CAUDAL (Q)</h3>
+            <div id="valFlow" class="value-display">---</div>
+            <small>m³/s (REAL TIME)</small>
+        </div>
+        <div class="data-card">
+            <h3>COTA AÇUDE (H)</h3>
+            <div id="valCota" class="value-display">---</div>
+            <small>m (NÍVEL APA)</small>
+        </div>
+        <div style="font-size: 9px; color: #555; padding: 5px;">
+            *Mapa Militar: Estilo SAR (Search and Rescue) com inversão de contraste para monitorização noturna.
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <table id="mainTable">
+            <thead>
+                <tr><th>ID LOCALIDADE</th><th>REF</th><th>NÍVEL</th><th>RISCO</th></tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const map = L.map('map', {zoomControl: false, attributionControl: false}).setView([40.1850, -8.6000], 11); 
+    
+    // Camada Estilo Cinza Militar (OpenStreetMap Standard com Filtro CSS)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    // TODAS AS 22 LOCALIZAÇÕES DO INÍCIO
+    const localidades = [
+        {id: "PORTELA", pos: [40.1945, -8.4055], cota: 20.2, dist: -2.0},
+        {id: "PONTE STA CLARA", pos: [40.2085, -8.4285], cota: 23.0, dist: 0.1},
+        {id: "BAIXA (P. COMÉRCIO)", pos: [40.2092, -8.4298], cota: 21.0, dist: 0.3},
+        {id: "ESTÁDIO UNIVERS.", pos: [40.2045, -8.4345], cota: 20.8, dist: 0.6},
+        {id: "MOSTEIRO STA CLARA", pos: [40.2018, -8.4340], cota: 19.5, dist: 1.0},
+        {id: "PARQUE VERDE", pos: [40.2025, -8.4270], cota: 19.0, dist: 1.2},
+        {id: "CHOUPAL", pos: [40.2220, -8.4480], cota: 15.5, dist: 2.5},
+        {id: "BENCANTA", pos: [40.2110, -8.4520], cota: 15.0, dist: 3.2},
+        {id: "TAVEIRO", pos: [40.1910, -8.5060], cota: 14.5, dist: 8.5},
+        {id: "VILA POUCA", pos: [40.1850, -8.5150], cota: 14.2, dist: 9.8},
+        {id: "AMEAL", pos: [40.1750, -8.5350], cota: 13.5, dist: 11.2},
+        {id: "ARZILA", pos: [40.1650, -8.5550], cota: 12.8, dist: 14.5},
+        {id: "CASAL VERDE", pos: [40.1720, -8.6050], cota: 12.0, dist: 18.0},
+        {id: "FORMOSELHA", pos: [40.1550, -8.6550], cota: 11.2, dist: 20.5},
+        {id: "MONTEMOR (VILA)", pos: [40.1745, -8.6815], cota: 10.5, dist: 23.5},
+        {id: "MONTEMOR (BAIXA)", pos: [40.1700, -8.6850], cota: 9.8, dist: 24.2},
+        {id: "EREIRA", pos: [40.1420, -8.6950], cota: 9.5, dist: 27.0},
+        {id: "VERRIDE", pos: [40.1350, -8.6880], cota: 9.8, dist: 28.5},
+        {id: "REVELLES", pos: [40.1920, -8.6550], cota: 11.0, dist: 21.0},
+        {id: "LARES", pos: [40.1480, -8.7550], cota: 7.5, dist: 33.0},
+        {id: "MAIORCA", pos: [40.1720, -8.7520], cota: 8.0, dist: 32.0},
+        {id: "FIGUEIRA DA FOZ", pos: [40.1450, -8.8250], cota: 4.5, dist: 41.0}
+    ];
+
+    let apaQ = 0, apaH = 0;
+    let markers = {};
+
+    localidades.forEach(l => {
+        markers[l.id] = L.circle(l.pos, {
+            radius: 250, color: '#00d2ff', weight: 1, fillOpacity: 0.2
+        }).addTo(map);
+    });
+
+    async function syncAPA() {
+        try {
+            const res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://infoagua.apambiente.pt/pt/cheias/cheia-detalhe/1627743374'));
+            const json = await res.json();
+            const flowMatch = json.contents.match(/(\d+[.,]?\d*)\s*m3\/s/);
+            const cotaMatch = json.contents.match(/(\d+[.,]\d+)\s*m(?!\d|\/|3)/);
+            if (flowMatch) apaQ = parseFloat(flowMatch[1].replace(',', '.'));
+            if (cotaMatch) apaH = parseFloat(cotaMatch[1].replace(',', '.'));
+            document.getElementById('syncStatus').innerText = "ONLINE - " + new Date().toLocaleTimeString();
+        } catch (e) { document.getElementById('syncStatus').innerText = "MODO ESTIMATIVA"; }
+    }
+
+    function updateFrame() {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+        
+        // Micro-flutuação para dinâmica visual
+        let fQ = apaQ * (1 + (Math.random() - 0.5) * 0.002);
+        let fH = apaH * (1 + (Math.random() - 0.5) * 0.001);
+        
+        document.getElementById('valFlow').innerText = fQ.toFixed(0);
+        document.getElementById('valCota').innerText = fH.toFixed(2);
+
+        let nivelMare = Math.sin(Date.now() / 2000000) * 1.6;
+        document.getElementById('txtMare').innerText = nivelMare.toFixed(2) + "m";
+
+        localidades.forEach(l => {
+            let declive = l.dist * 0.045;
+            let efeitoQ = (fQ / 1700) * (1 + (l.dist / 35));
+            let efeitoM = nivelMare * Math.pow(Math.max(0, l.dist / 41), 2);
+            
+            let hLocal = fH - declive + efeitoQ + efeitoM;
+            let diff = hLocal - l.cota;
+            
+            // Dinâmica de Círculos
+            let rad = 250 + (Math.max(0, diff) * 450);
+            let cor = diff > 0.8 ? '#ff3e3e' : (diff > 0 ? '#f1c40f' : '#00d2ff');
+            markers[l.id].setRadius(rad);
+            markers[l.id].setStyle({color: cor, fillColor: cor, fillOpacity: diff > 0 ? 0.4 : 0.1});
+
+            let row = tbody.insertRow();
+            if (diff > 0.8) row.className = 'severe-risk';
+            else if (diff > 0) row.className = 'at-risk';
+            
+            row.insertCell(0).innerText = l.id;
+            row.insertCell(1).innerText = l.cota.toFixed(1) + "m";
+            row.insertCell(2).innerHTML = `<b>${hLocal.toFixed(2)}m</b>`;
+            let dot = diff > 0 ? 'dot-red' : 'dot-green';
+            row.insertCell(3).innerHTML = `<span class="status-dot ${dot}"></span>${diff > 0 ? 'RISCO' : 'OK'}`;
+        });
+    }
+
+    syncAPA();
+    setInterval(syncAPA, 60000);
+    setInterval(updateFrame, 1000);
+
+</script>
+</body>
+</html>

@@ -2,50 +2,40 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>SISTEMA GESTÃO ADAPTATIVA - MONDEGO (HIDRO-DINÂMICO)</title>
+    <title>SISTEMA MONDEGO - GESTÃO DINÂMICA (FEEDBACK REAL)</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { margin: 0; font-family: 'Courier New', monospace; background: #050505; color: #d0d0d0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         #map { height: 30vh; width: 100%; background: #000; filter: grayscale(1) contrast(1.2) brightness(0.8); border-bottom: 2px solid #333; }
-        
         .sar-header { background: rgba(0,0,0,0.9); padding: 5px 20px; display: flex; justify-content: space-between; font-size: 11px; border-bottom: 1px solid #444; color: #aaa; align-items: center; }
         .sar-header b { color: #00d2ff; }
-
         #timeDisplay { position: absolute; top: 50px; right: 20px; z-index: 1000; background: rgba(10, 10, 10, 0.9); padding: 10px; border: 1px solid #f1c40f; color: #f1c40f; text-align: right; }
-        
         .main-container { display: flex; flex: 1; overflow: hidden; background: #0a0a0a; }
-        .panel { flex: 1.2; padding: 15px; display: flex; flex-direction: column; gap: 8px; border-right: 1px solid #222; }
+        .panel { flex: 1.2; padding: 15px; display: flex; flex-direction: column; gap: 10px; border-right: 1px solid #222; }
         .sidebar { flex: 1.8; padding: 15px; background: #050505; overflow-y: auto; }
-
         .slider-box { background: #111; padding: 8px; border: 1px solid #333; font-size: 0.75em; }
         .slider-box b { color: #f1c40f; }
         input[type=range] { width: 100%; accent-color: #f1c40f; }
-
-        .graph-container { background: #000; border: 1px solid #333; height: 80px; position: relative; margin: 5px 0; }
-        .graph-area { height: 100%; width: 100%; position: relative; overflow: hidden; }
+        .graph-container { background: #000; border: 1px solid #333; height: 70px; position: relative; }
+        .graph-area { height: 100%; width: 100%; position: relative; }
         .bar-c { position: absolute; bottom: 0; width: 2px; background: #f1c40f; opacity: 0.7; }
         .bar-b { position: absolute; bottom: 0; width: 2px; background: #00d2ff; opacity: 0.7; }
-
         table { width: 100%; font-size: 10px; border-collapse: collapse; }
         th { border-bottom: 2px solid #444; padding: 6px; text-align: left; color: #00d2ff; position: sticky; top: 0; background: #050505; }
         td { padding: 6px; border-bottom: 1px solid #222; }
-        
         .at-risk { background: rgba(241, 196, 15, 0.1); color: #f1c40f; }
         .severe-risk { background: rgba(231, 76, 60, 0.15); color: #e74c3c; font-weight: bold; }
-
-        .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: auto; }
-        button { font-family: inherit; padding: 10px; cursor: pointer; font-weight: bold; border: 1px solid; background: transparent; transition: 0.3s; }
+        button { font-family: inherit; padding: 10px; cursor: pointer; font-weight: bold; border: 1px solid; background: transparent; transition: 0.3s; width: 100%; }
         #btnRun { color: #2ecc71; border-color: #2ecc71; }
-        #btnLog { color: #f1c40f; border-color: #f1c40f; }
     </style>
 </head>
 <body>
 
 <div class="sar-header">
-    <div>SINC APA: <b id="lastSync">---</b></div>
-    <div>MARÉ ATUAL: <b id="txtMareVal">0.00m</b></div>
-    <div>LINHAS DATASET: <b id="logCount">0</b></div>
-    <div>SISTEMA: <b>GESTÃO DINÂMICA MONDEGO 2026</b></div>
+    <div>ESTADO APA: <b id="lastSync">SINCRONIZANDO...</b></div>
+    <div>MARÉ: <b id="txtMareStat">0.00m</b></div>
+    <div>LOGS: <b id="logCount">0</b></div>
+    <div>SISTEMA: <b>GESTÃO DINÂMICA (FEEDBACK AUTOMÁTICO)</b></div>
 </div>
 
 <div id="timeDisplay">
@@ -57,30 +47,33 @@
 
 <div class="main-container">
     <div class="panel">
-        <div class="slider-box">COTA APA (C): <b id="txtInitC">--</b>m<input type="range" id="inpInitC" min="10.0" max="25.0" step="0.01" value="15.00"></div>
-        <div class="slider-box">CAUDAL APA: <b id="txtFlow">--</b> m3/s<input type="range" id="inpFlow" min="100" max="15000" step="1" value="2000"></div>
-        <div class="slider-box">ABERTURA AÇUDE: <b id="txtGates">90</b>%<input type="range" id="inpGates" min="0" max="100" value="90"></div>
+        <div class="slider-box">
+            COTA COIMBRA (hC): <b id="txtInitC">--</b>m
+            <input type="range" id="inpInitC" min="10.0" max="25.0" step="0.01" value="15.00">
+        </div>
+        <div class="slider-box">
+            CAUDAL ENTRADA: <b id="txtFlow">--</b> m3/s
+            <input type="range" id="inpFlow" min="100" max="15000" step="1" value="2000">
+        </div>
+        <div class="slider-box">
+            ABERTURA AÇUDE: <b id="txtGates">90</b>%
+            <input type="range" id="inpGates" min="0" max="100" value="90">
+        </div>
         
-        <div class="graph-container">
-            <div style="position:absolute; top:2px; left:5px; font-size:8px; color:#f1c40f; z-index:10;">COIMBRA (C)</div>
-            <div style="position:absolute; top:12px; left:5px; font-size:8px; color:#00d2ff; z-index:10;">B. MONDEGO (B) + MARÉ</div>
-            <div class="graph-area" id="graphArea"></div>
+        <div class="graph-container"><div class="graph-area" id="graphArea"></div></div>
+
+        <div style="background: #001a1a; padding: 10px; border: 1px solid #00d2ff; font-size: 11px;">
+            <label><input type="radio" name="iaMode" value="manual" checked> MODO MANUAL (ACUMULATIVO)</label><br>
+            <label><input type="radio" name="iaMode" value="baixa"> MODO PILOTO (AUTO-AÇUDE)</label>
         </div>
 
-        <div style="background: #001a1a; padding: 10px; border: 1px solid #00d2ff; font-size: 10px;">
-            MODO: <input type="radio" name="iaMode" value="manual" checked> MANUAL 
-            <input type="radio" name="iaMode" value="auto"> AUTO (PROT. COIMBRA)
-        </div>
-
-        <div class="btn-group">
-            <button id="btnRun">INICIAR</button>
-            <button id="btnLog">EXPORTAR R</button>
-        </div>
+        <button id="btnRun">INICIAR SIMULAÇÃO</button>
+        <button id="btnLog" style="color: #f1c40f; border-color: #f1c40f; margin-top: 5px;">EXPORTAR PARA R</button>
     </div>
 
     <div class="sidebar">
         <table id="mainTable">
-            <thead><tr><th>LOCAL</th><th>REF</th><th>ATUAL</th><th>ESTADO</th></tr></thead>
+            <thead><tr><th>LOCAL</th><th>COTA REF</th><th>NÍVEL ATUAL</th><th>ESTADO</th></tr></thead>
             <tbody id="tableBody"></tbody>
         </table>
     </div>
@@ -96,21 +89,10 @@
         {id: "BAIXA (P. COMÉRCIO)", pos: [40.2092, -8.4298], cota: 21.0, reg: "C"},
         {id: "ESTADIO UNIV.", pos: [40.2045, -8.4345], cota: 21.0, reg: "C"},
         {id: "PORTELA", pos: [40.1945, -8.4055], cota: 20.2, reg: "C"},
-        {id: "R. FERREIRA BORGES", pos: [40.20918, -8.42912], cota: 20.0, reg: "C"},
-        {id: "R. ADELINO VEIGA", pos: [40.209079, -8.43199], cota: 20.0, reg: "C"},
-        {id: "ETA BOAVISTA", pos: [40.1895, -8.4190], cota: 20.0, reg: "C"},
-        {id: "PARQUE VERDE", pos: [40.2035, -8.4275], cota: 20.0, reg: "C"},
-        {id: "MOSTEIRO STA CLARA", pos: [40.2018, -8.4340], cota: 19.0, reg: "C"},
-        {id: "MOSTEIRO STA CRUZ", pos: [40.2108, -8.4285], cota: 19.0, reg: "C"},
-        {id: "R. DO GORGULHÃO", pos: [40.216701, -8.456282], cota: 19.0, reg: "C"},
-        {id: "DOCAS RIO", pos: [40.202632, -8.426271], cota: 19.0, reg: "C"},
-        {id: "CHOUPAL", pos: [40.2220, -8.4480], cota: 14.8, reg: "C"},
         {id: "TAVEIRO", pos: [40.1910, -8.5060], cota: 14.0, reg: "C"},
         {id: "AMEAL", pos: [40.1750, -8.5350], cota: 13.2, reg: "B"},
         {id: "CAMPOS DO BOLÃO", pos: [40.2150, -8.4650], cota: 13.0, reg: "B"},
         {id: "ARZILA", pos: [40.1650, -8.5550], cota: 12.5, reg: "B"},
-        {id: "PEREIRA (LINHA)", pos: [40.1585, -8.5910], cota: 11.0, reg: "B"},
-        {id: "FORMOSELHA", pos: [40.1550, -8.6250], cota: 10.8, reg: "B"},
         {id: "MONTEMOR (VILA)", pos: [40.1745, -8.6815], cota: 10.2, reg: "B"},
         {id: "EREIRA", pos: [40.1420, -8.6950], cota: 9.8, reg: "B"},
         {id: "FIGUEIRA (SALINAS)", pos: [40.1450, -8.8250], cota: 4.5, reg: "B"}
@@ -120,43 +102,74 @@
     let hC = 15.00, hB = 8.50, tempo = 0, rodando = false;
     let amplitudeMare = 1.6, periodoMareMinutos = 744, nivelMareAtual = 0;
     let simTime = new Date();
-    let logBuffer = ["DATA_REAL\tHORA_SIM\tLOCAL\tNIVEL\tMARE\tCAUDAL\tGATES\n"];
+    let logBuffer = ["HORA_SIM\tLOCAL\tNIVEL\tMARE\tCAUDAL\tGATES\n"];
 
     sensores.forEach(s => {
-        L.circleMarker(s.pos, { radius: 2, color: '#00d2ff', fillOpacity: 1 }).addTo(map);
-        visualMarkers[s.id] = { circle: L.circle(s.pos, { radius: 0, weight: 1, opacity: 0.5, fillColor: '#f1c40f', fillOpacity: 0.1 }).addTo(map) };
+        L.circleMarker(s.pos, { radius: 3, color: '#00d2ff' }).addTo(map);
+        visualMarkers[s.id] = { circle: L.circle(s.pos, { radius: 0, weight: 1, fillColor: '#f1c40f', fillOpacity: 0.2 }).addTo(map) };
     });
 
+    async function fetchAPA() {
+        try {
+            const url = 'https://infoagua.apambiente.pt/pt/cheias/cheia-detalhe/1627743374';
+            const res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(url));
+            const json = await res.json();
+            const flowM = json.contents.match(/(\d+[.,]?\d*)\s*m3\/s/);
+            const cotaM = json.contents.match(/(\d+[.,]\d+)\s*m(?!\d|\/|3)/);
+            
+            if (flowM) {
+                let val = parseFloat(flowM[1].replace(',', '.'));
+                document.getElementById('inpFlow').value = val;
+                document.getElementById('txtFlow').innerText = val;
+            }
+            if (cotaM) {
+                hC = parseFloat(cotaM[1].replace(',', '.'));
+                document.getElementById('inpInitC').value = hC;
+                document.getElementById('txtInitC').innerText = hC.toFixed(2);
+            }
+            document.getElementById('lastSync').innerText = "CONECTADO (" + new Date().toLocaleTimeString() + ")";
+            updateUI();
+        } catch (e) { 
+            document.getElementById('lastSync').innerText = "MODO MANUAL";
+        }
+    }
+
     function simular() {
-        let flow = parseInt(document.getElementById('inpFlow').value);
+        let flowSlider = document.getElementById('inpFlow');
+        let cotaSlider = document.getElementById('inpInitC');
         let gatesInput = document.getElementById('inpGates');
         let mode = document.querySelector('input[name="iaMode"]:checked').value;
 
-        // 1. Motor de Maré
-        let fase = (tempo / periodoMareMinutos) * 2 * Math.PI;
-        nivelMareAtual = Math.sin(fase) * amplitudeMare;
-        document.getElementById('txtMareVal').innerText = nivelMareAtual.toFixed(2) + "m";
+        let currentFlow = parseInt(flowSlider.value);
+        let abertura = parseInt(gatesInput.value) / 100;
 
-        // 2. IA de Proteção
-        if (mode === "auto" && hC > 14.8) {
+        // 1. Maré
+        nivelMareAtual = Math.sin((tempo / periodoMareMinutos) * 2 * Math.PI) * amplitudeMare;
+        document.getElementById('txtMareStat').innerText = nivelMareAtual.toFixed(2) + "m";
+
+        // 2. IA Piloto
+        if (mode === "baixa" && hC > 15.0) {
             gatesInput.value = Math.min(100, parseInt(gatesInput.value) + 2);
+            document.getElementById('txtGates').innerText = gatesInput.value;
         }
 
-        let abertura = parseInt(gatesInput.value) / 100;
-        document.getElementById('txtGates').innerText = gatesInput.value;
-
-        // 3. DINÂMICA ACUMULATIVA COIMBRA (hC)
-        // Se gates = 0, hC sobe com o caudal. Se gates = 100, drena.
-        let influxo = (flow / 4500); 
+        // 3. CÁLCULO ACUMULATIVO (O efeito do fecho do açude)
+        let influxo = (currentFlow / 4500); 
         let defluxo = (abertura * 2.8);
         hC += (influxo - defluxo) * 0.08;
 
-        // 4. DINÂMICA BAIXO MONDEGO (hB) + MARÉ
-        let alvoHB = 7.5 + (flow / 4000) + (abertura * 6.5) + (nivelMareAtual * 0.8);
+        // --- ATUALIZAÇÃO AUTOMÁTICA DOS SLIDERS NO PAINEL ---
+        // Sincroniza o slider visual com o valor real da simulação
+        cotaSlider.value = hC.toFixed(2);
+        document.getElementById('txtInitC').innerText = hC.toFixed(2);
+        document.getElementById('txtFlow').innerText = currentFlow;
+
+        // Dinâmica do Baixo Mondego
+        let alvoHB = 7.5 + (currentFlow / 4000) + (abertura * 6.5) + (nivelMareAtual * 0.8);
         hB += (alvoHB - hB) * 0.05;
 
-        // Limites de segurança
-        hC = Math.max(10.5, hC);
+        // Limites
+        hC = Math.max(10.0, Math.min(25.0, hC));
         hB = Math.max(4.0, hB);
 
         simTime.setMinutes(simTime.getMinutes() + 1);
@@ -169,66 +182,55 @@
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = '';
         sensores.forEach(s => {
-            // Fator de impacto da maré por distância à foz
-            let mImpact = s.reg === "C" ? 0.05 : (s.id.includes("FIGUEIRA") ? 1.0 : 0.6);
-            let nivelLocal = (s.reg === "C" ? hC : hB) + (nivelMareAtual * mImpact * 0.2);
-            
-            let diff = nivelLocal - s.cota;
-            let estado = diff > 1.0 ? "CRÍTICO" : (diff > 0 ? "ALERTA" : "OK");
+            let distMare = s.reg === "C" ? 0.05 : (s.id.includes("FIGUEIRA") ? 1.0 : 0.6);
+            let nivel = (s.reg === "C" ? hC : hB) + (nivelMareAtual * distMare * 0.3);
+            let diff = nivel - s.cota;
+            let est = diff > 1.0 ? "CRÍTICO" : (diff > 0 ? "ALERTA" : "OK");
 
             let row = tbody.insertRow();
             if (diff > 0) {
                 row.className = diff > 1.0 ? 'severe-risk' : 'at-risk';
-                visualMarkers[s.id].circle.setRadius(20 + diff * 400);
+                visualMarkers[s.id].circle.setRadius(20 + diff * 450);
             } else { visualMarkers[s.id].circle.setRadius(0); }
 
             row.insertCell(0).innerText = s.id;
             row.insertCell(1).innerText = s.cota.toFixed(1) + "m";
-            row.insertCell(2).innerText = nivelLocal.toFixed(2) + "m";
-            row.insertCell(3).innerText = estado;
+            row.insertCell(2).innerText = nivel.toFixed(2) + "m";
+            row.insertCell(3).innerText = est;
         });
 
         document.getElementById('simClock').innerText = simTime.toLocaleTimeString('pt-PT');
         document.getElementById('elapsed').innerText = `T+ ${tempo} MIN`;
+        document.getElementById('logCount').innerText = tempo;
     }
 
     function desenharGrafico() {
         const area = document.getElementById('graphArea');
         const x = (tempo * 2) % area.offsetWidth;
         if (x < 2) area.innerHTML = '';
-        
-        // Coimbra
-        const bc = document.createElement('div'); 
-        bc.className = 'bar-c'; bc.style.left = x + 'px'; 
-        bc.style.height = Math.max(0, (hC - 10) * 5) + 'px';
+        const bc = document.createElement('div'); bc.className = 'bar-c'; bc.style.left = x + 'px'; bc.style.height = Math.max(0, (hC - 10) * 6) + 'px';
         area.appendChild(bc);
-        
-        // Baixo Mondego
-        const bb = document.createElement('div'); 
-        bb.className = 'bar-b'; bb.style.left = x + 'px'; 
-        bb.style.height = Math.max(0, (hB - 5) * 5) + 'px';
+        const bb = document.createElement('div'); bb.className = 'bar-b'; bb.style.left = x + 'px'; bb.style.height = Math.max(0, (hB - 5) * 5) + 'px';
         area.appendChild(bb);
     }
 
     document.getElementById('btnRun').onclick = function() {
         rodando = !rodando;
-        this.innerText = rodando ? "PARAR" : "INICIAR";
+        this.innerText = rodando ? "PARAR SIMULAÇÃO" : "RETOMAR SIMULAÇÃO";
         this.style.color = rodando ? "#e74c3c" : "#2ecc71";
     };
 
     document.getElementById('btnLog').onclick = () => {
         const blob = new Blob([logBuffer.join("")], { type: 'text/plain' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = "Relatorio_Mondego_Science.txt";
-        a.click();
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = "Simulacao_R.txt"; a.click();
     };
 
-    // Atualização de inputs manuais
+    // Eventos de entrada manual
     document.getElementById('inpInitC').oninput = function() { hC = parseFloat(this.value); document.getElementById('txtInitC').innerText = hC.toFixed(2); updateUI(); };
     document.getElementById('inpFlow').oninput = function() { document.getElementById('txtFlow').innerText = this.value; };
     document.getElementById('inpGates').oninput = function() { document.getElementById('txtGates').innerText = this.value; };
 
+    fetchAPA();
     setInterval(() => { if(rodando) simular(); }, 1000);
 </script>
 </body>
