@@ -2,18 +2,18 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>SISTEMA GESTÃO ADAPTATIVA - MONDEGO</title>
+    <title>SISTEMA GESTÃO ADAPTATIVA - MONDEGO (DATA SCIENCE EDITION)</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { margin: 0; font-family: 'Courier New', monospace; background: #050505; color: #d0d0d0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        #map { height: 32vh; width: 100%; background: #000; filter: grayscale(1) contrast(1.2) brightness(0.8); border-bottom: 2px solid #333; }
+        #map { height: 30vh; width: 100%; background: #000; filter: grayscale(1) contrast(1.2) brightness(0.8); border-bottom: 2px solid #333; }
         .sar-header { background: rgba(0,0,0,0.9); padding: 5px 20px; display: flex; justify-content: space-between; font-size: 11px; border-bottom: 1px solid #444; color: #aaa; }
         .sar-header b { color: #00d2ff; }
         #timeDisplay { position: absolute; top: 50px; right: 20px; z-index: 1000; background: rgba(10, 10, 10, 0.9); padding: 10px; border: 1px solid #f1c40f; color: #f1c40f; text-align: right; }
         #simClock { font-size: 1.5em; font-weight: bold; display: block; }
         .main-container { display: flex; flex: 1; overflow: hidden; background: #0a0a0a; }
-        .panel { flex: 1.5; padding: 15px; display: flex; flex-direction: column; gap: 8px; border-right: 1px solid #222; }
-        .sidebar { flex: 1.5; padding: 15px; background: #050505; overflow-y: auto; }
+        .panel { flex: 1.4; padding: 15px; display: flex; flex-direction: column; gap: 8px; border-right: 1px solid #222; }
+        .sidebar { flex: 1.6; padding: 15px; background: #050505; overflow-y: auto; }
         .slider-box { background: #111; padding: 8px; border: 1px solid #333; font-size: 0.75em; }
         .slider-box b { color: #f1c40f; }
         input[type=range] { width: 100%; accent-color: #f1c40f; }
@@ -21,7 +21,7 @@
         .hub-title { font-size: 10px; color: #ffffff; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; border-bottom: 1px solid #004d4d; }
         .mode-option { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; font-size: 10px; color: #ffffff; }
         .status-msg { font-size: 10px; color: #00d2ff; margin-top: 5px; font-style: italic; }
-        .graph-container { background: #000; border: 1px solid #333; height: 80px; position: relative; }
+        .graph-container { background: #000; border: 1px solid #333; height: 60px; position: relative; }
         .graph-area { height: 100%; width: 100%; position: relative; overflow: hidden; }
         .bar-c { position: absolute; bottom: 0; width: 2px; background: #f1c40f; }
         .bar-b { position: absolute; bottom: 0; width: 2px; background: #00d2ff; }
@@ -34,15 +34,14 @@
         button { font-family: inherit; padding: 10px; cursor: pointer; font-weight: bold; border: 1px solid; background: transparent; transition: 0.3s; }
         #btnRun { color: #2ecc71; border-color: #2ecc71; }
         #btnLog { color: #f1c40f; border-color: #f1c40f; }
-        #btnLog:hover { background: #f1c40f; color: #000; }
     </style>
 </head>
 <body>
 
 <div class="sar-header">
-    <div>SINC APA: <b id="lastSync">AGUARDANDO...</b></div>
-    <div>LOGS ATIVOS: <b id="logCount">0 REGISTOS</b></div>
-    <div>SISTEMA: <b>GESTÃO CRÍTICA MONDEGO 2026</b></div>
+    <div>SINC APA: <b id="lastSync">---</b></div>
+    <div>LINHAS DATASET: <b id="logCount">0</b></div>
+    <div>SISTEMA: <b>MONITORIZAÇÃO ESTATÍSTICA MONDEGO</b></div>
 </div>
 
 <div id="timeDisplay">
@@ -58,29 +57,23 @@
             <div class="slider-box">COTA APA (C): <b id="txtInitC">--</b>m<input type="range" id="inpInitC" min="10.0" max="25.0" step="0.01" value="15.00"></div>
             <div class="slider-box">CAUDAL APA: <b id="txtFlow">--</b><input type="range" id="inpFlow" min="100" max="15000" step="1" value="2000"></div>
         </div>
-        
-        <div class="slider-box">ABERTURA AÇUDE-PONTE: <b id="txtGates">90</b>%<input type="range" id="inpGates" min="0" max="100" value="90"></div>
-
+        <div class="slider-box">ABERTURA AÇUDE: <b id="txtGates">90</b>%<input type="range" id="inpGates" min="0" max="100" value="90"></div>
         <div class="graph-container"><div class="graph-area" id="graphArea"></div></div>
-
         <div class="automation-hub">
-            <div class="hub-title">Módulo de IA & Logística</div>
+            <div class="hub-title">Módulo de Automação</div>
             <label class="mode-option"><input type="radio" name="iaMode" value="manual" checked> MODO MANUAL</label>
-            <label class="mode-option"><input type="radio" name="iaMode" value="baixa"> PILOTO: PROTEÇÃO COIMBRA (AÇUDE)</label>
-            <label class="mode-option"><input type="radio" name="iaMode" value="total"> PILOTO: MINIMIZAÇÃO DE DANOS GLOBAIS</label>
-            <div id="aiMsg" class="status-msg">Pronto.</div>
+            <label class="mode-option"><input type="radio" name="iaMode" value="baixa"> PROTEÇÃO COIMBRA</label>
+            <label class="mode-option"><input type="radio" name="iaMode" value="total"> EQUILÍBRIO DE BACIA</label>
+            <div id="aiMsg" class="status-msg">Logs de alta densidade ativos.</div>
         </div>
-        
         <div class="btn-group">
-            <button id="btnRun">INICIAR MONITORIZAÇÃO</button>
-            <button id="btnLog">EXPORTAR RELATÓRIO TÉCNICO</button>
+            <button id="btnRun">INICIAR</button>
+            <button id="btnLog">EXPORTAR PARA R (.TXT)</button>
         </div>
     </div>
-
     <div class="sidebar">
-        <h4 style="margin: 0 0 10px 0; color:#f1c40f; font-size: 0.8em;">📡 SENSORES (ORDEM DESCENDENTE)</h4>
         <table id="mainTable">
-            <thead><tr><th>LOCAL</th><th>COTA REF</th><th>ATUAL</th><th>ESTADO</th></tr></thead>
+            <thead><tr><th>LOCAL</th><th>REF</th><th>NÍVEL</th><th>ESTADO</th></tr></thead>
             <tbody id="tableBody"></tbody>
         </table>
     </div>
@@ -117,91 +110,78 @@
     ];
 
     let visualMarkers = {};
-    let hC = 15.00, hB = 10.00, tempo = 0, rodando = false;
+    let hC = 15.00, hB = 10.00, tempo = 0, rodando = false, ultimoMinLog = -1;
     let simTime = new Date();
-    let logBuffer = [`--- RELATÓRIO TÉCNICO: GESTÃO ADAPTATIVA MONDEGO ---\n` +
-                     `Início da Sessão: ${new Date().toLocaleString()}\n` +
-                     `--------------------------------------------------------\n\n`];
+    // Cabeçalho para o R
+    let logBuffer = ["DATA_REAL\tHORA_SIM\tTIPO\tID_LOCAL\tREGIAO\tCOTA_REF\tNIVEL_ATUAL\tCAUDAL\tABERTURA_PERC\n"];
     let estadoAnterior = {};
 
     sensores.forEach(s => {
-        L.circleMarker(s.pos, { radius: 2, color: '#00d2ff', fillColor: '#00d2ff', fillOpacity: 1 }).addTo(map);
-        const circle = L.circle(s.pos, { radius: 0, color: '#888888', weight: 1, opacity: 0.5, fillColor: '#f1c40f', fillOpacity: 0.1 }).addTo(map);
-        visualMarkers[s.id] = { circle };
+        L.circleMarker(s.pos, { radius: 2, color: '#00d2ff', fillOpacity: 1 }).addTo(map);
+        visualMarkers[s.id] = { circle: L.circle(s.pos, { radius: 0, weight: 1, opacity: 0.5, fillColor: '#f1c40f', fillOpacity: 0.1 }).addTo(map) };
         estadoAnterior[s.id] = "OK";
     });
+
+    function addSnapshot(tipo) {
+        const hReal = new Date().toLocaleTimeString();
+        const hSim = simTime.toLocaleTimeString();
+        const caudal = document.getElementById('inpFlow').value;
+        const açude = document.getElementById('inpGates').value;
+
+        sensores.forEach(s => {
+            let nivel = (s.reg === "C") ? hC : hB;
+            let linha = `${hReal}\t${hSim}\t${tipo}\t${s.id}\t${s.reg}\t${s.cota}\t${nivel.toFixed(3)}\t${caudal}\t${açude}\n`;
+            logBuffer.push(linha);
+        });
+        document.getElementById('logCount').innerText = logBuffer.length - 1;
+    }
 
     async function fetchAPA() {
         try {
             const url = 'https://infoagua.apambiente.pt/pt/cheias/cheia-detalhe/1627743374';
             const res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(url));
             const json = await res.json();
-            const flowMatch = json.contents.match(/(\d+[.,]?\d*)\s*m3\/s/);
-            const cotaMatch = json.contents.match(/(\d+[.,]\d+)\s*m(?!\d|\/|3)/);
-
-            if (flowMatch) {
-                const val = parseFloat(flowMatch[1].replace(',', '.'));
-                document.getElementById('inpFlow').value = val;
-                document.getElementById('txtFlow').innerText = val;
-            }
-            if (cotaMatch) {
-                const val = parseFloat(cotaMatch[1].replace(',', '.'));
-                hC = val;
-                document.getElementById('inpInitC').value = val;
-                document.getElementById('txtInitC').innerText = val.toFixed(2);
-            }
+            const fM = json.contents.match(/(\d+[.,]?\d*)\s*m3\/s/);
+            const cM = json.contents.match(/(\d+[.,]\d+)\s*m(?!\d|\/|3)/);
+            if (fM) { document.getElementById('inpFlow').value = parseFloat(fM[1].replace(',', '.')); document.getElementById('txtFlow').innerText = fM[1]; }
+            if (cM) { hC = parseFloat(cM[1].replace(',', '.')); document.getElementById('inpInitC').value = hC; document.getElementById('txtInitC').innerText = hC.toFixed(2); }
             document.getElementById('lastSync').innerText = new Date().toLocaleTimeString();
             updateUI();
-        } catch (e) { document.getElementById('aiMsg').innerText = "Erro na ligação APA."; }
-    }
-
-    // --- FUNÇÃO DE LOG COM DADOS TÉCNICOS COMPLETOS ---
-    function addLog(local, cotaRef, nivelAtual, estado) {
-        const hReal = new Date().toLocaleTimeString();
-        const hSim = simTime.toLocaleTimeString();
-        const caudal = document.getElementById('inpFlow').value;
-        const açude = document.getElementById('inpGates').value;
-
-        const entrada = `[REAL: ${hReal} | SIM: ${hSim}] ` +
-                        `LOCAL: ${local.padEnd(20)} | ` +
-                        `ESTADO: ${estado.padEnd(8)} | ` +
-                        `NÍVEL: ${nivelAtual.toFixed(2)}m (REF: ${cotaRef}m) | ` +
-                        `CAUDAL: ${caudal} m3/s | ` +
-                        `AÇUDE: ${açude}%`;
-        
-        logBuffer.push(entrada + "\n");
-        document.getElementById('logCount').innerText = `${logBuffer.length - 3} REGISTOS`;
+        } catch (e) { console.log("APA Off"); }
     }
 
     function updateUI() {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = '';
+        let houveAlerta = false;
+
         sensores.forEach(s => {
             let nivel = (s.reg === "C") ? hC : hB;
             let diff = nivel - s.cota;
-            let visual = visualMarkers[s.id];
+            let est = diff > 1.0 ? "CRITICO" : (diff > 0 ? "ALERTA" : "OK");
+            
+            if (est !== estadoAnterior[s.id]) { houveAlerta = true; estadoAnterior[s.id] = est; }
+
             let row = tbody.insertRow();
-            let estadoAtual = "OK";
-
             if (diff > 0) {
-                estadoAtual = (diff > 1.0) ? "CRÍTICO" : "ALERTA";
-                row.className = (diff > 1.0) ? 'severe-risk' : 'at-risk';
-                visual.circle.setRadius(20 + diff * 500);
-                visual.circle.setStyle({ color: (diff > 1.0) ? '#e74c3c' : '#f1c40f', opacity: 0.6 });
-            } else {
-                visual.circle.setRadius(0);
-            }
-
-            if (estadoAtual !== estadoAnterior[s.id]) {
-                addLog(s.id, s.cota, nivel, estadoAtual);
-                estadoAnterior[s.id] = estadoAtual;
-            }
+                row.className = diff > 1.0 ? 'severe-risk' : 'at-risk';
+                visualMarkers[s.id].circle.setRadius(20 + diff * 500);
+            } else { visualMarkers[s.id].circle.setRadius(0); }
 
             row.insertCell(0).innerText = s.id;
-            row.insertCell(1).innerText = s.cota.toFixed(1) + "m";
-            row.insertCell(2).innerText = nivel.toFixed(2) + "m";
-            row.insertCell(3).innerText = estadoAtual;
+            row.insertCell(1).innerText = s.cota.toFixed(1);
+            row.insertCell(2).innerText = nivel.toFixed(2);
+            row.insertCell(3).innerText = est;
         });
+
+        if (houveAlerta) addSnapshot("ALERTA");
+
+        let minAtual = simTime.getMinutes();
+        if (minAtual % 5 === 0 && minAtual !== ultimoMinLog) {
+            addSnapshot("STAT_5M");
+            ultimoMinLog = minAtual;
+        }
+
         document.getElementById('simClock').innerText = simTime.toLocaleTimeString('pt-PT');
         document.getElementById('elapsed').innerText = `T+ ${tempo} MIN`;
     }
@@ -211,21 +191,16 @@
         let gatesInput = document.getElementById('inpGates');
         let mode = document.querySelector('input[name="iaMode"]:checked').value;
 
-        if (mode === "baixa" && hC > 14.5) {
-            gatesInput.value = Math.min(100, parseInt(gatesInput.value) + 5);
-        } else if (mode === "total") {
-            if (hC > 15.2) gatesInput.value = Math.min(100, parseInt(gatesInput.value) + 3);
-            else if (hB > 11.5) gatesInput.value = Math.max(0, parseInt(gatesInput.value) - 3);
+        if (mode === "baixa" && hC > 14.5) gatesInput.value = Math.min(100, parseInt(gatesInput.value) + 2);
+        else if (mode === "total") {
+            if (hC > 15.2) gatesInput.value = Math.min(100, parseInt(gatesInput.value) + 1);
+            else if (hB > 11.5) gatesInput.value = Math.max(0, parseInt(gatesInput.value) - 1);
         }
 
         let abertura = parseInt(gatesInput.value) / 100;
         document.getElementById('txtGates').innerText = gatesInput.value;
-
-        let alvoHC = 13.0 + (flow / 3000) + ((1 - abertura) * 6.0); 
-        hC += (alvoHC - hC) * 0.1;
-
-        let alvoHB = 8.0 + (flow / 4000) + (abertura * 7.0);
-        hB += (alvoHB - hB) * 0.08;
+        hC += ((13.0 + (flow / 3000) + ((1 - abertura) * 6.0)) - hC) * 0.1;
+        hB += ((8.0 + (flow / 4000) + (abertura * 7.0)) - hB) * 0.08;
 
         simTime.setMinutes(simTime.getMinutes() + 1);
         tempo++;
@@ -237,36 +212,30 @@
         const area = document.getElementById('graphArea');
         const x = (tempo * 2) % area.offsetWidth;
         if (x < 2) area.innerHTML = '';
-        const bc = document.createElement('div'); bc.className = 'bar-c'; bc.style.left = x + 'px'; bc.style.height = Math.max(0, (hC - 10) * 8) + 'px';
+        const bc = document.createElement('div'); bc.className = 'bar-c'; bc.style.left = x + 'px'; bc.style.height = Math.max(0, (hC - 10) * 5) + 'px';
         area.appendChild(bc);
-        const bb = document.createElement('div'); bb.className = 'bar-b'; bb.style.left = x + 'px'; bb.style.height = Math.max(0, (hB - 5) * 6) + 'px';
-        area.appendChild(bb);
     }
 
-    document.getElementById('btnLog').onclick = function() {
+    document.getElementById('btnLog').onclick = () => {
         const blob = new Blob(logBuffer, { type: 'text/plain' });
-        const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = `Relatorio_Tecnico_Mondego_${new Date().getTime()}.txt`;
+        a.href = URL.createObjectURL(blob);
+        a.download = `Dataset_Mondego_R_${new Date().getTime()}.txt`;
         a.click();
     };
 
     document.getElementById('btnRun').onclick = function() {
         rodando = !rodando;
-        this.innerText = rodando ? "INTERROMPER MONITORIZAÇÃO" : "INICIAR MONITORIZAÇÃO";
+        this.innerText = rodando ? "PARAR" : "INICIAR";
         this.style.color = rodando ? "#e74c3c" : "#2ecc71";
-        this.style.borderColor = rodando ? "#e74c3c" : "#2ecc71";
     };
 
-    document.getElementById('inpInitC').oninput = function() { hC = parseFloat(this.value); document.getElementById('txtInitC').innerText = hC.toFixed(2); updateUI(); };
+    document.getElementById('inpInitC').oninput = function() { hC = parseFloat(this.value); updateUI(); };
     document.getElementById('inpFlow').oninput = function() { document.getElementById('txtFlow').innerText = this.value; };
-    document.getElementById('inpGates').oninput = function() { document.getElementById('txtGates').innerText = this.value; };
 
     fetchAPA();
     setInterval(fetchAPA, 300000);
     setInterval(() => { if(rodando) simular(); }, 1000);
-    updateUI();
 </script>
 </body>
 </html>
