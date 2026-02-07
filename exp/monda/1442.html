@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>MONDEGO MONITOR - RADAR HISTÓRICO 40KM</title>
+    <title>MONDEGO MONITOR - CORES ESPECÍFICAS</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { margin: 0; font-family: 'Courier New', monospace; background: #050505; color: #d0d0d0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -47,7 +47,6 @@
             <div id="valCotaB" class="value-display" style="color: #00d2ff;">---</div><small>m (CALCULADO)</small>
         </div>
         <button id="btnLog">GERAR DATASET PARA R (.TXT)</button>
-        <div style="font-size: 9px; color: #666; margin-top: 10px;">* Pontos históricos marcados com [H] referem-se a zonas críticas da Baixa de Coimbra.</div>
     </div>
 
     <div class="sidebar">
@@ -65,9 +64,7 @@
     const map = L.map('map', {zoomControl: false}).setView([40.2050, -8.5000], 11);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-    // Definição das 22+ Localidades incluindo Pontos Históricos (Cotas 20-22)
     const localidades = [
-        // ZONA A (Montante / Baixa de Coimbra)
         {id: "MOSTEIRO STA CLARA-VELHA", pos: [40.2018, -8.4340], cota: 19.2, dist: 0.1, reg: "A", hist: true},
         {id: "ESTAÇÃO COIMBRA-A (VELHA)", pos: [40.2111, -8.4337], cota: 20.2, dist: 0.1, reg: "A", hist: true},
         {id: "PRAÇA DO COMÉRCIO", pos: [40.2092, -8.4298], cota: 20.8, dist: 0.2, reg: "A", hist: true},
@@ -76,14 +73,6 @@
         {id: "ESTÁDIO UNIVERSITÁRIO", pos: [40.2045, -8.4345], cota: 20.8, dist: 0.4, reg: "A", hist: false},
         {id: "RUA DA SOFIA", pos: [40.2125, -8.4310], cota: 22.0, dist: 0.5, reg: "A", hist: true},
         {id: "PARQUE DR. MANUEL BRAGA", pos: [40.2055, -8.4290], cota: 20.1, dist: 0.3, reg: "A", hist: true},
-        // ZONAS CRÍTICAS ADICIONAIS (COIMBRA)
-{id: "CLUBE NÁUTICO COIMBRA", pos: [40.1982, -8.4285], cota: 19.5, dist: 0.8, reg: "A", hist: true},
-{id: "SMTUC (OFICINAS)", pos: [40.1950, -8.4365], cota: 20.0, dist: 1.2, reg: "A", hist: true},
-{id: "ESCOLAS GUARDA INGLESA", pos: [40.1975, -8.4355], cota: 20.2, dist: 1.0, reg: "A", hist: true},
-{id: "REBOLIM (PRAIA FLUVIAL)", pos: [40.1895, -8.4050], cota: 23.5, dist: 2.5, reg: "A", hist: true},
-{id: "PISCINAS CHOUPALINHO", pos: [40.1995, -8.4305], cota: 19.8, dist: 0.7, reg: "A", hist: true},
-        
-        // ZONA B (Jusante / Baixo Mondego)
         {id: "CHOUPAL (ENTRADA)", pos: [40.2220, -8.4480], cota: 15.0, dist: 2.0, reg: "B", hist: false},
         {id: "BEM POSTA", pos: [40.2100, -8.4700], cota: 14.5, dist: 5.0, reg: "B", hist: false},
         {id: "TAVEIRO (ZONA COMERCIAL)", pos: [40.1910, -8.5060], cota: 14.0, dist: 8.5, reg: "B", hist: false},
@@ -104,7 +93,12 @@
     let markers = {};
 
     localidades.forEach(l => {
-        markers[l.id] = L.circle(l.pos, {radius: 250, color: l.hist ? '#f1c40f' : '#00d2ff', weight: 1, fillOpacity: 0.2}).addTo(map);
+        // Lógica de Cores pedida
+        let corCota = '#ff0000'; // Vermelho (Outros)
+        if (l.cota >= 20.0 && l.cota < 21.0) corCota = '#00ff00'; // Verde (Cota 20)
+        else if (l.cota >= 21.0 && l.cota < 22.0) corCota = '#800080'; // Roxo (Cota 21)
+
+        markers[l.id] = L.circle(l.pos, {radius: 250, color: corCota, weight: 2, fillOpacity: 0.3, fillColor: corCota}).addTo(map);
     });
 
     async function syncAPA() {
@@ -125,8 +119,6 @@
     function update() {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = '';
-        
-        // Salto Hidráulico: hB (Jusante) sobe com o caudal Q
         let salto = Math.max(0.3, 5.8 - (apaQ / 1100)); 
         hB = apaH - salto;
 
@@ -138,21 +130,21 @@
 
         localidades.forEach(l => {
             let base = l.reg === "A" ? apaH : hB;
-            // Propagação: Decréscimo pela distância + Empurrão do Caudal + Resistência da Maré
             let hFinal = base - (l.dist * 0.045) + (apaQ/1850)*(1+(l.dist/35)) + (mare*(l.dist/45));
             let diff = hFinal - l.cota;
             
             let row = tbody.insertRow();
             if (diff > 0) row.className = 'severe-risk';
             
-            let histPrefix = l.hist ? '<span class="historic-tag">HISTÓRICO</span>' : '';
+            let histPrefix = l.hist ? '<span class="historic-tag">H</span>' : '';
             row.insertCell(0).innerHTML = histPrefix + l.id;
             row.insertCell(1).innerText = l.cota.toFixed(1) + "m";
             row.insertCell(2).innerText = hFinal.toFixed(2) + "m";
             row.insertCell(3).innerText = diff > 0 ? "⚠️ ALAGADO" : "✓ SECO";
 
+            // Atualiza apenas raio e opacidade, preservando as cores definidas no início
             markers[l.id].setRadius(250 + (Math.max(0, diff)*600));
-            markers[l.id].setStyle({color: diff > 0 ? '#e74c3c' : (l.hist ? '#f1c40f' : '#00d2ff')});
+            markers[l.id].setStyle({fillOpacity: diff > 0 ? 0.6 : 0.2});
             
             logData += `${new Date().getTime()},${l.id},${hFinal.toFixed(2)},${diff>0?1:0}\n`;
         });
