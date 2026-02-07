@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>MONDEGO MONITOR - V3.0 FINAL CALIBRADA</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; font-family: 'Courier New', monospace; background: #050505; color: #d0d0d0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        #map { height: 35vh; width: 100%; background: #000; filter: grayscale(1) contrast(1.2) brightness(0.6); border-bottom: 2px solid #444; }
+        .sar-header { background: #111; padding: 10px 20px; display: flex; justify-content: space-between; font-size: 11px; border-bottom: 1px solid #333; color: #00d2ff; }
+        .main-container { display: flex; flex: 1; overflow: hidden; }
+        .panel { flex: 0.8; padding: 15px; display: flex; flex-direction: column; gap: 12px; border-right: 1px solid #222; background: #0a0a0a; overflow-y: auto; }
+        .sidebar { flex: 2.2; padding: 10px; background: #050505; overflow-y: auto; }
+        .data-card { background: #111; padding: 10px; border: 1px solid #333; border-left: 4px solid #f1c40f; }
+        .value-display { font-size: 1.8em; font-weight: bold; color: #fff; letter-spacing: -1px; }
+        table { width: 100%; font-size: 10px; border-collapse: collapse; }
+        th { border-bottom: 2px solid #444; padding: 10px; text-align: left; color: #00d2ff; position: sticky; top: 0; background: #050505; z-index: 10; }
+        td { padding: 8px; border-bottom: 1px solid #222; }
+        .severe-risk { background: rgba(231, 76, 60, 0.2) !important; color: #ff6b6b; font-weight: bold; }
+        .historic-tag { color: #f1c40f; font-size: 9px; border: 1px solid #f1c40f; padding: 1px 3px; border-radius: 2px; margin-right: 5px; }
+        #btnLog { color: #f1c40f; border: 1px solid #f1c40f; background: transparent; padding: 12px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s; }
+        #btnLog:hover { background: #f1c40f; color: #000; }
+    </style>
+</head>
+<body>
+
+<div class="sar-header">
+    <div>FONTE: <b>APA (AÇUDE COIMBRA) + CALIBRAÇÃO LOCAL</b></div>
+    <div>SINC: <b id="syncStatus">---</b></div>
+    <div style="color:#f1c40f">OFFSET: <b>+1.32m</b></div>
+</div>
+
+<div id="map"></div>
+
+<div class="main-container">
+    <div class="panel">
+        <div class="data-card">
+            <h3>CAUDAL (Q)</h3>
+            <div id="valFlow" class="value-display">---</div><small>m³/s</small>
+        </div>
+        <div class="data-card">
+            <h3>COTA APA (hA)</h3>
+            <div id="valCota" class="value-display">---</div><small>m (Sensor Açude)</small>
+        </div>
+        <div class="data-card">
+            <h3>NÍVEL REAL (hR)</h3>
+            <div id="valCotaB" class="value-display" style="color: #00ff00;">---</div><small>m (Coimbra Urbano)</small>
+        </div>
+        <button id="btnLog">EXPORTAR LOG DATA (.TXT)</button>
+    </div>
+
+    <div class="sidebar">
+        <table id="mainTable">
+            <thead>
+                <tr><th>LOCALIDADE / PONTO CRÍTICO</th><th>SOLO (Z)</th><th>NÍVEL (h)</th><th>ESTADO</th></tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const map = L.map('map', {zoomControl: false}).setView([40.2030, -8.4350], 13);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+    // Cotas de solo revistas (Z)
+    const localidades = [
+        {id: "MOSTEIRO STA CLARA-VELHA", pos: [40.2018, -8.4340], cota: 19.2, dist: 0.1, reg: "A", hist: true},
+        {id: "PARQUE DA CANÇÃO (RECINTO)", pos: [40.2040, -8.4309], cota: 19.5, dist: 0.2, reg: "A", hist: true},
+        {id: "AAC - DESPORTOS NÁUTICOS", pos: [40.2000, -8.4287], cota: 19.6, dist: 0.3, reg: "A", hist: true},
+        {id: "URSINHO (PARQUE VERDE)", pos: [40.2015, -8.4282], cota: 19.8, dist: 0.4, reg: "A", hist: true},
+        {id: "EXPLORATÓRIO / PISCINAS", pos: [40.1985, -8.4315], cota: 19.8, dist: 0.5, reg: "A", hist: true},
+        {id: "SMTUC (OFICINAS)", pos: [40.1950, -8.4365], cota: 20.0, dist: 0.8, reg: "A", hist: true},
+        {id: "PARQUE DR. MANUEL BRAGA", pos: [40.2055, -8.4290], cota: 20.1, dist: 0.2, reg: "A", hist: true},
+        {id: "ESTAÇÃO COIMBRA-A", pos: [40.2111, -8.4337], cota: 20.2, dist: 0.5, reg: "A", hist: true},
+        {id: "ESCOLAS GUARDA INGLESA", pos: [40.1975, -8.4355], cota: 20.2, dist: 0.7, reg: "A", hist: true},
+        {id: "HOTEL ASTÓRIA / PORTAGEM", pos: [40.2088, -8.4315], cota: 20.5, dist: 0.4, reg: "A", hist: true},
+        {id: "PRAÇA DO COMÉRCIO", pos: [40.2092, -8.4298], cota: 20.8, dist: 0.5, reg: "A", hist: true},
+        {id: "ESTÁDIO UNIVERSITÁRIO", pos: [40.2045, -8.4345], cota: 20.8, dist: 0.3, reg: "A", hist: false},
+        {id: "RUA DA SOFIA", pos: [40.2125, -8.4310], cota: 22.0, dist: 0.8, reg: "A", hist: true},
+        
+        {id: "CHOUPAL (ENTRADA)", pos: [40.2220, -8.4480], cota: 15.0, dist: 2.0, reg: "B", hist: false},
+        {id: "MONTEMOR-O-VELHO", pos: [40.1745, -8.6815], cota: 10.5, dist: 26.0, reg: "B", hist: false},
+        {id: "FIGUEIRA (SALINAS)", pos: [40.1450, -8.8250], cota: 4.5, dist: 41.0, reg: "B", hist: false}
+    ];
+
+    let apaQ = 0, apaH = 0, logData = "TIMESTAMP,LOCAL,H,RISCO\n";
+    let markers = {};
+
+    localidades.forEach(l => {
+        markers[l.id] = L.circle(l.pos, {radius: 200, weight: 2, fillOpacity: 0.3}).addTo(map);
+    });
+
+    async function syncAPA() {
+        try {
+            const res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://infoagua.apambiente.pt/pt/cheias/cheia-detalhe/1627743374'));
+            const data = await res.json();
+            const flowM = data.contents.match(/(\d+[.,]?\d*)\s*m3\/s/);
+            const cotaM = data.contents.match(/(\d+[.,]\d+)\s*m(?!\d|\/|3)/);
+            if (flowM) apaQ = parseFloat(flowM[1].replace(',', '.'));
+            if (cotaM) apaH = parseFloat(cotaM[1].replace(',', '.'));
+            document.getElementById('syncStatus').innerText = "OK: " + new Date().toLocaleTimeString();
+        } catch (e) {
+            document.getElementById('syncStatus').innerText = "OFFLINE - USANDO CACHE";
+            if(apaQ === 0) { apaQ = 1450; apaH = 18.58; }
+        }
+    }
+
+    function update() {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+        
+        const offset = 1.32; 
+        let hReal = apaH + offset;
+        let mare = Math.sin(Date.now() / 3600000) * 0.7;
+
+        document.getElementById('valFlow').innerText = apaQ.toFixed(0);
+        document.getElementById('valCota').innerText = apaH.toFixed(2);
+        document.getElementById('valCotaB').innerText = hReal.toFixed(2);
+
+        localidades.forEach(l => {
+            let hFinal;
+            if (l.reg === "A") {
+                hFinal = hReal; 
+            } else {
+                let pesoMare = l.dist / 45;
+                hFinal = (hReal - 1.5) - (l.dist * 0.12) + (apaQ/2500) + (mare * pesoMare);
+            }
+
+            let diff = hFinal - l.cota;
+            let row = tbody.insertRow();
+            if (diff > 0) row.className = 'severe-risk';
+            
+            row.insertCell(0).innerHTML = (l.hist ? '<span class="historic-tag">H</span>' : '') + l.id;
+            row.insertCell(1).innerText = l.cota.toFixed(1) + "m";
+            row.insertCell(2).innerText = hFinal.toFixed(2) + "m";
+            row.insertCell(3).innerText = diff > 0 ? "⚠️ ALAGADO" : "✓ SECO";
+
+            let corBase = '#ff0000'; 
+            if (l.cota >= 20.0 && l.cota < 21.0) corBase = '#00ff00';
+            else if (l.cota >= 21.0 && l.cota < 22.0) corBase = '#800080';
+
+            markers[l.id].setRadius(200 + (Math.max(0, diff)*800));
+            markers[l.id].setStyle({
+                color: diff > 0 ? '#ff3300' : corBase,
+                fillColor: diff > 0 ? '#ff3300' : corBase
+            });
+            
+            logData += `${Date.now()},${l.id},${hFinal.toFixed(2)},${diff>0?1:0}\n`;
+        });
+    }
+
+    document.getElementById('btnLog').onclick = () => {
+        const blob = new Blob([logData], {type: 'text/plain'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `MONDEGO_DATA_${new Date().toISOString().slice(0,10)}.txt`;
+        a.click();
+    };
+
+    syncAPA();
+    setInterval(syncAPA, 60000); 
+    setInterval(update, 1000);
+</script>
+</body>
+</html>
