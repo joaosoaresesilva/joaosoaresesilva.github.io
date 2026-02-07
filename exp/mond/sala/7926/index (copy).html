@@ -55,7 +55,7 @@
 <div class="main-container">
     <div class="panel">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <div class="slider-box">COTA APA: <b id="txtInitC">--</b>m<input type="range" id="inpInitC" min="10.0" max="25.0" step="0.01" value="15.00"></div>
+            <div class="slider-box">COTA APA (C): <b id="txtInitC">--</b>m<input type="range" id="inpInitC" min="10.0" max="25.0" step="0.01" value="15.00"></div>
             <div class="slider-box">CAUDAL APA: <b id="txtFlow">--</b><input type="range" id="inpFlow" min="100" max="15000" step="1" value="2000"></div>
         </div>
         
@@ -73,7 +73,7 @@
         
         <div class="btn-group">
             <button id="btnRun">INICIAR MONITORIZAÇÃO</button>
-            <button id="btnLog">EXPORTAR LOGS (.TXT)</button>
+            <button id="btnLog">EXPORTAR RELATÓRIO TÉCNICO</button>
         </div>
     </div>
 
@@ -91,7 +91,6 @@
     const map = L.map('map').setView([40.1850, -8.6000], 11); 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-    // Sensores Ordenados Descendentemente por Cota
     const sensores = [
         {id: "PTE STA CLARA", pos: [40.2085, -8.4285], cota: 23.0, reg: "C"},
         {id: "BAIXA (P. COMÉRCIO)", pos: [40.2092, -8.4298], cota: 21.0, reg: "C"},
@@ -120,8 +119,10 @@
     let visualMarkers = {};
     let hC = 15.00, hB = 10.00, tempo = 0, rodando = false;
     let simTime = new Date();
-    let logBuffer = [`--- RELATÓRIO DE MONITORIZAÇÃO MONDEGO - INÍCIO: ${new Date().toLocaleString()} ---\n`];
-    let estadoAnterior = {}; // Para detetar mudanças de estado
+    let logBuffer = [`--- RELATÓRIO TÉCNICO: GESTÃO ADAPTATIVA MONDEGO ---\n` +
+                     `Início da Sessão: ${new Date().toLocaleString()}\n` +
+                     `--------------------------------------------------------\n\n`];
+    let estadoAnterior = {};
 
     sensores.forEach(s => {
         L.circleMarker(s.pos, { radius: 2, color: '#00d2ff', fillColor: '#00d2ff', fillOpacity: 1 }).addTo(map);
@@ -154,11 +155,22 @@
         } catch (e) { document.getElementById('aiMsg').innerText = "Erro na ligação APA."; }
     }
 
-    function addLog(local, cota, nivel, estado) {
-        const timestamp = new Date().toLocaleString();
-        const entrada = `[${timestamp}] LOCAL: ${local} | COTA REF: ${cota}m | NÍVEL ATUAL: ${nivel.toFixed(2)}m | ESTADO: ${estado}`;
+    // --- FUNÇÃO DE LOG COM DADOS TÉCNICOS COMPLETOS ---
+    function addLog(local, cotaRef, nivelAtual, estado) {
+        const hReal = new Date().toLocaleTimeString();
+        const hSim = simTime.toLocaleTimeString();
+        const caudal = document.getElementById('inpFlow').value;
+        const açude = document.getElementById('inpGates').value;
+
+        const entrada = `[REAL: ${hReal} | SIM: ${hSim}] ` +
+                        `LOCAL: ${local.padEnd(20)} | ` +
+                        `ESTADO: ${estado.padEnd(8)} | ` +
+                        `NÍVEL: ${nivelAtual.toFixed(2)}m (REF: ${cotaRef}m) | ` +
+                        `CAUDAL: ${caudal} m3/s | ` +
+                        `AÇUDE: ${açude}%`;
+        
         logBuffer.push(entrada + "\n");
-        document.getElementById('logCount').innerText = `${logBuffer.length - 1} REGISTOS`;
+        document.getElementById('logCount').innerText = `${logBuffer.length - 3} REGISTOS`;
     }
 
     function updateUI() {
@@ -180,7 +192,6 @@
                 visual.circle.setRadius(0);
             }
 
-            // LOGICA DE LOG: Só regista se o estado mudar
             if (estadoAtual !== estadoAnterior[s.id]) {
                 addLog(s.id, s.cota, nivel, estadoAtual);
                 estadoAnterior[s.id] = estadoAtual;
@@ -232,19 +243,18 @@
         area.appendChild(bb);
     }
 
-    // Exportar ficheiro TXT
     document.getElementById('btnLog').onclick = function() {
         const blob = new Blob(logBuffer, { type: 'text/plain' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `Relatorio_Mondego_${new Date().getTime()}.txt`;
+        a.download = `Relatorio_Tecnico_Mondego_${new Date().getTime()}.txt`;
         a.click();
     };
 
     document.getElementById('btnRun').onclick = function() {
         rodando = !rodando;
-        this.innerText = rodando ? "INTERROMPER" : "INICIAR MONITORIZAÇÃO";
+        this.innerText = rodando ? "INTERROMPER MONITORIZAÇÃO" : "INICIAR MONITORIZAÇÃO";
         this.style.color = rodando ? "#e74c3c" : "#2ecc71";
         this.style.borderColor = rodando ? "#e74c3c" : "#2ecc71";
     };

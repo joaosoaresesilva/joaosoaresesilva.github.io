@@ -120,7 +120,7 @@
     let hC = 15.00, hB = 10.00, tempo = 0, rodando = false;
     let simTime = new Date();
     let logBuffer = [`--- RELATÓRIO DE GESTÃO ADAPTATIVA MONDEGO ---\n` +
-                     `Sessão iniciada em (Hora Real): ${new Date().toLocaleString()}\n` +
+                     `Início: ${new Date().toLocaleString()}\n` +
                      `--------------------------------------------------\n\n`];
     let estadoAnterior = {};
 
@@ -155,11 +155,13 @@
         } catch (e) { document.getElementById('aiMsg').innerText = "Erro na ligação APA."; }
     }
 
-    // --- FUNÇÃO DE LOG ATUALIZADA ---
+    // --- FUNÇÃO DE LOG COM CAUDAL ---
     function addLog(local, cota, nivel, estado) {
         const hReal = new Date().toLocaleTimeString();
-        const hSim = simTime.toLocaleTimeString(); // Hora da simulação (amarela)
-        const entrada = `[REAL: ${hReal} | SIMULAÇÃO: ${hSim}] LOCAL: ${local} | COTA REF: ${cota}m | NÍVEL: ${nivel.toFixed(2)}m | ESTADO: ${estado}`;
+        const hSim = simTime.toLocaleTimeString();
+        const qAtual = document.getElementById('inpFlow').value; // Captura o caudal atual
+        
+        const entrada = `[R: ${hReal} | S: ${hSim}] LOCAL: ${local.padEnd(20)} | CAUDAL: ${qAtual.padStart(5)} m3/s | NÍVEL: ${nivel.toFixed(2)}m | ESTADO: ${estado}`;
         logBuffer.push(entrada + "\n");
         document.getElementById('logCount').innerText = `${logBuffer.length - 3} REGISTOS`;
     }
@@ -239,13 +241,13 @@
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `Mondego_Log_${new Date().toISOString().split('T')[0]}.txt`;
+        a.download = `Relatorio_Mondego_${new Date().toISOString().slice(0,10)}.txt`;
         a.click();
     };
 
     document.getElementById('btnRun').onclick = function() {
         rodando = !rodando;
-        this.innerText = rodando ? "INTERROMPER" : "INICIAR MONITORIZAÇÃO";
+        this.innerText = rodando ? "PARAR" : "INICIAR MONITORIZAÇÃO";
         this.style.color = rodando ? "#e74c3c" : "#2ecc71";
         this.style.borderColor = rodando ? "#e74c3c" : "#2ecc71";
     };
