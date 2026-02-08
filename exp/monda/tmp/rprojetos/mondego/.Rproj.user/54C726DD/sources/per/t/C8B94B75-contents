@@ -1,0 +1,36 @@
+# 1. Carregar bibliotecas necessárias
+if(!require(ggplot2)) install.packages("ggplot2")
+library(ggplot2)
+
+# 2. Importar o dataset (ajusta o nome do ficheiro para o que descarregaste)
+df <- read.csv("DATASET_MONDEGO_XXX.txt", 
+               header = TRUE, 
+               sep = ",", 
+               stringsAsFactors = FALSE)
+
+# 3. Converter TIMESTAMP para formato Data/Hora real
+df$TIMESTAMP <- as.POSIXct(df$TIMESTAMP, format="%Y-%m-%dT%H:%M:%OSZ")
+
+# 4. Gráfico 1: Evolução do Nível Calculado em função do Caudal do Açude
+ggplot(df, aes(x = Q_APA, y = H_CALC, color = LOCAL)) +
+  geom_line(alpha = 0.6) +
+  geom_point(size = 0.5) +
+  theme_minimal() +
+  labs(title = "Correlação Caudal Açude vs Nível nas Localidades",
+       subtitle = "Simulação Hidrográfica Baseada em Dados Reais APA",
+       x = "Caudal (m3/s)",
+       y = "Nível Calculado (m)",
+       color = "Localidade") +
+  theme(legend.position = "bottom", legend.text = element_text(size = 7))
+
+# 5. Gráfico 2: Comparação entre Cota do Terreno e Nível da Água (Risco de Cheia)
+# Vamos filtrar apenas 3 pontos críticos para visualização clara
+df_critico <- subset(df, LOCAL %in% c("BAIXA DE COIMBRA (RIO)", "MOSTEIRO STA CLARA-VELHA", "CENTRO HÍPICO DE COIMBRA"))
+
+ggplot(df_critico, aes(x = TIMESTAMP, y = H_CALC, group = LOCAL, color = LOCAL)) +
+  geom_line(size = 1) +
+  facet_wrap(~LOCAL, ncol = 1) +
+  theme_dark() +
+  labs(title = "Série Temporal de Risco por Bairro",
+       x = "Hora da Monitorização",
+       y = "Nível de Água (m)")
