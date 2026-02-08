@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>MONDEGO MONITOR (experiencia) - DATASET INTEGRADO</title>
+    <title>MONDEGO MONITOR PRO - DATASET INTEGRADO</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { margin: 0; font-family: 'Courier New', monospace; background: #050505; color: #d0d0d0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -45,7 +45,7 @@
             <div id="valCota" class="value-display">---</div><small>m (Açude)</small>
         </div>
         <div class="data-card">
-            <h3>MARÉ </h3>
+            <h3>MARÉ REAL</h3>
             <div id="valMare" class="value-display" style="color: #00d2ff;">---</div><small>m (Figueira)</small>
         </div>
         <button id="btnLog">GERAR DATASET PARA R (.TXT)</button>
@@ -113,30 +113,25 @@
         markers[l.id] = L.circle(l.pos, {radius: 250, weight: 1, fillOpacity: 0.2, color: '#ffffff'}).addTo(map);
     });
 
-async function syncData() {
-    try {
-        // Sincronismo APA
-        const resAPA = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://infoagua.apambiente.pt/pt/cheias/cheia-detalhe/1627743374'));
-        const dataAPA = await resAPA.json();
-        const flowM = dataAPA.contents.match(/(\d+[.,]?\d*)\s*m3\/s/);
-        const cotaM = dataAPA.contents.match(/(\d+[.,]\d+)\s*m(?!\d|\/|3)/);
-        if (flowM) apaQ = parseFloat(flowM[1].replace(',', '.'));
-        if (cotaM) apaH = parseFloat(cotaM[1].replace(',', '.'));
+    async function syncData() {
+        try {
+            const resAPA = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://infoagua.apambiente.pt/pt/cheias/cheia-detalhe/1627743374'));
+            const dataAPA = await resAPA.json();
+            const flowM = dataAPA.contents.match(/(\d+[.,]?\d*)\s*m3\/s/);
+            const cotaM = dataAPA.contents.match(/(\d+[.,]\d+)\s*m(?!\d|\/|3)/);
+            if (flowM) apaQ = parseFloat(flowM[1].replace(',', '.'));
+            if (cotaM) apaH = parseFloat(cotaM[1].replace(',', '.'));
+            document.getElementById('syncStatus').innerText = "OK: " + new Date().toLocaleTimeString();
 
-        // Sincronismo Maré (Lendo o valor numérico da página de marés da Figueira)
-        const resMare = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://www.temperaturadomar.pt/europa/portugal/figueira-da-foz/tides.html'));
-        const dataMare = await resMare.json();
-        // Procura o padrão "X.X m" no texto da página
-        const mareM = dataMare.contents.match(/(\d+[.,]\d+)\s*m/);
-        if (mareM) {
-            hMareReal = parseFloat(mareM[1].replace(',', '.'));
-            document.getElementById('mareStatus').innerText = hMareReal.toFixed(2) + "m";
-        }
-        document.getElementById('syncStatus').innerText = "OK: " + new Date().toLocaleTimeString();
-    } catch (e) { 
-        document.getElementById('syncStatus').innerText = "ERRO SINC"; 
+            const resMare = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://www.temperaturadomar.pt/europa/portugal/figueira-da-foz/tides.html'));
+            const dataMare = await resMare.json();
+            const mareM = dataMare.contents.match(/(\d+[.,]\d+)\s*m/);
+            if (mareM) {
+                hMareReal = parseFloat(mareM[1].replace(',', '.'));
+                document.getElementById('mareStatus').innerText = hMareReal.toFixed(2) + "m";
+            }
+        } catch (e) { document.getElementById('syncStatus').innerText = "ERRO SINC"; }
     }
-}
 
     function update() {
         const tbody = document.getElementById('tableBody');
