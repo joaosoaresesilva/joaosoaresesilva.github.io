@@ -45,7 +45,7 @@
             <div id="valCota" class="value-display">---</div><small>m (Açude)</small>
         </div>
         <div class="data-card">
-            <h3>MARÉ (a atualizar..)</h3>
+            <h3>MARÉ REAL</h3>
             <div id="valMare" class="value-display" style="color: #00d2ff;">---</div><small>m (Figueira)</small>
         </div>
         <button id="btnLog">GERAR DATASET PARA R (.TXT)</button>
@@ -115,7 +115,7 @@
 
     async function syncData() {
         try {
-            // Sincronizar  APA
+            // Sincronizar com a APA
             const resAPA = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://infoagua.apambiente.pt/pt/cheias/cheia-detalhe/1627743374'));
             const dataAPA = await resAPA.json();
             const flowM = dataAPA.contents.match(/(\d+[.,]?\d*)\s*m3\/s/);
@@ -123,7 +123,7 @@
             if (flowM) apaQ = parseFloat(flowM[1].replace(',', '.'));
             if (cotaM) apaH = parseFloat(cotaM[1].replace(',', '.'));
 
-            // Sincronizar ao site de Maré - tabuademares.com
+            // Sincronizar com site de Maré - tabuademares.com
             const resMare = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://tabuademares.com/pt/coimbra/figueira-da-foz'));
             const dataMare = await resMare.json();
             const mareM = dataMare.contents.match(/(\d+[.,]\d+)\s*m/);
@@ -139,10 +139,10 @@
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = '';
         
-        let saltoBase = 4.0; 
-        let reducaoAfogamento = (apaQ / 350); 
-        let diferencialReal = Math.max(0.3, saltoBase - reducaoAfogamento); 
-        let hJusanteBase = apaH - diferencialReal;
+        let saltoBase = 4.2; // desnivel tipico açude
+        let reducaoAfogamento = (apaQ / 600); 
+        let diferencialReal = Math.max(0.4, saltoBase - reducaoAfogamento); 
+        let hJusanteBase = (apaH - diferencialReal)+ (hMareReal * 0.15);
 
         document.getElementById('valFlow').innerText = apaQ.toFixed(0);
         document.getElementById('valCota').innerText = apaH.toFixed(2);
@@ -151,10 +151,11 @@
         localidades.forEach(l => {
             let hFinal;
             if (l.reg === "A") {
-                hFinal = apaH + (apaQ / 5000);
+            // Montante: O nível sobe ligeiramente com o atrito do caudal
+                hFinal = apaH + (apaQ / 8000);
             } else {
-                let pesoMare = Math.max(0, 1 - (l.dist / 50));
-                hFinal = hJusanteBase - (l.dist * 0.08) + (apaQ / 2200) + (hMareReal * 0.4 * pesoMare);
+                let pesoMare = Math.max(0, 1 - (l.dist / 45));
+                hFinal = hJusanteBase - (l.dist * 0.05) + (apaQ / 2800) + (hMareReal * 0.6 * pesoMare);
             }
 
             let diff = hFinal - l.cota;
@@ -170,7 +171,7 @@
             cellStatus.innerText = (diff >= 0 ? "⚠️ " : "") + statusText;
             cellStatus.className = statusClass;
 
-            // Cores Cota
+            // Cores por Cota
             let corCirculo = l.hist ? '#f1c40f' : '#ffffff';
             if (l.cota >= 20.0 && l.cota < 21.0) corCirculo = '#00ff00';
             else if (l.cota >= 21.0 && l.cota < 22.0) corCirculo = '#800080';
