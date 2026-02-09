@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>MONDEGO MONITOR - COPERNICUS SYNC (EMSR864)</title>
+    <title>MONDEGO MONITOR</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { margin: 0; font-family: 'Courier New', monospace; background: #050505; color: #d0d0d0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -27,9 +27,9 @@
 <body>
 
 <div class="sar-header">
-    <div>FONTE: <b>APA (AÇUDE) + COPERNICUS EMSR864</b></div>
+    <div>FONTE: <b>APA (AÇUDE) + DGT (MARÉ)</b></div>
     <div>SINC STATUS: <b id="syncStatus">---</b></div>
-    <div>MARÉ ESTIMADA: <b id="mareStatus">---</b></div>
+    <div>MARÉ (FIG. FOZ): <b id="mareStatus">---</b></div>
 </div>
 
 <div id="map"></div>
@@ -37,7 +37,7 @@
 <div class="main-container">
     <div class="panel">
         <div class="data-card">
-            <h3>CAUDAL (Q)</h3>
+            <h3>CAUDAL AFLUENTE(Q)</h3>
             <div id="valFlow" class="value-display">---</div><small>m³/s</small>
         </div>
         <div class="data-card">
@@ -45,8 +45,8 @@
             <div id="valCota" class="value-display">---</div><small>m (Nível Real)</small>
         </div>
         <div class="data-card">
-            <h3>MARÉ (M)</h3>
-            <div id="valMare" class="value-display" style="color: #00d2ff;">---</div><small>m (Figueira)</small>
+            <h3>MARÉ  (M)</h3>
+            <div id="valMare" class="value-display" style="color: #00d2ff;">---</div><small>m (Nível Mar)</small>
         </div>
         <button id="btnLog">EXPORTAR DATASET (.TXT)</button>
     </div>
@@ -54,7 +54,7 @@
     <div class="sidebar">
         <table id="mainTable">
             <thead>
-                <tr><th>ID PONTO / LOCALIDADE</th><th>SOLO (Z)</th><th>NÍVEL (h)</th><th>ESTADO SAR</th></tr>
+                <tr><th>ID PONTO / LOCALIDADE</th><th>SOLO (Z)</th><th>NÍVEL (h)</th><th>ESTADO</th></tr>
             </thead>
             <tbody id="tableBody"></tbody>
         </table>
@@ -63,7 +63,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    const map = L.map('map', {zoomControl: false}).setView([40.1900, -8.4800], 12);
+    const map = L.map('map', {zoomControl: false}).setView([40.1500, -8.6000], 11);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
     const localidades = [
@@ -117,18 +117,27 @@
     let markers = {};
     let estadosAnteriores = {};
 
-    // Inicialização dos marcadores com borda cinzenta fixa
     localidades.forEach(l => {
         markers[l.id] = L.circle(l.pos, {
-            radius: 120, 
-            weight: 1.5, 
-            color: '#555555', // Cinzento para a borda
-            fillColor: '#00ff77', // Cor inicial (Seco)
-            fillOpacity: 0.2
+            radius: 180, weight: 2, color: '#555555', fillColor: '#00ff77', fillOpacity: 0.1
         }).addTo(map);
     });
 
-    async function syncData() {
+    // --- SINCRONIZAÇÃO DE MARÉ  ---
+    async function syncMare() {
+        try {
+            const proxy = 'https://api.allorigins.win/get?url=';
+            const urlMare = "https://www.dgterritorio.gov.pt/tides/get_tides_json/82"; // Figueira da Foz
+            const res = await fetch(proxy + encodeURIComponent(urlMare));
+            const data = await res.json();
+            // Vai buscar valor da maré mais recente do JSON
+            if(data && data.length > 0) {
+                hMareReal = parseFloat(data[0].level);
+            }
+        } catch (e) { console.log("Erro Maré, usando fallback"); }
+    }
+
+    async function syncAPA() {
         try {
             const proxy = 'https://api.allorigins.win/get?url=';
             const resAPA = await fetch(proxy + encodeURIComponent('https://infoagua.apambiente.pt/pt/cheias/cheia-detalhe/1627743374'));
@@ -137,17 +146,15 @@
             const cotaMatch = dataAPA.contents.match(/(\d+[.,]\d+)\s*m(?!\d)/);
             if (flowMatch) apaQ = parseFloat(flowMatch[1].replace(',', '.'));
             if (cotaMatch) apaH = parseFloat(cotaMatch[1].replace(',', '.'));
-            document.getElementById('syncStatus').innerText = "ONLINE: " + new Date().toLocaleTimeString();
-        } catch (e) { 
-            document.getElementById('syncStatus').innerText = "MODO ESTIMATIVA"; 
-        }
+            document.getElementById('syncStatus').innerText = "LIVE: " + new Date().toLocaleTimeString();
+        } catch (e) { document.getElementById('syncStatus').innerText = "ESTIMATIVA"; }
     }
 
     function update() {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = '';
-        
         let hJusanteBase = (apaH - 4.5); 
+
         document.getElementById('valFlow').innerText = apaQ.toFixed(0);
         document.getElementById('valCota').innerText = apaH.toFixed(2);
         document.getElementById('valMare').innerText = hMareReal.toFixed(2);
@@ -165,45 +172,27 @@
 
             let diff = hFinal - l.cota;
             let status = diff >= 0 ? "ALAGADO" : (diff >= -0.7 ? "PROVÁVEL" : "SECO");
-            let sClass = diff >= 0 ? "status-alagado" : (diff >= -0.7 ? "status-provavel" : "status-seco");
+            let sColor = diff >= 0 ? "#ff3333" : (diff >= -0.7 ? "#ffa500" : "#00ff77");
 
-            // Cores baseadas no estado para o preenchimento (fillColor)
-            // Alagado: Vermelho | Provável: Laranja | Seco: Verde
-            let statusColor = diff >= 0 ? "#ff3333" : (diff >= -0.7 ? "#ffa500" : "#00ff77");
-
-            if (estadosAnteriores[l.id] !== status) {
-                logData += `${new Date().toLocaleString()},${l.id},Z:${l.cota},H:${hFinal.toFixed(2)},STATUS:${status}\n`;
-                estadosAnteriores[l.id] = status;
-            }
-
-            // Update da Tabela
             let row = tbody.insertRow();
             row.insertCell(0).innerHTML = (l.hist ? '<span class="historic-tag">H</span>' : '') + l.id;
             row.insertCell(1).innerText = l.cota.toFixed(1) + "m";
             row.insertCell(2).innerText = hFinal.toFixed(2) + "m";
             let cStatus = row.insertCell(3);
-            cStatus.innerText = (diff >= 0 ? "🔵 " : "") + status;
-            cStatus.className = sClass;
+            cStatus.innerText = status;
+            cStatus.className = diff >= 0 ? "status-alagado" : (diff >= -0.7 ? "status-provavel" : "status-seco");
 
-            // --- ATUALIZAÇÃO DO MARCADOR ---
             markers[l.id].setStyle({
-                fillColor: statusColor,
-                fillOpacity: diff >= 0 ? 0.7 : (diff >= -0.7 ? 0.4 : 0.1),
-                color: '#555555' // Mantém a borda cinzenta
+                fillColor: sColor,
+                fillOpacity: diff >= 0 ? 0.8 : (diff >= -0.7 ? 0.5 : 0.1)
             });
         });
     }
 
-    document.getElementById('btnLog').onclick = () => {
-        const blob = new Blob([logData], {type: 'text/plain'});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `MONDEGO_DATASET_${new Date().getTime()}.txt`;
-        a.click();
-    };
-
-    syncData();
-    setInterval(syncData, 300000); 
+    syncAPA();
+    syncMare();
+    setInterval(syncAPA, 300000); // 5 min
+    setInterval(syncMare, 600000); // 10 min
     setInterval(update, 2000);
 </script>
 </body>

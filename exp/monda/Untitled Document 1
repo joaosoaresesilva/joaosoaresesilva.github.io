@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>MONDEGO MONITOR</title>
+    <title>MONDEGO MONITOR - COPERNICUS SYNC (EMSR864)</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { margin: 0; font-family: 'Courier New', monospace; background: #050505; color: #d0d0d0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -27,7 +27,7 @@
 <body>
 
 <div class="sar-header">
-    <div>FONTE: <b>APA (AÇUDE) + DGT (MARÉ)</b></div>
+    <div>FONTE: <b>APA (AÇUDE) + DGT (MARÉ) + COPERNICUS</b></div>
     <div>SINC STATUS: <b id="syncStatus">---</b></div>
     <div>MARÉ (FIG. FOZ): <b id="mareStatus">---</b></div>
 </div>
@@ -37,7 +37,7 @@
 <div class="main-container">
     <div class="panel">
         <div class="data-card">
-            <h3>CAUDAL AFLUENTE(Q)</h3>
+            <h3>CAUDAL (Q)</h3>
             <div id="valFlow" class="value-display">---</div><small>m³/s</small>
         </div>
         <div class="data-card">
@@ -45,7 +45,7 @@
             <div id="valCota" class="value-display">---</div><small>m (Nível Real)</small>
         </div>
         <div class="data-card">
-            <h3>MARÉ  (M)</h3>
+            <h3>MARÉ REAL (M)</h3>
             <div id="valMare" class="value-display" style="color: #00d2ff;">---</div><small>m (Nível Mar)</small>
         </div>
         <button id="btnLog">EXPORTAR DATASET (.TXT)</button>
@@ -123,14 +123,14 @@
         }).addTo(map);
     });
 
-    // --- SINCRONIZAÇÃO DE MARÉ  ---
+    // --- NOVA FUNÇÃO DE SINCRONIZAÇÃO DE MARÉ REAL ---
     async function syncMare() {
         try {
             const proxy = 'https://api.allorigins.win/get?url=';
             const urlMare = "https://www.dgterritorio.gov.pt/tides/get_tides_json/82"; // Figueira da Foz
             const res = await fetch(proxy + encodeURIComponent(urlMare));
             const data = await res.json();
-            // Vai buscar valor da maré mais recente do JSON
+            // Pega o valor da maré mais recente do JSON
             if(data && data.length > 0) {
                 hMareReal = parseFloat(data[0].level);
             }
