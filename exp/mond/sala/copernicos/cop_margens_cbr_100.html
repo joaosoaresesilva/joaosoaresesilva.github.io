@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>MONDEGO MONITOR - COIMBRA 100m BUFFER</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; background: #020202; color: #00d2ff; font-family: 'Courier New', monospace; overflow: hidden; display: flex; flex-direction: column; height: 100vh; }
+        #map { flex: 1; filter: contrast(1.2) brightness(0.8); }
+        .ui-panel { position: absolute; top: 20px; right: 20px; z-index: 1000; background: rgba(5,5,5,0.9); padding: 15px; border: 1px solid #00d2ff; width: 280px; pointer-events: none; }
+        .belt-row { display: flex; align-items: center; margin-bottom: 4px; font-size: 10px; }
+        .belt-bar { height: 4px; flex-grow: 1; background: #222; margin: 0 10px; position: relative; }
+        .belt-fill { height: 100%; transition: width 0.5s; }
+        .stat-val { width: 40px; text-align: right; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div class="ui-panel">
+    <div style="font-weight: bold; margin-bottom: 10px; letter-spacing: 1px;">SISTEMA DE CORREIAS (0-100m)</div>
+    <div id="beltContainer"></div>
+    <hr style="border:0; border-top:1px solid #333; margin:15px 0;">
+    <div style="font-size: 9px; opacity: 0.6;">DADOS DE INTERSEÇÃO HIDROSTÁTICA</div>
+    <div id="flowStatus" style="font-size: 1.2em; font-weight: bold; color: #fff;">--- m3/s</div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const map = L.map('map', {zoomControl: false}).setView([40.2060, -8.4340], 15);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+    // Eixo Coimbra-Açude
+    const trechoUrbano = [
+        [40.2135, -8.4415], [40.2105, -8.4370], [40.2050, -8.4330], [40.2010, -8.4280]
+    ];
+    
+    // Distâncias solicitadas: 0, 1, 10, 20, 50 e agora 100 metros
+    const correiasDist = [0, 1, 10, 20, 50, 100]; 
+    const nuvemSAR = [];
+
+    function initSistema() {
+        correiasDist.forEach((dist) => {
+            for (let i = 0; i < 200; i++) {
+                const perc = i / 200;
+                const pBase = interpolate(trechoUrbano, perc);
+                
+                // Conversão aproximada de metros para graus decimais
+                const offset = (dist / 111000); 
+                const lado = i % 2 === 0 ? 1 : -1; 
+                
+                const pos = [pBase[0] + (offset * 0.4 * lado), pBase[1] + (offset * lado)];
+                
+                const marker = L.circleMarker(pos, {
+                    radius: 1.2,
+                    weight: 0,
+                    fillOpacity: 0.7
+                }).addTo(map);
+
+                nuvemSAR.push({
+                    id: `C${dist}-P${i}`,
+                    marker: marker,
+                    distMargem: dist,
+                    // Cota Z: Sobe com a distância, mas mantendo a inclinação urbana de Coimbra
+                    z: 18.2 + (dist * 0.05) 
+                });
+            }
+        });
+    }
+
+    function interpolate(points, percent) {
+        const idx = Math.floor(percent * (points.length - 1));
+        const p1 = points[idx];
+        const p2 = points[idx + 1] || p1;
+        const sPerc = (percent * (points.length - 1)) - idx;
+        return [p1[0] + (p2[0] - p1[0]) * sPerc, p1[1] + (p2[1] - p1[1]) * sPerc];
+    }
+
+    function update() {
+        // Simulação de subida de nível para teste das correias
+        const Q = 900 + (Math.sin(Date.now()/4000) * 300);
+        const hAgua = 19.3 + (Q / 1800);
+        
+        document.getElementById('flowStatus').innerText = Q.toFixed(0) + " m3/s";
+        const container = document.getElementById('beltContainer');
+        container.innerHTML = '';
+
+        correiasDist.forEach(dist => {
+            const pontos = nuvemSAR.filter(p => p.distMargem === dist);
+            let ativos = 0;
+
+            pontos.forEach(p => {
+                let diff = hAgua - p.z;
+                let color = "#00ff77"; // Seco
+                
+                if (diff >= 0.4) {
+                    color = "#0044ff"; // Inundado
+                    ativos++;
+                } else if (diff >= 0) {
+                    color = "#00d2ff"; // Alerta
+                    ativos++;
+                }
+                
+                p.marker.setStyle({fillColor: color});
+            });
+
+            const perc = (ativos / pontos.length) * 100;
+            const barColor = dist === 100 ? '#ff00ff' : (perc > 50 ? '#0044ff' : '#00ff77');
+
+            container.innerHTML += `
+                <div class="belt-row">
+                    <span style="width:50px">${dist}m</span>
+                    <div class="belt-bar"><div class="belt-fill" style="width:${perc}%; background:${barColor}"></div></div>
+                    <span class="stat-val">${perc.toFixed(0)}%</span>
+                </div>`;
+        });
+    }
+
+    initSistema();
+    setInterval(update, 2000);
+</script>
+</body>
+</html>

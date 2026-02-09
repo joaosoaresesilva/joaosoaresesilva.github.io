@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>MONDEGO SAR - PORTELA ➔ COIMBRA ➔ FIGUEIRA</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; background: #050505; color: #d0d2d6; font-family: 'Courier New', monospace; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        #map { height: 45vh; width: 100%; filter: contrast(1.2) brightness(0.8); border-bottom: 2px solid #0044ff; }
+        .sar-header { background: #111; padding: 10px 20px; font-size: 11px; color: #00d2ff; border-bottom: 1px solid #222; display: flex; justify-content: space-between; }
+        .data-layout { flex: 1; display: flex; overflow: hidden; }
+        .sidebar { width: 320px; padding: 15px; border-right: 1px solid #222; background: #0a0a0a; display: flex; flex-direction: column; }
+        .table-container { flex: 1; overflow-y: auto; padding: 10px; font-size: 10px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; color: #00d2ff; border-bottom: 2px solid #333; padding: 8px; position: sticky; top: 0; background: #0a0a0a; }
+        td { padding: 6px; border-bottom: 1px solid #1a1a1a; }
+        .status-box { padding: 2px 5px; border-radius: 3px; font-weight: bold; font-size: 9px; }
+        .bg-green { background: rgba(0, 255, 119, 0.2); color: #00ff77; }
+        .bg-lblue { background: rgba(0, 210, 255, 0.2); color: #00d2ff; }
+        .bg-dblue { background: rgba(0, 68, 255, 0.2); color: #4488ff; }
+    </style>
+</head>
+<body>
+
+<div class="sar-header">
+    <div><b>MONDEGO EXTENDED</b> | PORTELA ➔ COIMBRA ➔ FIGUEIRA</div>
+    <div id="counter">PONTOS CARREGADOS: 0</div>
+</div>
+
+<div id="map"></div>
+
+<div class="data-layout">
+    <div class="sidebar">
+        <h3 style="margin-top:0; font-size: 14px;">SETORIZAÇÃO SAR</h3>
+        <div style="font-size: 11px; line-height: 1.6;">
+            <b style="color:#fff">SETOR A:</b> Portela ➔ Coimbra (Montante)<br>
+            <b style="color:#fff">SETOR B:</b> Coimbra ➔ Figueira (Jusante)<br>
+        </div>
+        <hr style="border:0; border-top:1px solid #333; margin:15px 0;">
+        <div style="color:#00ff77; font-size: 10px;">● REF: Água de Referência</div>
+        <div style="color:#00d2ff; font-size: 10px;">● SAT: Saturação (Zonas Baixas)</div>
+        <div style="color:#0044ff; font-size: 10px;">● FLO: Inundação Confirmada</div>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr><th>ID DISCRETO</th><th>ZONA</th><th>ESTADO SAR</th></tr>
+            </thead>
+            <tbody id="dataTable"></tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const map = L.map('map', {zoomControl: false}).setView([40.2000, -8.4100], 14);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+    const datasetSAR = [];
+
+    function generateData() {
+        // Coordenadas aproximadas do novo eixo estendido (Portela a Coimbra)
+        const eixoPortelaCoimbra = [
+            { id: "PRT", name: "Portela/Rebolim", lat: [40.1880, 40.1980], lng: [-8.4050, -8.3900] },
+            { id: "CBR", name: "Coimbra Centro", lat: [40.2000, 40.2150], lng: [-8.4400, -8.4200] }
+        ];
+
+        // Classes de pontos baseadas na ativação
+        const classes = [
+            { label: "REF", color: "#00ff77", style: "bg-green", count: 80 },
+            { label: "SAT", color: "#00d2ff", style: "bg-lblue", count: 120 },
+            { label: "FLO", color: "#0044ff", style: "bg-dblue", count: 100 }
+        ];
+
+        let idGlobal = 7000;
+
+        eixoPortelaCoimbra.forEach(zona => {
+            classes.forEach(cl => {
+                for (let i = 0; i < cl.count; i++) {
+                    const lat = zona.lat[0] + Math.random() * (zona.lat[1] - zona.lat[0]);
+                    const lng = zona.lng[0] + Math.random() * (zona.lng[1] - zona.lng[0]);
+                    const fullID = `${zona.id}-${cl.label}-${idGlobal++}`;
+
+                    const ponto = { id: fullID, zona: zona.name, label: cl.label, style: cl.style, color: cl.color };
+                    datasetSAR.push(ponto);
+
+                    L.circleMarker([lat, lng], {
+                        radius: 2.2,
+                        fillColor: cl.color,
+                        color: "#fff",
+                        weight: 0.4,
+                        fillOpacity: 0.9
+                    }).addTo(map).bindPopup(`<b>PONTO:</b> ${fullID}<br><b>Local:</b> ${zona.name}`);
+                }
+            });
+        });
+
+        renderTable();
+        document.getElementById('counter').innerText = `PONTOS CARREGADOS: ${datasetSAR.length}`;
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('dataTable');
+        datasetSAR.forEach(p => {
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td style="color:#fff">${p.id}</td>
+                <td style="opacity:0.8">${p.zona}</td>
+                <td><span class="status-box ${p.style}">${p.label}</span></td>
+            `;
+        });
+    }
+
+    generateData();
+</script>
+</body>
+</html>

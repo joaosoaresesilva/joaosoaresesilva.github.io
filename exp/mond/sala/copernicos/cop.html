@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>MONDEGO MONITOR - COPERNICUS FULL MAPPING</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; font-family: 'Courier New', monospace; background: #050505; color: #d0d0d0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        #map { height: 38vh; width: 100%; background: #000; filter: grayscale(0.5) contrast(1.2) brightness(0.8); border-bottom: 2px solid #444; }
+        .sar-header { background: #111; padding: 10px 20px; display: flex; justify-content: space-between; font-size: 11px; border-bottom: 1px solid #333; color: #00d2ff; }
+        .main-container { display: flex; flex: 1; overflow: hidden; }
+        .panel { flex: 0.8; padding: 15px; display: flex; flex-direction: column; gap: 10px; border-right: 1px solid #222; background: #0a0a0a; overflow-y: auto; }
+        .sidebar { flex: 2.2; padding: 10px; background: #050505; overflow-y: auto; }
+        .data-card { background: #111; padding: 10px; border: 1px solid #333; border-left: 4px solid #00d2ff; }
+        .value-display { font-size: 1.8em; font-weight: bold; color: #fff; letter-spacing: -1px; }
+        table { width: 100%; font-size: 10px; border-collapse: collapse; }
+        th { border-bottom: 2px solid #444; padding: 10px; text-align: left; color: #00d2ff; position: sticky; top: 0; background: #050505; z-index: 10; }
+        td { padding: 8px; border-bottom: 1px solid #222; color: #ffffff; }
+        .status-alagado { color: #ff0000 !important; font-weight: bold; } 
+        .status-provavel { color: #ffa500 !important; font-weight: bold; } 
+        .status-seco { color: #00ff77 !important; } 
+        .src-sat { color: #00d2ff; font-weight: bold; border: 1px solid #00d2ff; padding: 1px 3px; font-size: 8px; margin-right: 5px; }
+        #btnLog { color: #00d2ff; border: 1px solid #00d2ff; background: transparent; padding: 12px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s; margin-top: auto;}
+        #btnLog:hover { background: #00d2ff; color: #000; }
+    </style>
+</head>
+<body>
+
+<div class="sar-header">
+    <div>DADOS: <b>APA + COPERNICUS EMSR864</b></div>
+    <div>SINC APA: <b id="syncStatus">---</b></div>
+    <div>MARÉ FIGUEIRA: <b id="mareStatus">---</b></div>
+</div>
+
+<div id="map"></div>
+
+<div class="main-container">
+    <div class="panel">
+        <div class="data-card">
+            <h3>CAUDAL (Q)</h3>
+            <div id="valFlow" class="value-display">---</div><small>m³/s</small>
+        </div>
+        <div class="data-card">
+            <h3>COTA APA (hA)</h3>
+            <div id="valCota" class="value-display">---</div><small>m (Açude)</small>
+        </div>
+        <div class="data-card">
+            <h3>MARÉ (m)</h3>
+            <div id="valMare" class="value-display" style="color: #00d2ff;">---</div><small>Figueira da Foz</small>
+        </div>
+        <button id="btnLog">EXPORTAR DATASET (R)</button>
+    </div>
+
+    <div class="sidebar">
+        <table id="mainTable">
+            <thead>
+                <tr><th>PONTO DE MONITORIZAÇÃO</th><th>Z (Solo)</th><th>h (Nível)</th><th>ESTADO</th></tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const map = L.map('map', {zoomControl: false}).setView([40.1800, -8.5500], 11);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+    const localidades = [
+        // --- COIMBRA (ZONA A) ---
+        {id: "MOSTEIRO STA CLARA-VELHA", pos: [40.2018, -8.4340], cota: 18.0, reg: "A", src: "HIST", dist: 0.1},
+        {id: "PARQUE DA CANÇÃO", pos: [40.2040, -8.4309], cota: 19.0, reg: "A", src: "HIST", dist: 0.2},
+        {id: "BAIXA (ESTAÇÃO COIMBRA-A)", pos: [40.2111, -8.4337], cota: 20.2, reg: "A", src: "HIST", dist: 0.5},
+
+        // --- COP. AZUL ESCURO (INUNDAÇÃO OBSERVADA / CRÍTICO) ---
+        {id: "COP-BOLÃO-CENTRO", pos: [40.2245, -8.4682], cota: 17.5, reg: "B", src: "SAT", dist: 2.0},
+        {id: "COP-BOLÃO-OESTE", pos: [40.2240, -8.4780], cota: 17.8, reg: "B", src: "SAT", dist: 2.2},
+        {id: "COP-ADÉMIA-VALE", pos: [40.2350, -8.4610], cota: 18.1, reg: "B", src: "SAT", dist: 3.5},
+        {id: "COP-PEREIRA-BACIA", pos: [40.1652, -8.5741], cota: 11.2, reg: "B", src: "SAT", dist: 18.0},
+        {id: "COP-FORMOSELHA-CAMPO", pos: [40.1550, -8.5820], cota: 11.5, reg: "B", src: "SAT", dist: 19.5},
+        {id: "COP-EREIRA-VALA-REAL", pos: [40.1420, -8.6950], cota: 9.2, reg: "B", src: "SAT", dist: 29.0},
+        {id: "COP-VILA-VERDE-NORTE", pos: [40.1385, -8.8120], cota: 4.2, reg: "B", src: "SAT", dist: 38.0},
+        {id: "COP-MARINHAS-FOZ", pos: [40.1420, -8.8250], cota: 3.8, reg: "B", src: "SAT", dist: 40.5},
+
+        // --- COP. AZUL CLARO (SATURAÇÃO / ALERTA) ---
+        {id: "COP-ADÉMIA-LIMITE", pos: [40.2315, -8.4750], cota: 18.8, reg: "B", src: "SAT", dist: 2.8},
+        {id: "COP-TAVEIRO-MARGEM", pos: [40.1920, -8.5020], cota: 14.5, reg: "B", src: "SAT", dist: 8.0},
+        {id: "COP-ARZILA-RESERVA", pos: [40.1580, -8.5420], cota: 12.5, reg: "B", src: "SAT", dist: 15.0},
+        {id: "COP-PEREIRA-ESTE", pos: [40.1710, -8.5580], cota: 12.8, reg: "B", src: "SAT", dist: 16.5},
+        {id: "COP-REVELES-CAMPOS", pos: [40.1650, -8.6450], cota: 10.8, reg: "B", src: "SAT", dist: 23.0},
+        {id: "COP-MONTEMOR-LIMITE", pos: [40.1780, -8.6750], cota: 11.2, reg: "B", src: "SAT", dist: 25.5},
+        {id: "COP-VILA-VERDE-SUL", pos: [40.1290, -8.7980], cota: 6.8, reg: "B", src: "SAT", dist: 37.5},
+
+        // --- COP. VERDE (LEITO REFERÊNCIA) ---
+        {id: "COP-CANAL-ALVIELA", pos: [40.1842, -8.5135], cota: 13.0, reg: "B", src: "SAT", dist: 9.5},
+        {id: "COP-CANAL-FORMOSOS", pos: [40.1520, -8.6210], cota: 10.2, reg: "B", src: "SAT", dist: 21.0},
+        {id: "COP-CANAL-EREIRA", pos: [40.1450, -8.7150], cota: 8.5, reg: "B", src: "SAT", dist: 31.0}
+    ];
+
+    let apaQ = 0, apaH = 0, hMareReal = 0.5;
+    let markers = {};
+    let logData = "TIMESTAMP,ID,Q_APA,H_APA,H_RIO,H_MARE,STATUS\n";
+
+    localidades.forEach(l => {
+        markers[l.id] = L.circle(l.pos, {
+            radius: 300, 
+            weight: l.src === "SAT" ? 2 : 1, 
+            fillOpacity: 0.3, 
+            color: l.src === "SAT" ? '#00d2ff' : '#ffffff'
+        }).addTo(map);
+    });
+
+    async function syncData() {
+        try {
+            const resAPA = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://infoagua.apambiente.pt/pt/cheias/cheia-detalhe/1627743374'));
+            const dataAPA = await resAPA.json();
+            const flowM = dataAPA.contents.match(/(\d+[.,]?\d*)\s*m3\/s/);
+            const cotaM = dataAPA.contents.match(/(\d+[.,]\d+)\s*m(?!\d|\/|3)/);
+            if (flowM) apaQ = parseFloat(flowM[1].replace(',', '.'));
+            if (cotaM) apaH = parseFloat(cotaM[1].replace(',', '.'));
+
+            const resMare = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://www.temperaturadomar.pt/europa/portugal/figueira-da-foz/tides.html'));
+            const dataMare = await resMare.json();
+            const mareM = dataMare.contents.match(/(\d+[.,]\d+)\s*m/);
+            if (mareM) hMareReal = parseFloat(mareM[1].replace(',', '.'));
+            
+            document.getElementById('syncStatus').innerText = "OK: " + new Date().toLocaleTimeString();
+            document.getElementById('mareStatus').innerText = hMareReal.toFixed(2) + "m";
+        } catch (e) { document.getElementById('syncStatus').innerText = "ERRO"; }
+    }
+
+    function update() {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+        
+        let hJusanteBase = (apaH - 3.8) + (hMareReal * 0.2); // Diferencial base corrigido
+
+        document.getElementById('valFlow').innerText = apaQ.toFixed(0);
+        document.getElementById('valCota').innerText = apaH.toFixed(2);
+        document.getElementById('valMare').innerText = hMareReal.toFixed(2);
+
+        localidades.forEach(l => {
+            let hFinal;
+            if (l.reg === "A") {
+                hFinal = apaH + (apaQ / 9000);
+            } else {
+                let pMare = Math.max(0, 1 - (l.dist / 42));
+                hFinal = hJusanteBase - (l.dist * 0.045) + (apaQ / 2800) + (hMareReal * 0.5 * pMare);
+            }
+
+            let diff = hFinal - l.cota;
+            let st = diff >= 0 ? "CHEIA" : (diff >= -0.40 ? "ALERTA" : "SECO");
+            let sClass = diff >= 0 ? "status-alagado" : (diff >= -0.40 ? "status-provavel" : "status-seco");
+
+            let row = tbody.insertRow();
+            row.insertCell(0).innerHTML = (l.src === "SAT" ? '<span class="src-sat">SAT</span>' : '') + l.id;
+            row.insertCell(1).innerText = l.cota.toFixed(1) + "m";
+            row.insertCell(2).innerText = hFinal.toFixed(2) + "m";
+            let cSt = row.insertCell(3);
+            cSt.innerText = (diff >= 0 ? "⚠️ " : "") + st;
+            cSt.className = sClass;
+
+            let mColor = diff >= 0 ? "#ff0000" : (diff >= -0.40 ? "#ffa500" : (l.src === "SAT" ? "#00d2ff" : "#ffffff"));
+            markers[l.id].setRadius(250 + (Math.max(0, diff + 0.6) * 500));
+            markers[l.id].setStyle({color: mColor, fillColor: mColor});
+            
+            logData += `${new Date().toISOString()},${l.id},${apaQ},${apaH},${hFinal.toFixed(2)},${hMareReal},${st}\n`;
+        });
+    }
+
+    document.getElementById('btnLog').onclick = () => {
+        const blob = new Blob([logData], {type: 'text/plain'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `MONDEGO_COP_${new Date().getTime()}.txt`;
+        a.click();
+    };
+
+    syncData();
+    setInterval(syncData, 60000); 
+    setInterval(update, 2000);
+</script>
+</body>
+</html>

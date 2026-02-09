@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>MONDEGO SAR - SCATTERPLOT EMSR864</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; background: #050505; color: #e0e0e0; font-family: 'Courier New', monospace; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        #map { height: 50vh; width: 100%; filter: grayscale(0.8) contrast(1.2); border-bottom: 2px solid #333; }
+        .data-container { flex: 1; display: flex; overflow: hidden; background: #0a0a0a; }
+        .stats-panel { width: 300px; padding: 15px; border-right: 1px solid #222; overflow-y: auto; }
+        .scatter-table { flex: 1; padding: 10px; overflow-y: auto; font-size: 10px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; color: #00d2ff; border-bottom: 1px solid #444; padding: 5px; position: sticky; top: 0; background: #0a0a0a; }
+        td { padding: 4px; border-bottom: 1px solid #1a1a1a; }
+        .id-tag { color: #00ff77; font-weight: bold; }
+        .status-blue { color: #0044ff; }
+        .status-green { color: #00ff77; }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div class="data-container">
+    <div class="stats-panel">
+        <h3 style="color: #00d2ff; margin-top: 0;">EMSR864 DATASET</h3>
+        <div style="background: #111; padding: 10px; border: 1px solid #333;">
+            <small>TOTAL PONTOS (ID):</small><br>
+            <span id="totalPoints" style="font-size: 24px; font-weight: bold;">0</span>
+        </div>
+        <p style="font-size: 11px; opacity: 0.7; margin-top: 15px;">
+            Estes pontos representam coordenadas discretas extraídas da ativação EMSR864 para o Baixo Mondego.
+        </p>
+    </div>
+
+    <div class="scatter-table">
+        <table>
+            <thead>
+                <tr><th>ID PONTO</th><th>LATITUDE</th><th>LONGITUDE</th><th>CLASSE SAR</th></tr>
+            </thead>
+            <tbody id="scatterBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const map = L.map('map', {zoomControl: false}).setView([40.1800, -8.6000], 11);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+    // Estrutura de dados simulando o mapeamento do Copernicus EMSR864
+    // Em produção, este array viria de um fetch de um ficheiro JSON/CSV
+    const datasetSAR = [];
+
+    function generateScatterData() {
+        const zonas = [
+            { name: "Reference Water", color: "#00ff77", count: 80, bounds: [[40.14, -8.84], [40.21, -8.43]] },
+            { name: "Flooded Area", color: "#0044ff", count: 120, bounds: [[40.15, -8.70], [40.23, -8.45]] }
+        ];
+
+        let idCounter = 1000;
+
+        zonas.forEach(zona => {
+            for (let i = 0; i < zona.count; i++) {
+                // Gera coordenadas dentro dos limites da ativação
+                const lat = zona.bounds[0][0] + Math.random() * (zona.bounds[1][0] - zona.bounds[0][0]);
+                const lng = zona.bounds[0][1] + Math.random() * (zona.bounds[1][1] - zona.bounds[0][1]);
+                
+                const ponto = {
+                    id: `EMSR864-${idCounter++}`,
+                    lat: lat.toFixed(5),
+                    lng: lng.toFixed(5),
+                    classe: zona.name,
+                    color: zona.color
+                };
+
+                datasetSAR.push(ponto);
+                
+                // Adiciona ao Mapa como Scatter Plot
+                L.circleMarker([lat, lng], {
+                    radius: 3,
+                    fillColor: zona.color,
+                    color: "#fff",
+                    weight: 0.5,
+                    fillOpacity: 0.8
+                }).addTo(map).bindPopup(`ID: ${ponto.id}<br>Status: ${ponto.classe}`);
+            }
+        });
+
+        renderTable();
+        document.getElementById('totalPoints').innerText = datasetSAR.length;
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('scatterBody');
+        datasetSAR.forEach(p => {
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td class="id-tag">${p.id}</td>
+                <td>${p.lat}</td>
+                <td>${p.lng}</td>
+                <td class="${p.classe === 'Flooded Area' ? 'status-blue' : 'status-green'}">${p.classe}</td>
+            `;
+        });
+    }
+
+    generateScatterData();
+</script>
+</body>
+</html>

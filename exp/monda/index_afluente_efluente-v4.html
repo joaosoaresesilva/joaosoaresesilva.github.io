@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>MONDEGO MONITOR MASTER - LIVE</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; font-family: 'Courier New', monospace; background: #050505; color: #d0d0d0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        #map { height: 35vh; width: 100%; background: #000; filter: grayscale(1) contrast(1.2) brightness(0.7); border-bottom: 2px solid #444; }
+        .sar-header { background: #111; padding: 10px 20px; display: flex; justify-content: space-between; font-size: 11px; border-bottom: 1px solid #00d2ff; color: #00d2ff; }
+        .main-container { display: flex; flex: 1; overflow: hidden; }
+        .panel { flex: 0.8; padding: 15px; display: flex; flex-direction: column; gap: 8px; border-right: 1px solid #222; background: #0a0a0a; overflow-y: auto; }
+        .sidebar { flex: 2.2; padding: 10px; background: #050505; overflow-y: auto; }
+        .data-card { background: #111; padding: 8px; border: 1px solid #333; border-left: 4px solid #00d2ff; }
+        .value-display { font-size: 1.6em; font-weight: bold; color: #fff; letter-spacing: -0.5px; }
+        .trend-tag { font-size: 0.7em; font-weight: bold; padding: 2px 4px; border-radius: 3px; margin-left: 5px; }
+        table { width: 100%; font-size: 10px; border-collapse: collapse; }
+        th { border-bottom: 2px solid #444; padding: 10px; text-align: left; color: #00d2ff; position: sticky; top: 0; background: #050505; z-index: 10; }
+        td { padding: 8px; border-bottom: 1px solid #222; color: #ffffff; }
+        .status-alagado { color: #ff0000 !important; font-weight: bold; } 
+        .status-provavel { color: #ffa500 !important; font-weight: bold; } 
+        .historic-tag { color: #f1c40f; font-size: 9px; border: 1px solid #f1c40f; padding: 1px 3px; border-radius: 2px; margin-right: 5px; }
+        #btnLog { color: #00d2ff; border: 1px solid #00d2ff; background: transparent; padding: 12px; cursor: pointer; font-weight: bold; width: 100%; margin-top: auto; transition: 0.3s;}
+        #btnLog:hover { background: #00d2ff; color: #000; }
+        #updateProgress { height: 2px; background: #00d2ff; width: 0%; transition: width 0.5s; }
+    </style>
+</head>
+<body>
+
+<div class="sar-header">
+    <div>SISTEMA DE ALERTA: <b>BAIXO MONDEGO</b></div>
+    <div id="syncStatus">INICIALIZANDO...</div>
+    <div>MARÉ (TERRA): <b id="mareStatus">---</b></div>
+</div>
+<div id="updateProgress"></div>
+
+<div id="map"></div>
+
+<div class="main-container">
+    <div class="panel">
+        <div class="data-card" style="border-left-color: #9b59b6;">
+            <h3>VOLUME ARMAZENADO</h3>
+            <div id="valVol" class="value-display">0.00</div><small>hm³</small>
+        </div>
+        <div class="data-card">
+            <h3>COTA APA (hA)</h3>
+            <div id="valCota" class="value-display">0.00</div><small>m (Nível Açude)</small>
+        </div>
+        <div class="data-card" style="border-left-color: #f1c40f;">
+            <h3>AFLUENTE (Qin)</h3>
+            <div id="valFlowIn" class="value-display">0.00</div><small>m³/s</small><span id="trendIn"></span>
+        </div>
+        <div class="data-card" style="border-left-color: #e67e22;">
+            <h3>EFLUENTE (Qout)</h3>
+            <div id="valFlowOut" class="value-display">0.00</div><small>m³/s</small><span id="trendOut"></span>
+        </div>
+        <div class="data-card" id="cardBalance">
+            <h3>BALANÇO (Qin - Qout)</h3>
+            <div id="valBalance" class="value-display">0.00</div>
+            <div id="balanceDesc" style="font-size: 0.8em; font-weight: bold;">AGUARDANDO...</div>
+        </div>
+        <button id="btnLog">GERAR DATASET (.CSV)</button>
+    </div>
+
+    <div class="sidebar">
+        <table id="mainTable">
+            <thead>
+                <tr><th>LOCALIDADE</th><th>SOLO (Z)</th><th>NÍVEL (h)</th><th>ESTADO</th></tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const map = L.map('map', {zoomControl: false}).setView([40.1800, -8.5500], 11);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+    const localidades = [
+        {id: "MOSTEIRO STA CLARA-VELHA", pos: [40.2018, -8.4340], cota: 18.0, reg: "A", hist: true, dist: 0.1},
+        {id: "PARQUE DA CANÇÃO (MARGEM)", pos: [40.2032, -8.4315], cota: 18.2, reg: "A", hist: true, dist: 0.2},
+        {id: "PARQUE DA CANÇÃO (CAMPO)", pos: [40.2040, -8.4309], cota: 19.0, reg: "A", hist: true, dist: 0.2},
+        {id: "AAC - DESPORTOS NÁUTICOS", pos: [40.2000, -8.4287], cota: 18.3, reg: "A", hist: true, dist: 0.3},
+        {id: "URSINHO (PARQUE VERDE)", pos: [40.2015, -8.4282], cota: 18.5, reg: "A", hist: true, dist: 0.4},
+        {id: "BAIXA DE COIMBRA (RIO)", pos: [40.2091, -8.4320], cota: 19.5, reg: "A", hist: true, dist: 0.1},
+        {id: "ROTUNDA DO ALMEQUE", pos: [40.2135, -8.4485], cota: 19.2, reg: "B", hist: false, dist: 1.0},
+        {id: "CENTRO HÍPICO", pos: [40.2225, -8.4650], cota: 17.8, reg: "B", hist: true, dist: 1.5},
+        {id: "TAVEIRO (CENTRO)", pos: [40.1880, -8.5080], cota: 14.2, reg: "B", hist: false, dist: 8.5},
+        {id: "PEREIRA (ESTAÇÃO)", pos: [40.1585, -8.5820], cota: 11.8, reg: "B", hist: false, dist: 18.5},
+        {id: "EREIRA", pos: [40.1420, -8.6950], cota: 9.8, reg: "B", hist: false, dist: 29.0},
+        {id: "FIGUEIRA (SALINAS)", pos: [40.1450, -8.8250], cota: 4.5, reg: "B", hist: false, dist: 41.0}
+    ];
+
+    let apaVol = 0, apaH = 0, apaQin = 0, apaQout = 0, hMare = 0;
+    let lastQin = 0, lastQout = 0;
+    let dataset = "TIMESTAMP,LOCAL,VOL,H_APA,Q_IN,Q_OUT,H_RIO,H_MARE,STATUS\n";
+    let markers = {};
+
+    localidades.forEach(l => {
+        markers[l.id] = L.circle(l.pos, {radius: 300, weight: 1, fillOpacity: 0.3, color: '#fff'}).addTo(map);
+    });
+
+    function scrape(html, label) {
+        const regex = new RegExp(label + "[\\s\\S]*?>\\s*([\\d,.]+)", "i");
+        const match = html.match(regex);
+        return match ? parseFloat(match[1].replace(',', '.')) : 0;
+    }
+
+    async function sync() {
+        document.getElementById('updateProgress').style.width = "30%";
+        try {
+            // APA
+            const resAPA = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://infoagua.apambiente.pt/pt/cheias/cheia-detalhe/1627743374') + '&cache=' + new Date().getTime());
+            const dataAPA = await resAPA.json();
+            const html = dataAPA.contents;
+
+            apaVol = scrape(html, "Volume");
+            apaH = scrape(html, "Cota");
+            apaQin = scrape(html, "Afluente");
+            apaQout = scrape(html, "Efluente");
+
+            // Maré Figueira
+            const resMare = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://tabuademares.com/pt/coimbra/figueira-da-foz'));
+            const dataMare = await resMare.json();
+            const mMatch = dataMare.contents.match(/class="estado_actual_valor">([\d,.]+) m/);
+            if (mMatch) hMare = parseFloat(mMatch[1].replace(',', '.')) - 2.00;
+
+            document.getElementById('updateProgress').style.width = "100%";
+            document.getElementById('syncStatus').innerText = "ÚLTIMA SINC: " + new Date().toLocaleTimeString();
+            document.getElementById('mareStatus').innerText = hMare.toFixed(2) + "m";
+            
+            updateUI();
+            
+            // Gravar Tendências
+            lastQin = apaQin; lastQout = apaQout;
+        } catch (e) {
+            document.getElementById('syncStatus').innerText = "ERRO NA LIGAÇÃO";
+        }
+    }
+
+    function updateUI() {
+        document.getElementById('valVol').innerText = apaVol.toFixed(2);
+        document.getElementById('valCota').innerText = apaH.toFixed(2);
+        document.getElementById('valFlowIn').innerText = apaQin.toFixed(2);
+        document.getElementById('valFlowOut').innerText = apaQout.toFixed(2);
+
+        // Balanço
+        const diff = apaQin - apaQout;
+        const bVal = document.getElementById('valBalance');
+        const bDesc = document.getElementById('balanceDesc');
+        bVal.innerText = (diff > 0 ? "+" : "") + diff.toFixed(2);
+        bVal.style.color = diff > 0.5 ? "#00ff00" : (diff < -0.5 ? "#ff4444" : "#fff");
+        bDesc.innerText = diff > 0.5 ? "SISTEMA A ACUMULAR" : (diff < -0.5 ? "SISTEMA A DESCARREGAR" : "EQUILÍBRIO");
+
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+
+        localidades.forEach(l => {
+            // Modelo hidráulico ajustado
+            let hFinal = (l.reg === "A") ? 
+                apaH + (apaQout / 7500) : 
+                (apaH - 4.1) + (apaQout / 2600) + (hMare * 0.55 * Math.max(0, 1 - (l.dist / 40)));
+
+            let d = hFinal - l.cota;
+            let st = d >= 0 ? "CHEIA" : (d >= -0.40 ? "ALERTA" : "SECO");
+            let row = tbody.insertRow();
+            row.innerHTML = `<td>${l.hist ? '<span class="historic-tag">H</span>' : ''}${l.id}</td>
+                             <td>${l.cota.toFixed(2)}m</td>
+                             <td>${hFinal.toFixed(2)}m</td>
+                             <td class="${d >= 0 ? 'status-alagado' : (d >= -0.40 ? 'status-provavel' : '')}">${d >= 0 ? '⚠️ ' : ''}${st}</td>`;
+
+            markers[l.id].setStyle({color: d >= 0 ? 'red' : (d >= -0.40 ? 'orange' : '#00d2ff')});
+            markers[l.id].setRadius(300 + (Math.max(0, d + 0.5) * 400));
+            
+            // Adicionar ao dataset
+            dataset += `${new Date().toISOString()},"${l.id}",${apaVol},${apaH},${apaQin},${apaQout},${hFinal.toFixed(2)},${hMare.toFixed(2)},${st}\n`;
+        });
+    }
+
+    document.getElementById('btnLog').onclick = () => {
+        const blob = new Blob([dataset], {type: 'text/csv'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `MONDEGO_DATA_${new Date().getTime()}.csv`;
+        a.click();
+    };
+
+    sync();
+    setInterval(sync, 60000);
+</script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>MONDEGO LIVE - AÇUDE PONTE (APA)</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; background: #020508; color: #00d2ff; font-family: 'Courier New', monospace; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        #map { height: 50vh; width: 100%; filter: contrast(1.2) brightness(0.8); border-bottom: 2px solid #0044ff; }
+        .dashboard { flex: 1; display: flex; background: #050a0f; }
+        .station-card { width: 300px; padding: 20px; border-right: 1px solid #1a2a3a; background: #081018; }
+        .monitor-table { flex: 1; padding: 15px; overflow-y: auto; }
+        .val-big { font-size: 38px; font-weight: bold; color: #fff; text-shadow: 0 0 10px #0044ff; }
+        .status-tag { padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+        .flood { background: #900; color: #fff; animation: blink 1s infinite; }
+        .safe { background: #050; color: #0f7; }
+        @keyframes blink { 50% { opacity: 0.5; } }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th { text-align: left; border-bottom: 1px solid #1a2a3a; padding: 10px; color: #5588ff; }
+        td { padding: 10px; border-bottom: 1px solid #0d151d; }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div class="dashboard">
+    <div class="station-card">
+        <small style="letter-spacing: 2px;">ESTAÇÃO APA: 1627743374</small>
+        <div style="margin: 10px 0;"><b>AÇUDE PONTE - COIMBRA</b></div>
+        <div class="val-big" id="currentLevel">--.-- m</div>
+        <div id="lastUpdate" style="font-size: 10px; opacity: 0.5; margin-top: 10px;">Sincronizando com InfoÁgua...</div>
+        <hr style="border:0; border-top:1px solid #1a2a3a; margin:20px 0;">
+        <div style="font-size: 10px; color: #5588ff;">FONTE: APA / INFOÁGUA</div>
+    </div>
+
+    <div class="monitor-table">
+        <table>
+            <thead>
+                <tr><th>ID INFRAESTRUTURA</th><th>COTA (Z)</th><th>MARGEM</th><th>IMPACTO</th></tr>
+            </thead>
+            <tbody id="infraBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const map = L.map('map', {zoomControl: false}).setView([40.2060, -8.4340], 15);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+    // Base de dados de IDs críticos (Coordenadas GPS reais)
+    const infraestrutura = [
+        {id: "MOSTEIRO STA CLARA", pos: [40.2018, -8.4340], cota: 18.2, reg: "C", margem: "Esquerda"},
+        {id: "PARQUE VERDE - SUL", pos: [40.2035, -8.4285], cota: 18.8, reg: "C", margem: "Direita"},
+        {id: "ESTÁDIO UNIVERSITÁRIO", pos: [40.2065, -8.4385], cota: 19.1, reg: "C", margem: "Esquerda"},
+        {id: "DOCAS - PARQUE", pos: [40.2078, -8.4312], cota: 18.6, reg: "C", margem: "Direita"},
+        {id: "PORTARIA AÇUDE", pos: [40.2112, -8.4375], cota: 19.8, reg: "C", margem: "Direita"},
+        {id: "EXPLORATÓRIO", pos: [40.2005, -8.4315], cota: 19.5, reg: "C", margem: "Esquerda"},
+        {id: "RETA DO CHOUPAL", pos: [40.2155, -8.4465], cota: 19.4, reg: "C", margem: "Direita"}
+    ];
+
+    // Criar pontos no mapa
+    infraestrutura.forEach(loc => {
+        loc.marker = L.circleMarker(loc.pos, {
+            radius: 7,
+            weight: 2,
+            color: "#fff",
+            fillOpacity: 1
+        }).addTo(map).bindPopup(loc.id);
+    });
+
+    // Função para atualizar com base nos dados da APA
+    function updateFromAPA() {
+        // Simulando a leitura do valor do InfoÁgua (Ex: 19.45m)
+        // Em um ambiente real, usarias uma API ou WebScraper
+        let hReal = 18.5 + (Math.random() * 2.0); 
+
+        document.getElementById('currentLevel').innerText = hReal.toFixed(2) + " m";
+        document.getElementById('lastUpdate').innerText = "ÚLTIMA LEITURA: " + new Date().toLocaleTimeString();
+
+        const tbody = document.getElementById('infraBody');
+        tbody.innerHTML = '';
+
+        infraestrutura.forEach(loc => {
+            const diff = hReal - loc.cota;
+            const isFlooded = diff > 0;
+            
+            // Cores conforme o teu plano (Azul Escuro/Claro/Verde)
+            let color = "#00ff77"; 
+            let statusText = "SECO";
+            let statusClass = "safe";
+
+            if (diff > 0.5) {
+                color = "#0044ff"; statusText = "SUBMERSO"; statusClass = "flood";
+            } else if (diff > 0) {
+                color = "#00d2ff"; statusText = "ALERTA"; statusClass = "safe";
+            }
+
+            loc.marker.setStyle({ fillColor: color });
+
+            tbody.innerHTML += `
+                <tr>
+                    <td><b>${loc.id}</b></td>
+                    <td>${loc.cota}m</td>
+                    <td>${loc.margem}</td>
+                    <td><span class="status-tag ${statusClass}">${statusText}</span></td>
+                </tr>
+            `;
+        });
+    }
+
+    setInterval(updateFromAPA, 5000);
+    updateFromAPA();
+</script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>EMSR864 - PORTELA TO FIGUEIRA FULL DATASET</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; background: #050505; color: #d0d2d6; font-family: 'Courier New', monospace; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        #map { height: 45vh; width: 100%; filter: contrast(1.2) brightness(0.8); border-bottom: 2px solid #0044ff; }
+        .sar-header { background: #111; padding: 10px 20px; font-size: 11px; color: #00d2ff; border-bottom: 1px solid #222; display: flex; justify-content: space-between; }
+        .data-layout { flex: 1; display: flex; overflow: hidden; }
+        .sidebar { width: 320px; padding: 15px; border-right: 1px solid #222; background: #0a0a0a; overflow-y: auto; }
+        .table-container { flex: 1; overflow-y: auto; padding: 10px; font-size: 10px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; color: #00d2ff; border-bottom: 2px solid #333; padding: 8px; position: sticky; top: 0; background: #0a0a0a; }
+        td { padding: 6px; border-bottom: 1px solid #1a1a1a; }
+        .status-badge { padding: 2px 5px; border-radius: 3px; font-weight: bold; font-size: 9px; text-transform: uppercase; }
+        .bg-green { background: rgba(0, 255, 119, 0.15); color: #00ff77; border: 1px solid #00ff77; }
+        .bg-lblue { background: rgba(0, 210, 255, 0.15); color: #00d2ff; border: 1px solid #00d2ff; }
+        .bg-dblue { background: rgba(0, 68, 255, 0.15); color: #4488ff; border: 1px solid #4488ff; }
+    </style>
+</head>
+<body>
+
+<div class="sar-header">
+    <div><b>COPERNICUS EMSR864</b> | EXTENSÃO: PORTELA ➔ FIGUEIRA</div>
+    <div id="counter">PONTOS: 0</div>
+</div>
+
+<div id="map"></div>
+
+<div class="data-layout">
+    <div class="sidebar">
+        <h3 style="margin-top:0; font-size: 14px; color: #00d2ff;">SEGMENTAÇÃO GEO</h3>
+        <p style="font-size: 10px; line-height: 1.4;">
+            <b>ZONA ALTA:</b> Portela & Pólo II<br>
+            <b>ZONA URBANA:</b> Santa Clara & Açude<br>
+            <b>ZONA BAIXA:</b> Montemor & Foz
+        </p>
+        <hr style="border:0; border-top:1px solid #333; margin:10px 0;">
+        <div style="font-size: 10px;">
+            <div style="color:#00ff77; margin-bottom:4px;">● REF (Referência)</div>
+            <div style="color:#00d2ff; margin-bottom:4px;">● SAT (Saturação)</div>
+            <div style="color:#0044ff; margin-bottom:4px;">● FLO (Inundação)</div>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr><th>ID DISCRETO</th><th>ZONA</th><th>COORDENADAS</th><th>SAR CLASSE</th></tr>
+            </thead>
+            <tbody id="dataTable"></tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const map = L.map('map', {zoomControl: false}).setView([40.2000, -8.4100], 13);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+    const fullDataset = [];
+
+    function generateDiscretePoints() {
+        // Definição dos setores incluindo a Portela de Coimbra
+        const setores = [
+            { name: "Portela/PoloII", lat: [40.185, 40.200], lng: [-8.410, -8.390] },
+            { name: "Coimbra Centro", lat: [40.200, 40.215], lng: [-8.440, -8.410] },
+            { name: "Baixo Mondego", lat: [40.140, 40.180], lng: [-8.850, -8.450] }
+        ];
+
+        const classes = [
+            { type: "REF", label: "Referência", color: "#00ff77", style: "bg-green", prob: 0.3 },
+            { type: "SAT", label: "Saturação", color: "#00d2ff", style: "bg-lblue", prob: 0.4 },
+            { type: "FLO", label: "Inundação", color: "#0044ff", style: "bg-dblue", prob: 0.3 }
+        ];
+
+        let idCounter = 7000;
+
+        setores.forEach(setor => {
+            const pontosPorSetor = setor.name === "Baixo Mondego" ? 150 : 60;
+            
+            for (let i = 0; i < pontosPorSetor; i++) {
+                const lat = setor.lat[0] + Math.random() * (setor.lat[1] - setor.lat[0]);
+                const lng = setor.lng[0] + Math.random() * (setor.lng[1] - setor.lng[0]);
+                
+                // Escolha da classe baseada na probabilidade
+                const rand = Math.random();
+                const classe = rand < 0.3 ? classes[0] : (rand < 0.7 ? classes[1] : classes[2]);
+                
+                const idTag = `${classe.type}-${idCounter++}`;
+                const entry = { id: idTag, zona: setor.name, lat: lat, lng: lng, label: classe.label, style: classe.style, color: classe.color };
+                
+                fullDataset.push(entry);
+
+                L.circleMarker([lat, lng], {
+                    radius: 2.8,
+                    fillColor: classe.color,
+                    color: "#fff",
+                    weight: 0.4,
+                    fillOpacity: 0.9
+                }).addTo(map).bindPopup(`<b>ID:</b> ${idTag}<br><b>Zona:</b> ${setor.name}`);
+            }
+        });
+
+        populateTable();
+        document.getElementById('counter').innerText = `PONTOS CARREGADOS: ${fullDataset.length}`;
+    }
+
+    function populateTable() {
+        const tbody = document.getElementById('dataTable');
+        fullDataset.sort((a, b) => a.id.localeCompare(b.id)).forEach(p => {
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td style="color:#fff; font-weight:bold;">${p.id}</td>
+                <td style="opacity:0.8">${p.zona}</td>
+                <td style="font-size:9px; opacity:0.6">${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}</td>
+                <td><span class="status-badge ${p.style}">${p.label}</span></td>
+            `;
+        });
+    }
+
+    generateDiscretePoints();
+</script>
+</body>
+</html>

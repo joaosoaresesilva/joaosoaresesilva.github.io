@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>MONDEGO MONITOR V7 - NUVEM DE PONTOS SAR</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; font-family: 'Courier New', monospace; background: #050505; color: #d0d0d0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        #map { height: 45vh; width: 100%; background: #000; filter: contrast(1.3) brightness(0.9); border-bottom: 2px solid #00d2ff; }
+        .sar-header { background: #111; padding: 10px 20px; display: flex; justify-content: space-between; font-size: 11px; border-bottom: 1px solid #333; color: #00d2ff; }
+        .main-container { display: flex; flex: 1; overflow: hidden; }
+        .panel { flex: 0.8; padding: 15px; display: flex; flex-direction: column; gap: 10px; border-right: 1px solid #222; background: #0a0a0a; overflow-y: auto; }
+        .sidebar { flex: 2.2; padding: 10px; background: #050505; overflow-y: auto; }
+        .data-card { background: #111; padding: 10px; border: 1px solid #333; border-left: 4px solid #00d2ff; }
+        .value-display { font-size: 1.8em; font-weight: bold; color: #fff; letter-spacing: -1px; }
+        table { width: 100%; font-size: 9px; border-collapse: collapse; }
+        th { border-bottom: 2px solid #444; padding: 8px; text-align: left; color: #00d2ff; position: sticky; top: 0; background: #050505; z-index: 10; }
+        td { padding: 4px; border-bottom: 1px solid #222; color: #ffffff; }
+        .status-alagado { color: #0044ff !important; font-weight: bold; text-shadow: 0 0 5px #0044ff; } 
+        .status-alerta { color: #00d2ff !important; }
+        #btnLog { color: #00d2ff; border: 1px solid #00d2ff; background: transparent; padding: 12px; cursor: pointer; font-weight: bold; width: 100%; margin-top: auto;}
+    </style>
+</head>
+<body>
+
+<div class="sar-header">
+    <div><b>MONDEGO SAR POINT CLOUD</b> | PONTOS GEREADOS: <span id="pCount">0</span></div>
+    <div>SINC APA: <b id="syncStatus">---</b></div>
+    <div>MARÉ: <b id="mareStatus">---</b></div>
+</div>
+
+<div id="map"></div>
+
+<div class="main-container">
+    <div class="panel">
+        <div class="data-card"><h3>CAUDAL (Q)</h3><div id="valFlow" class="value-display">---</div><small>m³/s</small></div>
+        <div class="data-card"><h3>MARÉ (m)</h3><div id="valMare" class="value-display" style="color: #00d2ff;">---</div><small>Figueira da Foz</small></div>
+        <button id="btnLog">EXPORTAR NUVEM (R)</button>
+    </div>
+    <div class="sidebar">
+        <table id="mainTable">
+            <thead><tr><th>ID DISCRETO</th><th>COTA Z</th><th>H CALC</th><th>ESTADO SAR</th></tr></thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const map = L.map('map', {zoomControl: false}).setView([40.1800, -8.5500], 11);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+    // --- CONFIGURAÇÃO DA GERAÇÃO DE PONTOS ---
+    const NUM_PONTOS = 2000; // Representação massiva
+    const nuvemPontos = [];
+    const centros = [
+        {id: "BOLAO", pos: [40.22, -8.47], dist: 2.5, cota: 17.5},
+        {id: "ARZILA", pos: [40.16, -8.54], dist: 14.5, cota: 12.5},
+        {id: "MONTEMOR", pos: [40.17, -8.67], dist: 25.0, cota: 10.5},
+        {id: "FOZ", pos: [40.14, -8.81], dist: 39.0, cota: 4.0}
+    ];
+
+    function gerarNuvem() {
+        for (let i = 0; i < NUM_PONTOS; i++) {
+            const ref = centros[Math.floor(Math.random() * centros.length)];
+            const lat = ref.pos[0] + (Math.random() - 0.5) * 0.04;
+            const lng = ref.pos[1] + (Math.random() - 0.5) * 0.08;
+            
+            const pId = `P-${i.toString().padStart(4, '0')}`;
+            const cotaZ = ref.cota + (Math.random() * 2.5); // Variação de relevo
+
+            const marker = L.circleMarker([lat, lng], {
+                radius: 1.2,
+                weight: 0,
+                fillOpacity: 0.6
+            }).addTo(map);
+
+            nuvemPontos.push({ id: pId, pos: [lat, lng], cota: cotaZ, dist: ref.dist, marker: marker });
+        }
+        document.getElementById('pCount').innerText = NUM_PONTOS;
+    }
+
+    let apaQ = 0, apaH = 0, hMare = 0.5;
+    let logData = "ID,LAT,LNG,Z,H_CALC,STATUS\n";
+
+    async function sync() {
+        try {
+            const resA = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://infoagua.apambiente.pt/pt/cheias/cheia-detalhe/1627743374'));
+            const dataA = await resA.json();
+            const flowM = dataA.contents.match(/(\d+[.,]?\d*)\s*m3\/s/);
+            const cotaM = dataA.contents.match(/(\d+[.,]\d+)\s*m(?!\d|\/|3)/);
+            if (flowM) apaQ = parseFloat(flowM[1].replace(',', '.'));
+            if (cotaM) apaH = parseFloat(cotaM[1].replace(',', '.'));
+
+            const resM = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://www.temperaturadomar.pt/europa/portugal/figueira-da-foz/tides.html'));
+            const dataM = await resM.json();
+            const mareM = dataM.contents.match(/(\d+[.,]\d+)\s*m/);
+            if (mareM) hMare = parseFloat(mareM[1].replace(',', '.'));
+
+            document.getElementById('syncStatus').innerText = "OK: " + new Date().toLocaleTimeString();
+            document.getElementById('mareStatus').innerText = hMare.toFixed(2) + "m";
+            updateCloud();
+        } catch (e) { document.getElementById('syncStatus').innerText = "ERRO"; }
+    }
+
+    function updateCloud() {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+        document.getElementById('valFlow').innerText = apaQ.toFixed(0);
+        document.getElementById('valMare').innerText = hMare.toFixed(2);
+        
+        let baseJusante = (apaH - 4.0) + (hMare * 0.2);
+
+        // Atualizar os 2000 pontos
+        nuvemPontos.forEach((p, index) => {
+            let pMare = Math.max(0, 1 - (p.dist / 43));
+            let hFinal = baseJusante - (p.dist * 0.045) + (apaQ / 2800) + (hMare * 0.55 * pMare);
+            let diff = hFinal - p.cota;
+            
+            let color = "#00ff77"; // Verde (Seco)
+            let status = "NORMAL";
+            
+            if (diff >= 0.6) {
+                color = "#0044ff"; // Azul Escuro (Inundado)
+                status = "ALAGADO";
+            } else if (diff >= 0) {
+                color = "#00d2ff"; // Azul Claro (Saturação)
+                status = "ALERTA";
+            }
+
+            p.marker.setStyle({ fillColor: color, color: color });
+
+            // Exibir apenas os primeiros 50 na tabela para não travar o browser
+            if (index < 50) {
+                let row = tbody.insertRow();
+                row.innerHTML = `<td>${p.id}</td><td>${p.cota.toFixed(2)}</td><td>${hFinal.toFixed(2)}</td><td class="${status === 'ALAGADO' ? 'status-alagado' : 'status-alerta'}">${status}</td>`;
+            }
+            
+            if (index === 0) logData = "ID,LAT,LNG,Z,H_CALC,STATUS\n"; // Reset log
+            logData += `${p.id},${p.pos[0]},${p.pos[1]},${p.cota.toFixed(2)},${hFinal.toFixed(2)},${status}\n`;
+        });
+    }
+
+    gerarNuvem();
+    sync();
+    setInterval(sync, 60000);
+    document.getElementById('btnLog').onclick = () => {
+        const blob = new Blob([logData], {type: 'text/plain'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob); a.download = `SAR_CLOUD_DATA.csv`; a.click();
+    };
+</script>
+</body>
+</html>

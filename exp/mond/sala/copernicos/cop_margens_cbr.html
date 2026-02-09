@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>MONDEGO MONITOR - FOCO COIMBRA AÇUDE</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; background: #050505; color: #00d2ff; font-family: 'Courier New', monospace; overflow: hidden; display: flex; flex-direction: column; height: 100vh; }
+        #map { flex: 1; filter: contrast(1.3) brightness(0.9) saturate(1.2); }
+        .ui-panel { position: absolute; top: 20px; left: 20px; z-index: 1000; background: rgba(10,10,10,0.9); padding: 15px; border: 1px solid #0044ff; width: 260px; pointer-events: none; }
+        .belt-info { font-size: 10px; margin-top: 8px; border-left: 2px solid #333; padding-left: 10px; }
+        .label { font-size: 9px; opacity: 0.7; text-transform: uppercase; }
+        .val { font-size: 1.2em; font-weight: bold; color: #fff; }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div class="ui-panel">
+    <div style="font-weight: bold; color: #00d2ff; margin-bottom: 10px;">SETOR A: COIMBRA - AÇUDE</div>
+    <div class="label">Caudal em Tempo Real</div>
+    <div id="dispQ" class="val">--- m3/s</div>
+    <hr style="border:0; border-top:1px solid #222; margin:10px 0;">
+    <div id="beltAnalysis"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    // Foco restrito: Açude e Parque da Canção
+    const map = L.map('map', {zoomControl: false}).setView([40.2050, -8.4350], 15);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+    // Eixo central do Mondego no trecho urbano de Coimbra
+    const trechoUrbano = [
+        [40.2135, -8.4415], // Jusante Açude
+        [40.2105, -8.4370], // Açude
+        [40.2050, -8.4330], // Sta Clara
+        [40.2010, -8.4280]  // Parque Canção
+    ];
+    
+    const polylineRio = L.polyline(trechoUrbano, {color: 'transparent'}).addTo(map);
+    const correiasDist = [0, 1, 10, 20, 50, 100]; // Metros da margem
+    const pontosSAR = [];
+
+    function gerarSistemaCorreias() {
+        correiasDist.forEach((dist) => {
+            for (let i = 0; i < 250; i++) {
+                const perc = i / 250;
+                const pBase = interpolate(trechoUrbano, perc);
+                
+                // Cálculo de offset lateral (perpendicular aproximado)
+                const offset = (dist / 111000); 
+                const lado = i % 2 === 0 ? 1 : -1; // Margem Esquerda vs Direita
+                
+                const pos = [pBase[0] + (offset * 0.4 * lado), pBase[1] + (offset * lado)];
+                
+                const marker = L.circleMarker(pos, {
+                    radius: 1.3,
+                    weight: 0,
+                    fillOpacity: 0.8
+                }).addTo(map);
+
+                pontosSAR.push({
+                    id: `C${dist}-ID${i}`,
+                    marker: marker,
+                    dist: dist,
+                    z: 18.0 + (dist * 0.08) // A cota sobe à medida que nos afastamos do rio
+                });
+            }
+        });
+    }
+
+    // Função auxiliar de interpolação linear
+    function interpolate(points, percent) {
+        const idx = Math.floor(percent * (points.length - 1));
+        const p1 = points[idx];
+        const p2 = points[idx + 1] || p1;
+        const segmentPerc = (percent * (points.length - 1)) - idx;
+        return [
+            p1[0] + (p2[0] - p1[0]) * segmentPerc,
+            p1[1] + (p2[1] - p1[1]) * segmentPerc
+        ];
+    }
+
+    async function monitorizar() {
+        // Simulação de caudal dinâmico (Integrável com API APA)
+        const Q = 800 + (Math.random() * 200);
+        document.getElementById('dispQ').innerText = Q.toFixed(0) + " m3/s";
+        
+        // Nível de referência no Açude (Cota da água)
+        const hAgua = 19.2 + (Q / 1500); 
+        const analysisDiv = document.getElementById('beltAnalysis');
+        analysisDiv.innerHTML = '';
+
+        correiasDist.forEach(dist => {
+            let totalIn = 0;
+            const ptsBelt = pontosSAR.filter(p => p.dist === dist);
+            
+            ptsBelt.forEach(p => {
+                if (hAgua > p.z) {
+                    p.marker.setStyle({fillColor: '#0044ff', fillOpacity: 0.9});
+                    totalIn++;
+                } else if (hAgua > p.z - 0.4) {
+                    p.marker.setStyle({fillColor: '#00d2ff', fillOpacity: 0.6});
+                } else {
+                    p.marker.setStyle({fillColor: '#00ff77', fillOpacity: 0.2});
+                }
+            });
+
+            const perc = (totalIn / ptsBelt.length) * 100;
+            analysisDiv.innerHTML += `
+                <div class="belt-info">
+                    <span class="label">Raio ${dist}m:</span> 
+                    <span style="color:${perc > 50 ? '#ff4444' : '#00ff77'}">${perc.toFixed(0)}% Submerso</span>
+                </div>`;
+        });
+    }
+
+    gerarSistemaCorreias();
+    monitorizar();
+    setInterval(monitorizar, 3000);
+</script>
+</body>
+</html>

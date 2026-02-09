@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>MONDEGO HYDRAULIC - MONOCHROME INTERSECTION</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; background: #050505; color: #00d2ff; font-family: 'Courier New', monospace; overflow: hidden; display: flex; flex-direction: column; height: 100vh; }
+        #map { flex: 1; background: #000; filter: contrast(1.4) brightness(0.9); }
+        .sar-header { background: #111; padding: 10px 20px; display: flex; justify-content: space-between; font-size: 11px; border-bottom: 2px solid #0044ff; color: #00d2ff; }
+        .info-panel { position: absolute; top: 70px; left: 20px; z-index: 1000; background: rgba(0,0,0,0.8); padding: 15px; border-left: 3px solid #0044ff; pointer-events: none; }
+        .val { font-size: 1.5em; color: #fff; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="sar-header">
+    <div>RADAR SAR SIMULATION | EMSR864</div>
+    <div>SINC STATUS: <b id="sync">A LER APA...</b></div>
+    <div>MARÉ: <b id="mare">---</b></div>
+</div>
+
+<div id="map"></div>
+
+<div class="info-panel">
+    <div>CAUDAL (Q)</div>
+    <div id="dispQ" class="val">---</div>
+    <div style="margin-top:10px;">PONTOS ABAIXO DO PLANO</div>
+    <div id="dispFlood" class="val" style="color: #0044ff;">0</div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const map = L.map('map', {zoomControl: false}).setView([40.1800, -8.6000], 11);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+    const DENSIDADE = 3000; // Aumentado para melhor definição da mancha
+    const nuvem = [];
+    
+    // Configuração dos setores para geração do relevo (Cotas Z)
+    const setores = [
+        {pos: [40.22, -8.47], z: 15.0, dist: 2.5},
+        {pos: [40.16, -8.54], z: 10.5, dist: 14.5},
+        {pos: [40.17, -8.68], z: 7.0, dist: 25.0},
+        {pos: [40.14, -8.82], z: 2.5, dist: 40.0}
+    ];
+
+    // Inicializar a nuvem de pontos (Terreno estático)
+    function initTerreno() {
+        for (let i = 0; i < DENSIDADE; i++) {
+            const s = setores[Math.floor(Math.random() * setores.length)];
+            const lat = s.pos[0] + (Math.random() - 0.5) * 0.09;
+            const lng = s.pos[1] + (Math.random() - 0.5) * 0.16;
+            
+            // Cada ponto recebe um ID discreto e uma cota Z simulada
+            const cotaZ = s.z + (Math.random() * 8); 
+
+            const marker = L.circleMarker([lat, lng], {
+                radius: 1.1,
+                weight: 0,
+                fillOpacity: 0.5
+            }).addTo(map);
+
+            nuvem.push({ id: `PT-${i}`, marker: marker, z: cotaZ, dist: s.dist });
+        }
+    }
+
+    async function processarIntersecao() {
+        // Valores baseados nos teus scripts de leitura da APA
+        let Q = 980; 
+        let M = 1.35; 
+
+        document.getElementById('dispQ').innerText = Q + " m³/s";
+        document.getElementById('mare').innerText = M.toFixed(2) + "m";
+        document.getElementById('sync').innerText = "OK: " + new Date().toLocaleTimeString();
+
+        // Nível do Plano Perpendicular (hPlano)
+        let hPlanoBase = 4.2 + (Q/2100) + (M * 0.5);
+        let floodCount = 0;
+
+        nuvem.forEach(p => {
+            // O plano desce ligeiramente em direção à foz (declive hidráulico)
+            let hPlanoLocal = hPlanoBase + ((40 - p.dist) * 0.12);
+
+            // INTERSEÇÃO: Unica cor para a superfície alagada
+            if (hPlanoLocal > p.z) {
+                // Ponto Intersetado pelo Plano (Alagado)
+                p.marker.setStyle({
+                    fillColor: "#0044ff", // Cor única do plano
+                    fillOpacity: 0.8
+                });
+                floodCount++;
+            } else {
+                // Ponto Acima do Plano (Solo Seco)
+                p.marker.setStyle({
+                    fillColor: "#222", // Neutro / Cinza escuro
+                    fillOpacity: 0.2
+                });
+            }
+        });
+        document.getElementById('dispFlood').innerText = floodCount;
+    }
+
+    initTerreno();
+    processarIntersecao();
+    setInterval(processarIntersecao, 5000);
+</script>
+</body>
+</html>

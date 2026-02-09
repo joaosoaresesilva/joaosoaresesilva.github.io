@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>MONDEGO FULL SCALE - COIMBRA TO FIGUEIRA</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; background: #010101; color: #00d2ff; font-family: 'Courier New', monospace; overflow: hidden; display: flex; flex-direction: column; height: 100vh; }
+        #map { flex: 1; filter: contrast(1.3) brightness(0.8); }
+        .ui-panel { position: absolute; top: 15px; right: 15px; z-index: 1000; background: rgba(0,0,0,0.85); padding: 12px; border: 1px solid #0044ff; width: 220px; font-size: 10px; }
+        .belt-stat { margin-top: 5px; height: 12px; background: #111; border: 1px solid #333; overflow: hidden; }
+        .belt-fill { height: 100%; transition: width 0.8s ease; }
+        .header-title { font-weight: bold; border-bottom: 1px solid #0044ff; padding-bottom: 5px; margin-bottom: 10px; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div class="ui-panel">
+    <div class="header-title">Monitorização Baixo Mondego</div>
+    <div>Caudal: <b id="valQ">---</b> m³/s</div>
+    <div>Maré (Foz): <b id="valM">---</b> m</div>
+    <div id="statsContainer" style="margin-top:15px;"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const map = L.map('map', {zoomControl: false}).setView([40.1600, -8.6500], 11);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+    // EIXO COMPLETO DO RIO: Coimbra -> Pereira -> Montemor -> Figueira
+    const eixoRio = [
+        [40.2110, -8.4380], // Coimbra (Açude)
+        [40.1880, -8.5080], // Taveiro
+        [40.1650, -8.5700], // Pereira
+        [40.1620, -8.6480], // Montemor
+        [40.1450, -8.7450], // Vila Verde / Arunca
+        [40.1450, -8.8450]  // Figueira da Foz
+    ];
+
+    const correiasDist = [0, 1, 10, 20, 50, 100]; 
+    const nuvemSAR = [];
+
+    function initGlobal() {
+        correiasDist.forEach((dist) => {
+            // 600 pontos por correia para cobrir os 45km
+            for (let i = 0; i < 600; i++) {
+                const perc = i / 600;
+                const pBase = interpolate(eixoRio, perc);
+                
+                const offset = (dist / 111000); 
+                const lado = i % 2 === 0 ? 1 : -1; 
+                const pos = [pBase[0] + (offset * 0.5 * lado), pBase[1] + (offset * lado)];
+                
+                // COTA Z DINÂMICA: 
+                // Começa em 18m (Coimbra) e desce até 2m (Figueira)
+                const cotaBaseFluvial = 18 - (perc * 16); 
+                const cotaZ = cotaBaseFluvial + (dist * 0.06);
+
+                const marker = L.circleMarker(pos, {
+                    radius: 1,
+                    weight: 0,
+                    fillOpacity: 0.6
+                }).addTo(map);
+
+                nuvemSAR.push({
+                    id: `B${dist}-P${i}`,
+                    marker: marker,
+                    distMargem: dist,
+                    distFozPerc: 1 - perc, // 0 na foz, 1 em Coimbra
+                    z: cotaZ
+                });
+            }
+        });
+    }
+
+    function interpolate(points, percent) {
+        const idx = Math.floor(percent * (points.length - 1));
+        const p1 = points[idx];
+        const p2 = points[idx + 1] || p1;
+        const sPerc = (percent * (points.length - 1)) - idx;
+        return [p1[0] + (p2[0] - p1[0]) * sPerc, p1[1] + (p2[1] - p1[1]) * sPerc];
+    }
+
+    async function engine() {
+        // Simulando dados dinâmicos da APA e Maré
+        const Q = 1100 + (Math.sin(Date.now()/10000) * 400); 
+        const M = 1.2 + (Math.cos(Date.now()/8000) * 1.8); 
+
+        document.getElementById('valQ').innerText = Q.toFixed(0);
+        document.getElementById('valM').innerText = M.toFixed(2);
+
+        const statsDiv = document.getElementById('statsContainer');
+        statsDiv.innerHTML = '';
+
+        correiasDist.forEach(dist => {
+            const pontos = nuvemSAR.filter(p => p.distMargem === dist);
+            let ativos = 0;
+
+            pontos.forEach(p => {
+                // Modelo Hidráulico: Influência de Q diminui para a foz, influência de M aumenta
+                const hCalculada = 2.0 + (Q/2500 * p.distFozPerc) + (M * 0.8 * (1 - p.distFozPerc));
+                const diff = hCalculada - p.z;
+
+                let color = "#00ff77"; // Seco
+                if (diff >= 0.5) color = "#0044ff"; // Submerso
+                else if (diff >= 0) color = "#00d2ff"; // Alerta
+                
+                p.marker.setStyle({fillColor: color});
+                if (diff >= 0) ativos++;
+            });
+
+            const perc = (ativos / pontos.length) * 100;
+            statsDiv.innerHTML += `
+                <div>Correia ${dist}m (${perc.toFixed(0)}%)</div>
+                <div class="belt-stat">
+                    <div class="belt-fill" style="width:${perc}%; background:${perc > 50 ? '#0044ff' : '#00ff77'}"></div>
+                </div>`;
+        });
+    }
+
+    initGlobal();
+    engine();
+    setInterval(engine, 4000);
+</script>
+</body>
+</html>

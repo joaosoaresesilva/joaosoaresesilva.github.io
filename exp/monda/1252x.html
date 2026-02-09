@@ -63,51 +63,46 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    const map = L.map('map', {zoomControl: false}).setView([40.1900, -8.4800], 12);
+    const map = L.map('map', {zoomControl: false}).setView([40.2050, -8.4320], 14);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-    const localidades = [
-        {id: "ETA DA BOAVISTA", pos: [40.1947, -8.4190], cota: 22.0, reg: "A", hist: false, dist: 0.0},
-        {id: "DOCAS DO MONDEGO", pos: [40.2078, -8.4312], cota: 18.6, reg: "A", hist: false, dist: 0.1},
-        {id: "MOSTEIRO STA CLARA-VELHA", pos: [40.2018, -8.4340], cota: 18.2, reg: "A", hist: true, dist: 0.1},
-        {id: "BAIXA (RIO / MARGEM)", pos: [40.2091, -8.4320], cota: 19.5, reg: "A", hist: true, dist: 0.1},
-        {id: "PARQUE VERDE (MARGEM)", pos: [40.2032, -8.4315], cota: 18.2, reg: "A", hist: true, dist: 0.2},
-        {id: "PARQUE DA CANÇÃO", pos: [40.2040, -8.4309], cota: 19.0, reg: "A", hist: true, dist: 0.2},
-        {id: "PARQUE DR. MANUEL BRAGA", pos: [40.2055, -8.4290], cota: 20.1, reg: "A", hist: true, dist: 0.2},
-        {id: "AAC - DESPORTOS NÁUTICOS", pos: [40.2000, -8.4287], cota: 18.3, reg: "A", hist: true, dist: 0.3},
-        {id: "RUA DA FEITORIA (STA CLARA)", pos: [40.2010, -8.4365], cota: 18.5, reg: "A", hist: true, dist: 0.3},
-        {id: "PARQUE VERDE (URSINHO)", pos: [40.2015, -8.4282], cota: 18.5, reg: "A", hist: true, dist: 0.4},
-        {id: "LARGO DA PORTAGEM", pos: [40.2085, -8.4310], cota: 20.3, reg: "A", hist: true, dist: 0.4},
-        {id: "ESTAÇÃO COIMBRA-A", pos: [40.2111, -8.4337], cota: 20.2, reg: "A", hist: true, dist: 0.5},
-        {id: "BAIXA (RUA DA SOFIA)", pos: [40.2115, -8.4312], cota: 21.0, reg: "A", hist: true, dist: 0.5},
-        {id: "LUGAR DA BRUNHEIRA", pos: [40.2155, -8.4520], cota: 19.5, reg: "B", hist: false, dist: 1.2},
-        {id: "CENTRO HÍPICO DE COIMBRA", pos: [40.2225, -8.4650], cota: 17.8, reg: "B", hist: true, dist: 1.5},
-        {id: "CHOUPAL (ENTRADA)", pos: [40.2220, -8.4480], cota: 13.5, reg: "B", hist: false, dist: 2.0},
-        {id: "TAVEIRO (COMERCIAL)", pos: [40.1910, -8.5060], cota: 14.2, reg: "B", hist: false, dist: 8.5},
-        {id: "VALADO TAVEIRO (BARREIRA)", pos: [40.1875, -8.5080], cota: 14.8, reg: "B", hist: false, dist: 8.7},
-        {id: "VILA POUCA (URBANO)", pos: [40.1850, -8.5150], cota: 13.5, reg: "B", hist: true, dist: 9.0},
-        {id: "ADUANEIRA (BACIA SUL)", pos: [40.1939, -8.5388], cota: 13.2, reg: "B", hist: true, dist: 10.5},
-        {id: "AMEAL (RESIDENCIAL)", pos: [40.1750, -8.5350], cota: 13.8, reg: "B", hist: false, dist: 11.5},
-        {id: "EN1 / IC2 (VILA POUCA)", pos: [40.1357, -8.4895], cota: 14.5, reg: "B", hist: false, dist: 12.0},
-        {id: "PEREIRA DO CAMPO", pos: [40.1580, -8.5850], cota: 11.5, reg: "B", hist: false, dist: 18.0},
-        {id: "EREIRA (CAMPOS)", pos: [40.1420, -8.6950], cota: 8.2, reg: "B", hist: false, dist: 29.0},
-        {id: "FIGUEIRA (SALINAS)", pos: [40.1450, -8.8250], cota: 2.5, reg: "B", hist: false, dist: 41.0}
-    ];
+const localidades = [
+    // ZONA A (COIMBRA URBANA) - Ordenado por proximidade ao Açude
+    {id: "ETA DA BOAVISTA", pos: [40.1947, -8.4190], cota: 22.0, reg: "A", hist: false, dist: 0.0},
+    {id: "DOCAS DO MONDEGO", pos: [40.2078, -8.4312], cota: 18.6, reg: "A", hist: false, dist: 0.1},
+    {id: "MOSTEIRO STA CLARA-VELHA", pos: [40.2018, -8.4340], cota: 18.2, reg: "A", hist: true, dist: 0.1},
+    {id: "BAIXA (RIO / MARGEM)", pos: [40.2091, -8.4320], cota: 19.5, reg: "A", hist: true, dist: 0.1},
+    {id: "PARQUE VERDE (MARGEM)", pos: [40.2032, -8.4315], cota: 18.2, reg: "A", hist: true, dist: 0.2},
+    {id: "PARQUE DA CANÇÃO", pos: [40.2040, -8.4309], cota: 19.0, reg: "A", hist: true, dist: 0.2},
+    {id: "PARQUE DR. MANUEL BRAGA", pos: [40.2055, -8.4290], cota: 20.1, reg: "A", hist: true, dist: 0.2},
+    {id: "AAC - DESPORTOS NÁUTICOS", pos: [40.2000, -8.4287], cota: 18.3, reg: "A", hist: true, dist: 0.3},
+    {id: "RUA DA FEITORIA (STA CLARA)", pos: [40.2010, -8.4365], cota: 18.5, reg: "A", hist: true, dist: 0.3},
+    {id: "PARQUE VERDE (URSINHO)", pos: [40.2015, -8.4282], cota: 18.5, reg: "A", hist: true, dist: 0.4},
+    {id: "LARGO DA PORTAGEM", pos: [40.2085, -8.4310], cota: 20.3, reg: "A", hist: true, dist: 0.4},
+    {id: "ESTAÇÃO COIMBRA-A", pos: [40.2111, -8.4337], cota: 20.2, reg: "A", hist: true, dist: 0.5},
+    {id: "BAIXA (RUA DA SOFIA)", pos: [40.2115, -8.4312], cota: 21.0, reg: "A", hist: true, dist: 0.5},
+
+    // ZONA B (BAIXO MONDEGO) - Ordenado pela descida do rio (distância crescente)
+    {id: "LUGAR DA BRUNHEIRA", pos: [40.2155, -8.4520], cota: 19.5, reg: "B", hist: false, dist: 1.2},
+    {id: "CENTRO HÍPICO DE COIMBRA", pos: [40.2225, -8.4650], cota: 17.8, reg: "B", hist: true, dist: 1.5},
+    {id: "CHOUPAL (ENTRADA)", pos: [40.2220, -8.4480], cota: 13.5, reg: "B", hist: false, dist: 2.0},
+    {id: "TAVEIRO (COMERCIAL)", pos: [40.1910, -8.5060], cota: 14.2, reg: "B", hist: false, dist: 8.5},
+    {id: "VALADO TAVEIRO (BARREIRA)", pos: [40.1875, -8.5080], cota: 14.8, reg: "B", hist: false, dist: 8.7},
+    {id: "VILA POUCA (URBANO)", pos: [40.1850, -8.5150], cota: 13.5, reg: "B", hist: true, dist: 9.0},
+    {id: "ADUANEIRA (BACIA SUL)", pos: [40.1939, -8.5388], cota: 13.2, reg: "B", hist: true, dist: 10.5},
+    {id: "AMEAL (RESIDENCIAL)", pos: [40.1750, -8.5350], cota: 13.8, reg: "B", hist: false, dist: 11.5},
+    {id: "EN1 / IC2 (VILA POUCA)", pos: [40.1357, -8.4895], cota: 14.5, reg: "B", hist: false, dist: 12.0},
+    {id: "PEREIRA DO CAMPO", pos: [40.1580, -8.5850], cota: 11.5, reg: "B", hist: false, dist: 18.0},
+    {id: "EREIRA (CAMPOS)", pos: [40.1420, -8.6950], cota: 8.2, reg: "B", hist: false, dist: 29.0},
+    {id: "FIGUEIRA (SALINAS)", pos: [40.1450, -8.8250], cota: 2.5, reg: "B", hist: false, dist: 41.0}
+];
 
     let apaQ = 0, apaH = 17.45, hMareReal = 0.8;
     let logData = "TIMESTAMP,ID,Z_SOLO,H_RIO,STATUS\n";
     let markers = {};
-    let estadosAnteriores = {};
 
-    // Inicialização dos marcadores com borda cinzenta fixa
     localidades.forEach(l => {
-        markers[l.id] = L.circle(l.pos, {
-            radius: 120, 
-            weight: 1.5, 
-            color: '#555555', // Cinzento para a borda
-            fillColor: '#00ff77', // Cor inicial (Seco)
-            fillOpacity: 0.2
-        }).addTo(map);
+        markers[l.id] = L.circle(l.pos, {radius: 50, weight: 2, fillOpacity: 0.4, color: '#ffffff'}).addTo(map);
     });
 
     async function syncData() {
@@ -120,20 +115,22 @@
             if (flowMatch) apaQ = parseFloat(flowMatch[1].replace(',', '.'));
             if (cotaMatch) apaH = parseFloat(cotaMatch[1].replace(',', '.'));
             document.getElementById('syncStatus').innerText = "ONLINE: " + new Date().toLocaleTimeString();
-        } catch (e) { 
-            document.getElementById('syncStatus').innerText = "MODO ESTIMATIVA"; 
-        }
+        } catch (e) { document.getElementById('syncStatus').innerText = "MODO ESTIMATIVA"; }
     }
+
+// Variável global para monitorizar estados anteriores
+    let estadosAnteriores = {};
 
     function update() {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = '';
         
+        // CALIBRAÇÃO DO DEGRAU (Açude -> Jusante)
         let hJusanteBase = (apaH - 4.5); 
+
         document.getElementById('valFlow').innerText = apaQ.toFixed(0);
         document.getElementById('valCota').innerText = apaH.toFixed(2);
         document.getElementById('valMare').innerText = hMareReal.toFixed(2);
-        document.getElementById('mareStatus').innerText = hMareReal.toFixed(1) + "m";
 
         localidades.forEach(l => {
             let hFinal;
@@ -149,16 +146,16 @@
             let status = diff >= 0 ? "ALAGADO" : (diff >= -0.7 ? "PROVÁVEL" : "SECO");
             let sClass = diff >= 0 ? "status-alagado" : (diff >= -0.7 ? "status-provavel" : "status-seco");
 
-            // Cores baseadas no estado para o preenchimento (fillColor)
-            // Alagado: Vermelho | Provável: Laranja | Seco: Verde
-            let statusColor = diff >= 0 ? "#ff3333" : (diff >= -0.7 ? "#ffa500" : "#00ff77");
-
+            // --- LÓGICA DO LIMITADOR DE LOG (EVENTOS) ---
             if (estadosAnteriores[l.id] !== status) {
+                // Só escreve no log se o estado mudou
                 logData += `${new Date().toLocaleString()},${l.id},Z:${l.cota},H:${hFinal.toFixed(2)},STATUS:${status}\n`;
+                // Atualiza o sentinela
                 estadosAnteriores[l.id] = status;
+                console.log(`Evento registado: ${l.id} passou a ${status}`);
             }
 
-            // Update da Tabela
+            // Renderização da Tabela
             let row = tbody.insertRow();
             row.insertCell(0).innerHTML = (l.hist ? '<span class="historic-tag">H</span>' : '') + l.id;
             row.insertCell(1).innerText = l.cota.toFixed(1) + "m";
@@ -167,22 +164,11 @@
             cStatus.innerText = (diff >= 0 ? "🔵 " : "") + status;
             cStatus.className = sClass;
 
-            // --- ATUALIZAÇÃO DO MARCADOR ---
-            markers[l.id].setStyle({
-                fillColor: statusColor,
-                fillOpacity: diff >= 0 ? 0.7 : (diff >= -0.7 ? 0.4 : 0.1),
-                color: '#555555' // Mantém a borda cinzenta
-            });
+            // Atualização do Mapa
+            let mColor = diff >= 0 ? "#0044ff" : (diff >= -0.7 ? "#00d2ff" : "#00ff77");
+            markers[l.id].setStyle({color: mColor, fillColor: mColor, fillOpacity: (diff >= 0 ? 0.6 : 0.1)});
         });
     }
-
-    document.getElementById('btnLog').onclick = () => {
-        const blob = new Blob([logData], {type: 'text/plain'});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `MONDEGO_DATASET_${new Date().getTime()}.txt`;
-        a.click();
-    };
 
     syncData();
     setInterval(syncData, 300000); 
