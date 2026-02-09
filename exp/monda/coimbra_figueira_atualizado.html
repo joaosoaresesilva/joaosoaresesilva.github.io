@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>GESTÃO ADAPTATIVA (MONDEGO)</title>
+    <title>GESTÃO ADAPTATIVA</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { margin: 0; font-family: 'Courier New', monospace; background: #050505; color: #d0d0d0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -26,7 +26,7 @@
         .graph-container { background: #000; border: 1px solid #333; height: 100px; position: relative; display: flex; flex-direction: column; }
         .graph-area { flex: 1; position: relative; overflow: hidden; }
         .bar-c { position: absolute; bottom: 0; width: 2px; background: #f1c40f; }
-        .bar-b { position: absolute; bottom: 0; width: 2px; background: #00ffff; } /* Cor alterada para Ciano */
+        .bar-b { position: absolute; bottom: 0; width: 2px; background: #00ffff; } 
         
         table { width: 100%; font-size: 11px; border-collapse: collapse; }
         th { border-bottom: 2px solid #444; padding: 8px; text-align: left; color: #00d2ff; }
@@ -40,7 +40,7 @@
 
 <div class="sar-header">
     <div>SINC APA: <b id="lastSync">A CONECTAR...</b></div>
-    <div>ALGORITMO: <b>SISTEMA DE GESTÃO ADAPTATIVA</b></div>
+    <div>ALGORITMO: <b>SISTEMA MONDA</b></div>
     <div>FONTE: <b>ESTAÇÃO COIMBRA (AÇUDE-PONTE)</b></div>
 </div>
 
@@ -55,8 +55,8 @@
     <div class="panel">
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
             <div class="slider-box">COTA REAL (APA): <b id="txtInitC">--</b>m<input type="range" id="inpInitC" min="10.0" max="23.5" step="0.01" value="15.42"></div>
-            <div class="slider-box">CAUDAL REAL (APA): <b id="txtFlow">--</b><input type="range" id="inpFlow" min="100" max="12000" step="1" value="2100"></div>
-            <div class="slider-box">Abert. AÇUDE: <b id="txtGates">90</b>%<input type="range" id="inpGates" min="0" max="100" value="90"></div>
+            <div class="slider-box">CAUDAL AFLUENTE (APA): <b id="txtFlow">--</b><input type="range" id="inpFlow" min="100" max="12000" step="1" value="2100"></div>
+            <div class="slider-box">ABERTURA AÇUDE -> EFLUENTE: <b id="txtGates">90</b>%<input type="range" id="inpGates" min="0" max="100" value="90"></div>
         </div>
 
         <div class="graph-container">
@@ -81,7 +81,7 @@
     </div>
 
     <div class="sidebar">
-        <h4 style="margin: 0 0 10px 0; color:#f1c40f; font-size: 0.9em;">📡 (pseudo) REDE DE SENSORES (COTAS ATUALIZADAS)</h4>
+        <h4 style="margin: 0 0 10px 0; color:#f1c40f; font-size: 0.9em;">📡 (pseudo) REDE SENSORES</h4>
         <table id="mainTable">
             <thead><tr><th>LOCAL</th><th>COTA REF</th><th>NÍVEL ATUAL</th><th>ESTADO</th></tr></thead>
             <tbody id="tableBody"></tbody>
