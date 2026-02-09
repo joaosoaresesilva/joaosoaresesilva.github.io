@@ -70,7 +70,6 @@
         // ZONA A (COIMBRA)
         {id: "ETA DA BOAVISTA", pos: [40.1947, -8.4190], cota: 22.0, reg: "A", hist: false, dist: 0.1},
         {id: "MOSTEIRO STA CLARA-VELHA", pos: [40.2018, -8.4340], cota: 18.0, reg: "A", hist: true, dist: 0.1},
-        {id: "PARQUE DA CANÇÃO (MARGEM)", pos: [40.2032, -8.4315], cota: 18.2, reg: "A", hist: true, dist: 0.2},
         {id: "PARQUE DA CANÇÃO", pos: [40.2040, -8.4309], cota: 18.2, reg: "A", hist: true, dist: 0.2},
         {id: "AAC - DESPORTOS NÁUTICOS", pos: [40.2000, -8.4287], cota: 18.3, reg: "A", hist: true, dist: 0.3},
         {id: "URSINHO (PARQUE VERDE)", pos: [40.2015, -8.4282], cota: 18.5, reg: "A", hist: true, dist: 0.4},
@@ -125,13 +124,30 @@
             if (cotaM) apaH = parseFloat(cotaM[1].replace(',', '.'));
 
             // Sincronizar com site de Maré - tabuademares.com
-            const resMare = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://www.temperaturadomar.pt/europa/portugal/figueira-da-foz/tides.html'));
-            const dataMare = await resMare.json();
-            const mareM = dataMare.contents.match(/(\d+[.,]\d+)\s*m/);
-            if (mareM) {
-                hMareReal = parseFloat(mareM[1].replace(',', '.'));
-                document.getElementById('mareStatus').innerText = hMareReal.toFixed(2) + "m";
-            }
+const dataMare = await resMare.json();
+// Captura o primeiro valor numérico seguido de "m" (metros)
+const mareM = dataMare.contents.match(/(\d+[.,]\d+)\s*m/);
+
+if (mareM) {
+    // 1. Valor bruto vindo do site (Referencial Zero Hidrográfico - ZH)
+    let valorZH = parseFloat(mareM[1].replace(',', '.'));
+    
+    // 2. Conversão para Cota Terrestre (Nível Médio do Mar em Cascais)
+    // Na Figueira da Foz, a diferença é de 2 metros.
+    hMareReal = valorZH - 2.00;
+
+    // 3. Atualização visual no cabeçalho
+    // Mostramos a cota terrestre e, entre parênteses, o valor original ZH para conferência
+    document.getElementById('mareStatus').innerHTML = 
+        hMareReal.toFixed(2) + "m <small>(ZH: " + valorZH.toFixed(2) + ")</small>";
+    
+    // 4. Se tiveres o gráfico de tendência, ele usará agora o hMareReal convertido
+    if (typeof updateMareChart === "function") {
+        updateMareChart();
+    }
+}
+
+
             document.getElementById('syncStatus').innerText = "OK: " + new Date().toLocaleTimeString();
         } catch (e) { document.getElementById('syncStatus').innerText = "ERRO SINC"; }
     }
@@ -194,7 +210,7 @@
     };
 
     syncData();
-    setInterval(syncData, 60000); 
+    setInterval(syncData, 120000); 
     setInterval(update, 1000);
 </script>
 </body>
