@@ -19,17 +19,14 @@
         .status-alagado { color: #ff3333 !important; font-weight: bold; background: rgba(255,0,0,0.1); }
         .status-provavel { color: #ffa500 !important; font-weight: bold; }
         .status-seco { color: #00ff77 !important; }
-        .historic-tag { color: #f1c40f; font-size: 9px; border: 1px solid #f1c40f; padding: 1px 3px; border-radius: 2px; margin-right: 5px; }
-        #btnLog { color: #00d2ff; border: 1px solid #00d2ff; background: transparent; padding: 12px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s; margin-top: auto;}
-        #btnLog:hover { background: #00d2ff; color: #000; }
     </style>
 </head>
 <body>
 
 <div class="sar-header">
-    <div>FONTE: <b>APA (AÇUDE) + DGT (MARÉ)</b></div>
+    <div>FONTE: <b>APA (INFOAGUA) + IH (MARÉ)</b></div>
     <div>SINC STATUS: <b id="syncStatus">---</b></div>
-    <div>MARÉ (FIG. FOZ): <b id="mareStatus">---</b></div>
+    <div>MARÉ (FIG): <b id="mareStatus">---</b></div>
 </div>
 
 <div id="map"></div>
@@ -45,12 +42,10 @@
             <div id="valCota" class="value-display">---</div><small>m (Nível Real)</small>
         </div>
         <div class="data-card">
-            <h3>MARÉ  (M)</h3>
-            <div id="valMare" class="value-display" style="color: #00d2ff;">---</div><small>m (Nível Mar)</small>
+            <h3>MARÉ (M)</h3>
+            <div id="valMare" class="value-display" style="color: #00d2ff;">---</div><small>m</small>
         </div>
-        <button id="btnLog">EXPORTAR DATASET (.TXT)</button>
     </div>
-
     <div class="sidebar">
         <table id="mainTable">
             <thead>
@@ -66,8 +61,8 @@
     const map = L.map('map', {zoomControl: false}).setView([40.1500, -8.6000], 11);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-    const localidades = [
-        {id: "AV. eMÍDIO NAVARRO (PORTAGEM-HOTEL ASTÓRIA)", pos: [40.2073, -8.4308], cota: 20.1, reg: "A", hist: true, dist: 0.15} ,
+const localidades = [
+        {id: "AV. EMÍDIO NAVARRO (PORTAGEM-HOTEL ASTÓRIA)", pos: [40.2073, -8.4308], cota: 20.1, reg: "A", hist: true, dist: 0.15} ,
         {id: "ETA DA BOAVISTA", pos: [40.1947, -8.4190], cota: 22.0, reg: "A", hist: false, dist: 0.0},
         {id: "DOCAS DO MONDEGO", pos: [40.2078, -8.4312], cota: 18.6, reg: "A", hist: false, dist: 0.1},
         {id: "PAVILHÃO CENTRO DE PORTUGAL", pos: [40.1989, -8.4332], cota: 18.5, reg: "A", dist: 0.2, hist: true},
@@ -117,93 +112,61 @@
     ];
 
     let apaQ = 0, apaH = 17.45, hMareReal = 0.8;
-    let logData = "TIMESTAMP,ID,Z_SOLO,H_RIO,STATUS,Q,M\n";
     let markers = {};
-    let estadosAnteriores = {};
 
     localidades.forEach(l => {
         markers[l.id] = L.circle(l.pos, {
-            radius: 180, weight: 2, color: '#555555', fillColor: '#00ff77', fillOpacity: 0.1
+            radius: 200, weight: 2, color: '#555555', fillColor: '#00ff77', fillOpacity: 0.1
         }).addTo(map);
     });
 
-async function syncAPA() {
-    try {
-        const proxy = 'https://api.allorigins.win/get?url=';
-        // URL da estação do Açude Ponte de Coimbra
-        const targetUrl = 'https://infoagua.apambiente.pt/pt/cheias/cheia-detalhe/1627743374';
-        const resAPA = await fetch(proxy + encodeURIComponent(targetUrl));
-        const data = await resAPA.json();
-        
-  
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(data.contents, 'text/html');
-        
+    async function syncAPA() {
+        try {
+            const proxy = 'https://api.allorigins.win/get?url=';
+            const targetUrl = 'https://infoagua.apambiente.pt/pt/cheias/cheia-detalhe/1627743374';
+            const res = await fetch(proxy + encodeURIComponent(targetUrl));
+            const data = await res.json();
+            
+            // Extraímos o HTML puro
+            const htmlContent = data.contents;
+            
 
-        const bodyText = doc.body.innerText;
-        
-        // Regex mais específica: procura o número que vem ANTES de "m3/s" e "m"
-        // especificamente na vizinhança de palavras-chave
-        const flowMatch = bodyText.match(/Caudal.*?(\d+[.,]?\d*)\s*m3\/s/i);
-        const cotaMatch = bodyText.match(/Nível.*?(\d+[.,]\d+)\s*m(?!\d)/i);
+            const flowMatch = htmlContent.match(/([\d.,]+)\s*m3\/s/);
+            const levelMatch = htmlContent.match(/([\d.,]+)\s*m(?!\d|\w)/);
 
-        if (flowMatch) {
-            apaQ = parseFloat(flowMatch[1].replace(',', '.'));
-        }
-        if (cotaMatch) {
-            apaH = parseFloat(cotaMatch[1].replace(',', '.'));
-        }
-
-        document.getElementById('syncStatus').innerText = "LIVE: " + new Date().toLocaleTimeString();
-        document.getElementById('syncStatus').style.color = "#00ff77";
-    } catch (e) { 
-        console.error("Erro APA:", e);
-        document.getElementById('syncStatus').innerText = "ERRO SINC / ESTIMATIVA";
-        document.getElementById('syncStatus').style.color = "#ff3333";
-    }
-}
-
-async function syncMare() {
-    try {
-        const proxy = 'https://api.allorigins.win/get?url=';
-        // O endpoint .json.php do IH muitas vezes bloqueia o referer. 
-        // Se falhar, usamos o valor previsto da Marinha para a Figueira.
-        const urlIH = "https://www.hidrografico.pt/json/mare.grafico.json.php?id=82";
-        
-        const res = await fetch(proxy + encodeURIComponent(urlIH));
-        const data = await res.json();
-        
-        if (data.contents) {
-            const mareData = JSON.parse(data.contents);
-            if (mareData && mareData.dados && mareData.dados.length > 0) {
-                // Procurar o valor mais próximo da hora atual
-                const agora = new Date().getTime();
-                let closest = mareData.dados[0];
-                let minDiff = Math.abs(new Date(closest.data).getTime() - agora);
-
-                mareData.dados.forEach(d => {
-                    let diff = Math.abs(new Date(d.data).getTime() - agora);
-                    if (diff < minDiff) {
-                        minDiff = diff;
-                        closest = d;
-                    }
-                });
-
-                hMareReal = parseFloat(closest.valor);
-                console.log("Maré atualizada:", hMareReal);
+            if (flowMatch) {
+                const val = parseFloat(flowMatch[1].replace(',', '.'));
+                if (val > 0) apaQ = val; 
             }
-        }
-    } catch (e) {
-        console.log("Erro Maré, a usar fallback.");
-    }
-}
+            if (levelMatch) {
+                const val = parseFloat(levelMatch[1].replace(',', '.'));
+                if (val > 10 && val < 25) apaH = val; // Validação para garantir que é a cota do Açude
+            }
 
-    function update() {
+            document.getElementById('syncStatus').innerText = "OK: " + new Date().toLocaleTimeString();
+            document.getElementById('syncStatus').style.color = "#00ff77";
+        } catch (e) {
+            document.getElementById('syncStatus').innerText = "ERRO SINC";
+            document.getElementById('syncStatus').style.color = "#ff3333";
+        }
+    }
+
+    async function syncMare() {
+        try {
+            const proxy = 'https://api.allorigins.win/get?url=';
+            const urlIH = "https://www.hidrografico.pt/json/mare.grafico.json.php?id=82";
+            const res = await fetch(proxy + encodeURIComponent(urlIH));
+            const data = await res.json();
+            const mareData = JSON.parse(data.contents);
+            hMareReal = parseFloat(mareData.dados[mareData.dados.length - 1].valor);
+        } catch (e) { console.log("Erro Maré"); }
+    }
+
+    function updateUI() {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = '';
-        let hJusanteBase = (apaH - 4.5); 
-
-        document.getElementById('valFlow').innerText = apaQ.toFixed(2);
+        
+        document.getElementById('valFlow').innerText = apaQ.toLocaleString();
         document.getElementById('valCota').innerText = apaH.toFixed(2);
         document.getElementById('valMare').innerText = hMareReal.toFixed(2);
         document.getElementById('mareStatus').innerText = hMareReal.toFixed(1) + "m";
@@ -213,6 +176,7 @@ async function syncMare() {
             if (l.reg === "A") {
                 hFinal = apaH + (apaQ / 15000);
             } else {
+                let hJusanteBase = (apaH - 4.5);
                 let perdaCarga = l.dist * 0.06;
                 let pesoMare = Math.max(0, 1 - (l.dist / 35));
                 hFinal = hJusanteBase - perdaCarga + (apaQ / 4500) + (hMareReal * 0.6 * pesoMare);
@@ -222,15 +186,8 @@ async function syncMare() {
             let status = diff >= 0 ? "ALAGADO" : (diff >= -0.7 ? "PROVÁVEL" : "SECO");
             let sColor = diff >= 0 ? "#ff3333" : (diff >= -0.7 ? "#ffa500" : "#00ff77");
 
-            // GRAVAÇÃO DOS DADOS PARA O R
-            if (l.hist && estadosAnteriores[l.id] !== status) {
-                let ts = new Date().toISOString();
-                logData += `${ts},"${l.id}",${l.cota},${hFinal.toFixed(2)},${status},${apaQ},${hMareReal}\n`;
-                estadosAnteriores[l.id] = status;
-            }
-
             let row = tbody.insertRow();
-            row.insertCell(0).innerHTML = (l.hist ? '<span class="historic-tag">H</span>' : '') + l.id;
+            row.insertCell(0).innerText = l.id;
             row.insertCell(1).innerText = l.cota.toFixed(1) + "m";
             row.insertCell(2).innerText = hFinal.toFixed(2) + "m";
             let cStatus = row.insertCell(3);
@@ -239,28 +196,19 @@ async function syncMare() {
 
             markers[l.id].setStyle({
                 fillColor: sColor,
-                fillOpacity: diff >= 0 ? 0.8 : (diff >= -0.7 ? 0.5 : 0.1)
+                fillOpacity: diff >= 0 ? 0.8 : 0.2
             });
         });
     }
 
-    // FUNÇÃO DO BOTÃO GRAVA  
-      document.getElementById('btnLog').addEventListener('click', () => {
-        const blob = new Blob([logData], { type: 'text/csv;charset=utf-8;' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `dataset_mondego_${new Date().getTime()}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-    });
-
+    // Execução inicial
     syncAPA();
     syncMare();
+
+    // Loops de atualização
     setInterval(syncAPA, 300000); // 5 min
     setInterval(syncMare, 600000); // 10 min
-    setInterval(update, 1000);
+    setInterval(updateUI, 2000); // UI a cada 2 seg
 </script>
 </body>
 </html>
