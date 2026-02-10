@@ -127,76 +127,42 @@
         }).addTo(map);
     });
 
-async function syncAPA() {
-    try {
-        const proxy = 'https://api.allorigins.win/get?url=';
-        // URL da estação do Açude Ponte de Coimbra
-        const targetUrl = 'https://infoagua.apambiente.pt/pt/cheias/cheia-detalhe/1627743374';
-        const resAPA = await fetch(proxy + encodeURIComponent(targetUrl));
-        const data = await resAPA.json();
-        
-        // Criar um parser temporário para ler o HTML como documento
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(data.contents, 'text/html');
-        
-        // Tentativa de extração por texto de contexto (mais resiliente)
-        const bodyText = doc.body.innerText;
-        
-        // Regex mais específica: procura o número que vem ANTES de "m3/s" e "m"
-        // especificamente na vizinhança de palavras-chave
-        const flowMatch = bodyText.match(/Caudal.*?(\d+[.,]?\d*)\s*m3\/s/i);
-        const cotaMatch = bodyText.match(/Nível.*?(\d+[.,]\d+)\s*m(?!\d)/i);
-
-        if (flowMatch) {
-            apaQ = parseFloat(flowMatch[1].replace(',', '.'));
-        }
-        if (cotaMatch) {
-            apaH = parseFloat(cotaMatch[1].replace(',', '.'));
-        }
-
-        document.getElementById('syncStatus').innerText = "LIVE: " + new Date().toLocaleTimeString();
-        document.getElementById('syncStatus').style.color = "#00ff77";
-    } catch (e) { 
-        console.error("Erro APA:", e);
-        document.getElementById('syncStatus').innerText = "ERRO SINC / ESTIMATIVA";
-        document.getElementById('syncStatus').style.color = "#ff3333";
-    }
-}
-
 async function syncMare() {
     try {
         const proxy = 'https://api.allorigins.win/get?url=';
-        // O endpoint .json.php do IH muitas vezes bloqueia o referer. 
-        // Se falhar, usamos o valor previsto da Marinha para a Figueira.
+        // Endpoint do Instituto Hidrográfico - Estação Figueira da Foz
         const urlIH = "https://www.hidrografico.pt/json/mare.grafico.json.php?id=82";
         
         const res = await fetch(proxy + encodeURIComponent(urlIH));
         const data = await res.json();
-        
-        if (data.contents) {
-            const mareData = JSON.parse(data.contents);
-            if (mareData && mareData.dados && mareData.dados.length > 0) {
-                // Procurar o valor mais próximo da hora atual
-                const agora = new Date().getTime();
-                let closest = mareData.dados[0];
-                let minDiff = Math.abs(new Date(closest.data).getTime() - agora);
+        const mareData = JSON.parse(data.contents);
 
-                mareData.dados.forEach(d => {
-                    let diff = Math.abs(new Date(d.data).getTime() - agora);
-                    if (diff < minDiff) {
-                        minDiff = diff;
-                        closest = d;
-                    }
-                });
-
-                hMareReal = parseFloat(closest.valor);
-                console.log("Maré atualizada:", hMareReal);
-            }
+        // O IH devolve uma lista de valores. Vamos buscar o último valor medido.
+        if (mareData && mareData.dados && mareData.dados.length > 0) {
+            const ultimoRegisto = mareData.dados[mareData.dados.length - 1];
+            hMareReal = parseFloat(ultimoRegisto.valor);
+            
+            document.getElementById('valMare').innerText = hMareReal.toFixed(2);
+            document.getElementById('mareStatus').innerText = hMareReal.toFixed(1) + "m";
+            console.log("Maré IH (Figueira) atualizada: " + hMareReal);
         }
     } catch (e) {
-        console.log("Erro Maré, a usar fallback.");
+        console.log("Erro ao ligar ao IH, a manter valor anterior.");
     }
 }
+
+    async function syncAPA() {
+        try {
+            const proxy = 'https://api.allorigins.win/get?url=';
+            const resAPA = await fetch(proxy + encodeURIComponent('https://infoagua.apambiente.pt/pt/cheias/cheia-detalhe/1627743374'));
+            const dataAPA = await resAPA.json();
+            const flowMatch = dataAPA.contents.match(/(\d+[.,]?\d*)\s*m3\/s/);
+            const cotaMatch = dataAPA.contents.match(/(\d+[.,]\d+)\s*m(?!\d)/);
+            if (flowMatch) apaQ = parseFloat(flowMatch[1].replace(',', '.'));
+            if (cotaMatch) apaH = parseFloat(cotaMatch[1].replace(',', '.'));
+            document.getElementById('syncStatus').innerText = "LIVE: " + new Date().toLocaleTimeString();
+        } catch (e) { document.getElementById('syncStatus').innerText = "ESTIMATIVA"; }
+    }
 
     function update() {
         const tbody = document.getElementById('tableBody');
