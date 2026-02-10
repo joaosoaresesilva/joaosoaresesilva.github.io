@@ -135,11 +135,11 @@ async function syncAPA() {
         const resAPA = await fetch(proxy + encodeURIComponent(targetUrl));
         const data = await resAPA.json();
         
-        // Criar um parser temporário para ler o HTML como documento
+  
         const parser = new DOMParser();
         const doc = parser.parseFromString(data.contents, 'text/html');
         
-        // Tentativa de extração por texto de contexto (mais resiliente)
+
         const bodyText = doc.body.innerText;
         
         // Regex mais específica: procura o número que vem ANTES de "m3/s" e "m"

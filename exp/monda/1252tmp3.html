@@ -130,35 +130,58 @@
 async function syncAPA() {
     try {
         const proxy = 'https://api.allorigins.win/get?url=';
-        // URL da estação do Açude Ponte de Coimbra
         const targetUrl = 'https://infoagua.apambiente.pt/pt/cheias/cheia-detalhe/1627743374';
         const resAPA = await fetch(proxy + encodeURIComponent(targetUrl));
         const data = await resAPA.json();
         
-        // Criar um parser temporário para ler o HTML como documento
+        if (!data.contents) throw new Error("Sem conteúdo");
+
         const parser = new DOMParser();
         const doc = parser.parseFromString(data.contents, 'text/html');
         
-        // Tentativa de extração por texto de contexto (mais resiliente)
-        const bodyText = doc.body.innerText;
+        // 1. Localizar todas as linhas de tabela (onde a APA guarda os dados)
+        const rows = doc.querySelectorAll('tr');
         
-        // Regex mais específica: procura o número que vem ANTES de "m3/s" e "m"
-        // especificamente na vizinhança de palavras-chave
-        const flowMatch = bodyText.match(/Caudal.*?(\d+[.,]?\d*)\s*m3\/s/i);
-        const cotaMatch = bodyText.match(/Nível.*?(\d+[.,]\d+)\s*m(?!\d)/i);
+        let foundQ = false;
+        let foundH = false;
 
-        if (flowMatch) {
-            apaQ = parseFloat(flowMatch[1].replace(',', '.'));
-        }
-        if (cotaMatch) {
-            apaH = parseFloat(cotaMatch[1].replace(',', '.'));
+        rows.forEach(row => {
+            const text = row.innerText.replace(/\s+/g, ' '); // Normaliza espaços
+            
+            // Procura por Caudal (Q)
+            if (text.includes("Caudal") && text.includes("m3/s")) {
+                const match = text.match(/(\d+[.,]\d+|\d+)\s*m3\/s/);
+                if (match) {
+                    apaQ = parseFloat(match[1].replace(',', '.'));
+                    foundQ = true;
+                }
+            }
+            
+            // Procura por Nível/Cota (H)
+            // Filtramos por "m" mas evitamos "m3/s" para não confundir
+            if ((text.includes("Nível") || text.includes("Cota")) && text.includes(" m") && !text.includes("m3/s")) {
+                const match = text.match(/(\d+[.,]\d+|\d+)\s*m(?!\d)/);
+                if (match) {
+                    apaH = parseFloat(match[1].replace(',', '.'));
+                    foundH = true;
+                }
+            }
+        });
+
+        // Atualização visual do Status
+        const statusEl = document.getElementById('syncStatus');
+        if (foundQ || foundH) {
+            statusEl.innerText = "LIVE: " + new Date().toLocaleTimeString();
+            statusEl.style.color = "#00ff77";
+        } else {
+            // Se o site carregou mas a tabela estava vazia (comum em manutenção)
+            statusEl.innerText = "DATA GAP (SITE ONLINE)";
+            statusEl.style.color = "#ffa500";
         }
 
-        document.getElementById('syncStatus').innerText = "LIVE: " + new Date().toLocaleTimeString();
-        document.getElementById('syncStatus').style.color = "#00ff77";
     } catch (e) { 
-        console.error("Erro APA:", e);
-        document.getElementById('syncStatus').innerText = "ERRO SINC / ESTIMATIVA";
+        console.error("Erro na extração:", e);
+        document.getElementById('syncStatus').innerText = "ERRO DE LIGAÇÃO";
         document.getElementById('syncStatus').style.color = "#ff3333";
     }
 }
