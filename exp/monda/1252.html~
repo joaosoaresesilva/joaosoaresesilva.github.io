@@ -92,7 +92,7 @@ const localidades = [
     {id: "PAVILHÃO CENTRO DE PORTUGAL", pos: [40.1989, -8.4332], cota: 18.5, reg: "A", dist: 0.2, hist: true},
     {id: "PARQUE VERDE (MARGEM)", pos: [40.2032, -8.4315], cota: 18.2, reg: "A", hist: true, dist: 0.2},
     {id: "PARQUE DA CANÇÃO", pos: [40.2040, -8.4309], cota: 19.0, reg: "A", hist: true, dist: 0.2},
-    {id: "PARQUE DR. MANUEL BRAGA", pos: [40.2055, -8.4290], cota: 20.1, reg: "A", hist: true, dist: 0.2},
+    {id: "PARQUE DR. MANUEL BRAGA", pos: [40.204291, -8.426844], cota: 20.1, reg: "A", hist: true, dist: 0.2},
     {id: "CITY-02: L. PORTAGEM", pos: [40.2085, -8.4312], cota: 19.5, reg: "A", dist: 0.25},
     {id: "AAC - DESPORTOS NÁUTICOS", pos: [40.2000, -8.4287], cota: 18.3, reg: "A", hist: true, dist: 0.3},
     {id: "RUA DA FEITORIA (STA CLARA)", pos: [40.2010, -8.4365], cota: 18.5, reg: "A", hist: true, dist: 0.3},
