@@ -315,6 +315,18 @@ const localidades = [
     {id: "CV-05: ALTO DO ZORRO", pos: [40.1875, -8.4220], cota: 40.0, reg: "A", dist: 2.4},
     {id: "CV-06: LIMITE CAMPUS", pos: [40.1880, -8.4250], cota: 43.0, reg: "A", dist: 2.0},
     {id: "CASTELO VIEGAS (ENTRADA)", pos: [40.180870, -8.412783], cota: 55.0, reg: "A", dist: 3.5},
+    
+    // --- EIXO ENCOSTA ESTE: CASTELO VIEGAS (R. FOZ DO CEIRA) ---
+    {id: "CV-E01: ENCOSTA S", pos: [40.173800, -8.394091], cota: 48.0, reg: "A", dist: 4.8},
+    {id: "CV-E02: R. CEIRA S", pos: [40.1746, -8.3941], cota: 50.5, reg: "A", dist: 4.7},
+    {id: "CV-E03: PATAMAR 53", pos: [40.1754, -8.3942], cota: 53.0, reg: "A", dist: 4.6},
+    {id: "CV-E04: ZONA RESID.", pos: [40.1762, -8.3943], cota: 56.5, reg: "A", dist: 4.5},
+    {id: "CV-E05: MEIA ENCOSTA", pos: [40.1770, -8.3944], cota: 60.0, reg: "A", dist: 4.4},
+    {id: "CV-E06: COTA 63", pos: [40.1778, -8.3945], cota: 63.5, reg: "A", dist: 4.3},
+    {id: "CV-E07: FOZ CEIRA 66", pos: [40.1786, -8.3946], cota: 66.0, reg: "A", dist: 4.2},
+    {id: "CV-E08: ACESSO SUP.", pos: [40.1794, -8.3947], cota: 68.5, reg: "A", dist: 4.1},
+    {id: "CV-E09: CUMEADA", pos: [40.1802, -8.3947], cota: 70.0, reg: "A", dist: 4.0},
+    {id: "CV-E10: FOZ CEIRA 114", pos: [40.181053, -8.394768], cota: 72.0, reg: "A", dist: 3.9},
 
     // REGIAO B - JUSANTE
     {id: "LUGAR DA BRUNHEIRA", pos: [40.2155, -8.4520], cota: 19.5, reg: "B", hist: false, dist: 1.2},
