@@ -80,7 +80,7 @@ const localidades = [
     // --- MONTANTE E CIDADE (DISTÂNCIA 0.0 A 1.1) ---
     //{id: "ETA-01 DA BOAVISTA", pos: [40.1947, -8.4190], cota: 22.0, reg: "A", hist: false, dist: 0.0},
     {id: "ETA-02: BOAVISTA OPERACIONAL", pos: [40.189819, -8.422121], cota: 21.5, reg: "A", dist: 0.1},
-    {id: "DOCAS DO MONDEGO", pos: [40.2078, -8.4312], cota: 18.6, reg: "A", hist: false, dist: 0.1},
+    {id: "DOCAS DO MONDEGO", pos: [40.202750, -8.426389], cota: 18.6, reg: "A", hist: false, dist: 0.1},
     {id: "MOSTEIRO STA CLARA-VELHA", pos: [40.2018, -8.4340], cota: 18.2, reg: "A", hist: true, dist: 0.1},
     {id: "BAIXA (RIO / MARGEM)", pos: [40.2091, -8.4320], cota: 19.5, reg: "A", hist: true, dist: 0.1},
     {id: "AV. EMÍDIO NAVARRO (PORTAGEM-HOTEL ASTÓRIA)", pos: [40.2073, -8.4308], cota: 19.0, reg: "A", hist: true, dist: 0.15},
@@ -180,6 +180,7 @@ const localidades = [
     {id: "ARZ-09: MARGEM ESQ.", pos: [40.1855, -8.5200], cota: 12.1, reg: "B", dist: 16.5},
     {id: "DIAG-06: ARZILA (BORDA)", pos: [40.1680, -8.5620], cota: 12.8, reg: "B", dist: 16.8},
     {id: "ARZ-10: MONDEGO RIO", pos: [40.1880, -8.5160], cota: 11.8, reg: "B", dist: 17.0},
+    {id: "ARZ-10: ARZILA (LARGO DA IGREJA)", pos: [40.183264, -8.551125], cota: 11.8, reg: "B", dist: 17.0},
     {id: "PEREIRA DO CAMPO", pos: [40.1580, -8.5850], cota: 11.5, reg: "B", hist: false, dist: 18.0},
     {id: "DIAG-07: PEREIRA (BAIXA)", pos: [40.1590, -8.5850], cota: 12.8, reg: "B", dist: 19.2},
     {id: "LINHA DO NORTE (ALFARELOS/ARUNCA)", pos: [40.1185, -8.6380], cota: 10.8, reg: "B", hist: true, dist: 20.0},
