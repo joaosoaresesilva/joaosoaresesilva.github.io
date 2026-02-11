@@ -419,7 +419,7 @@ const localidades = [
     {id: "RUA DA FEITORIA (STA CLARA)", pos: [40.2010, -8.4365], cota: 18.5, reg: "A", hist: true, dist: 0.3},
     {id: "PARQUE VERDE (URSINHO)", pos: [40.2015, -8.4282], cota: 18.5, reg: "A", hist: true, dist: 0.4},
     {id: "BAIXA (RUA DA SOFIA)", pos: [40.2115, -8.4312], cota: 21.0, reg: "A", hist: true, dist: 0.5},
-   // {id: "TERREIRO DA ERVA", pos: [40.210450, -8.430250], cota: 19.8, reg: "A", dist: 0.35},
+    {id: "TERREIRO DA ERVA", pos: [40.210450, -8.430250], cota: 19.8, reg: "A", dist: 0.35},
     {id: "LARGO DA PORTAGEM (GERAL)", pos: [40.2085, -8.4310], cota: 20.3, reg: "A", hist: true, dist: 0.4},
     {id: "ESTAÇÃO COIMBRA-A", pos: [40.2111, -8.4337], cota: 20.2, reg: "A", hist: true, dist: 0.5},
     {id: "PRAÇA 8 DE MAIO (SANTA CRUZ)", pos: [40.211472, -8.429183], cota: 21.3, reg: "A", dist: 0.6},
@@ -438,8 +438,8 @@ const localidades = [
     {id: "CITY-10: CÂMARA MUNIC.", pos: [40.2118, -8.4289], cota: 21.3, reg: "A", dist: 0.60},
     
     // --- EIXO URBANO CRÍTICO: EMÍDIO NAVARRO ---
-    //{id: "URB-03: MUSEU ÁGUA", pos: [40.2065, -8.4305], cota: 19.0, reg: "A", dist: 0.30},
-    //{id: "URB-04: CORETO", pos: [40.2055, -8.4298], cota: 19.0, reg: "A", dist: 0.45},
+    {id: "URB-03: MUSEU ÁGUA", pos: [40.2065, -8.4305], cota: 19.0, reg: "A", dist: 0.30},
+    {id: "URB-04: CORETO", pos: [40.2055, -8.4298], cota: 19.0, reg: "A", dist: 0.45},
     {id: "URB-05: PISCINAS", pos: [40.2045, -8.4300], cota: 19.0, reg: "A", dist: 0.55},
     {id: "URB-06: DOCAS NORTE", pos: [40.2035, -8.4305], cota: 19.0, reg: "A", dist: 0.70},
     {id: "URB-07: PASSEIO RIB.", pos: [40.2025, -8.4312], cota: 19.0, reg: "A", dist: 0.80},
