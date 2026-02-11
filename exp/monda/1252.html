@@ -2,11 +2,20 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>MONDEGO RIO</title>
+    <title>MONDEGO RIO - MONITOR</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { margin: 0; font-family: 'Courier New', monospace; background: #050505; color: #d0d0d0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         #map { height: 35vh; width: 100%; background: #000; filter: grayscale(1) contrast(1.2) brightness(0.7); border-bottom: 2px solid #0044ff; }
+        
+        /* Animação para pontos em perigo */
+        @keyframes pulse {
+            0% { stroke-width: 2; stroke-opacity: 1; }
+            50% { stroke-width: 12; stroke-opacity: 0.4; }
+            100% { stroke-width: 2; stroke-opacity: 1; }
+        }
+        .marker-alagado { animation: pulse 1.5s infinite; }
+
         .sar-header { background: #111; padding: 10px 20px; display: flex; justify-content: space-between; font-size: 11px; border-bottom: 1px solid #333; color: #00d2ff; }
         .main-container { display: flex; flex: 1; overflow: hidden; }
         .panel { flex: 0.8; padding: 15px; display: flex; flex-direction: column; gap: 12px; border-right: 1px solid #222; background: #0a0a0a; overflow-y: auto; }
@@ -58,10 +67,10 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    const map = L.map('map', {zoomControl: false}).setView([40.1500, -8.6000], 11);
+    const map = L.map('map', {zoomControl: false}).setView([40.2085, -8.4310], 14); // Foco inicial na Baixa
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-const localidades = [
+    const localidades = [
     // REGIAO A - MONTANTE (Ordenados por Proximidade ao Açude)
     {id: "ETA DA BOAVISTA", pos: [40.1947, -8.4190], cota: 22.0, reg: "A", hist: false, dist: 0.0},
     {id: "DOCAS DO MONDEGO", pos: [40.2078, -8.4312], cota: 18.6, reg: "A", hist: false, dist: 0.1},
@@ -79,9 +88,13 @@ const localidades = [
     {id: "AAC - DESPORTOS NÁUTICOS", pos: [40.2000, -8.4287], cota: 18.3, reg: "A", hist: true, dist: 0.3},
     {id: "RUA DA FEITORIA (STA CLARA)", pos: [40.2010, -8.4365], cota: 18.5, reg: "A", hist: true, dist: 0.3},
     {id: "PARQUE VERDE (URSINHO)", pos: [40.2015, -8.4282], cota: 18.5, reg: "A", hist: true, dist: 0.4},
-    {id: "LARGO DA PORTAGEM", pos: [40.2085, -8.4310], cota: 20.3, reg: "A", hist: true, dist: 0.4},
-    {id: "ESTAÇÃO COIMBRA-A", pos: [40.2111, -8.4337], cota: 20.2, reg: "A", hist: true, dist: 0.5},
+    //{id: "LARGO DA PORTAGEM", pos: [40.2085, -8.4310], cota: 20.3, reg: "A", hist: true, dist: 0.4},
+    //{id: "ESTAÇÃO COIMBRA-A", pos: [40.2111, -8.4337], cota: 20.2, reg: "A", hist: true, dist: 0.5},
     {id: "BAIXA (RUA DA SOFIA)", pos: [40.2115, -8.4312], cota: 21.0, reg: "A", hist: true, dist: 0.5},
+    {id: "LARGO DA PORTAGEM (GERAL)", pos: [40.2085, -8.4310], cota: 20.3, reg: "A", hist: true, dist: 0.4},
+    {id: "ESTAÇÃO COIMBRA-A", pos: [40.2111, -8.4337], cota: 20.2, reg: "A", hist: true, dist: 0.5},
+    {id: "PRAÇA 8 DE MAIO (SANTA CRUZ)", pos: [40.211472, -8.429183], cota: 21.3, reg: "A", dist: 0.6},
+    {id: "RUA DA SOFIA (CENTRO)", pos: [40.2125, -8.4308], cota: 21.5, reg: "A", dist: 0.65},
 
     // REGIAO B - JUSANTE
     {id: "LUGAR DA BRUNHEIRA", pos: [40.2155, -8.4520], cota: 19.5, reg: "B", hist: false, dist: 1.2},
@@ -120,10 +133,15 @@ const localidades = [
     let apaQ = 0, apaH = 17.45, hMareReal = 0.8;
     let markers = {};
 
+    // Inicializar Marcadores Técnicos (CircleMarkers)
     localidades.forEach(l => {
-        markers[l.id] = L.circle(l.pos, {
-            radius: 200, weight: 2, color: '#555555', fillColor: '#00ff77', fillOpacity: 0.1
-        }).addTo(map);
+        markers[l.id] = L.circleMarker(l.pos, {
+            radius: 5,        // Pixels fixos
+            weight: 1,
+            color: '#fff',    // Borda branca para contraste
+            fillColor: '#00ff77',
+            fillOpacity: 0.9
+        }).addTo(map).bindTooltip(l.id, {direction: 'top', offset: [0, -5]});
     });
 
     async function syncAPA() {
@@ -132,27 +150,20 @@ const localidades = [
             const targetUrl = 'https://infoagua.apambiente.pt/pt/cheias/cheia-detalhe/1627743374';
             const res = await fetch(proxy + encodeURIComponent(targetUrl));
             const data = await res.json();
-            
-            // Extraímos o HTML puro
             const htmlContent = data.contents;
             
-
             const flowMatch = htmlContent.match(/([\d.,]+)\s*m3\/s/);
             const levelMatch = htmlContent.match(/([\d.,]+)\s*m(?!\d|\w)/);
-
-            if (flowMatch) {
-                const val = parseFloat(flowMatch[1].replace(',', '.'));
-                if (val > 0) apaQ = val; 
-            }
+            
+            if (flowMatch) apaQ = parseFloat(flowMatch[1].replace(',', '.'));
             if (levelMatch) {
                 const val = parseFloat(levelMatch[1].replace(',', '.'));
-                if (val > 10 && val < 25) apaH = val; // Validação para garantir que é a cota do Açude
+                if (val > 10) apaH = val;
             }
-
             document.getElementById('syncStatus').innerText = "OK: " + new Date().toLocaleTimeString();
             document.getElementById('syncStatus').style.color = "#00ff77";
         } catch (e) {
-            document.getElementById('syncStatus').innerText = "ERRO SINC";
+            document.getElementById('syncStatus').innerText = "ERRO APA";
             document.getElementById('syncStatus').style.color = "#ff3333";
         }
     }
@@ -180,7 +191,7 @@ const localidades = [
         localidades.forEach(l => {
             let hFinal;
             if (l.reg === "A") {
-                hFinal = apaH + (apaQ / 15000);
+                hFinal = apaH + (apaQ / 15000); // Ajuste dinâmico montante
             } else {
                 let hJusanteBase = (apaH - 4.5);
                 let perdaCarga = l.dist * 0.06;
@@ -192,6 +203,21 @@ const localidades = [
             let status = diff >= 0 ? "ALAGADO" : (diff >= -0.7 ? "PROVÁVEL" : "SECO");
             let sColor = diff >= 0 ? "#ff3333" : (diff >= -0.7 ? "#ffa500" : "#00ff77");
 
+            // Atualização do Marcador
+            markers[l.id].setStyle({
+                fillColor: sColor,
+                radius: diff >= 0 ? 8 : 5, // Aumenta se estiver alagado
+                color: diff >= 0 ? '#fff' : '#ffffff33'
+            });
+
+            // Adicionar classe de pulsação se alagado
+            if (diff >= 0) {
+                markers[l.id].getElement().classList.add('marker-alagado');
+                markers[l.id].bringToFront();
+            } else {
+                if(markers[l.id].getElement()) markers[l.id].getElement().classList.remove('marker-alagado');
+            }
+
             let row = tbody.insertRow();
             row.insertCell(0).innerText = l.id;
             row.insertCell(1).innerText = l.cota.toFixed(1) + "m";
@@ -199,22 +225,13 @@ const localidades = [
             let cStatus = row.insertCell(3);
             cStatus.innerText = status;
             cStatus.className = diff >= 0 ? "status-alagado" : (diff >= -0.7 ? "status-provavel" : "status-seco");
-
-            markers[l.id].setStyle({
-                fillColor: sColor,
-                fillOpacity: diff >= 0 ? 0.8 : 0.2
-            });
         });
     }
 
-    // Execução inicial
-    syncAPA();
-    syncMare();
-
-    // Loops de atualização
-    setInterval(syncAPA, 300000); // 5 min
-    setInterval(syncMare, 600000); // 10 min
-    setInterval(updateUI, 2000); // UI a cada 2 seg
+    syncAPA(); syncMare();
+    setInterval(syncAPA, 300000); 
+    setInterval(syncMare, 600000); 
+    setInterval(updateUI, 2000);
 </script>
 </body>
 </html>
