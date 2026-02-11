@@ -80,8 +80,8 @@ const localidades = [
     // --- MONTANTE E CIDADE (DISTÂNCIA 0.0 A 1.1) ---
     //{id: "ETA-01 DA BOAVISTA", pos: [40.1947, -8.4190], cota: 22.0, reg: "A", hist: false, dist: 0.0},
     {id: "ETA-02: BOAVISTA OPERACIONAL", pos: [40.189819, -8.422121], cota: 21.5, reg: "A", dist: 0.1},
-    {id: "DOCAS DO MONDEGO", pos: [40.2078, -8.4312], cota: 18.6, reg: "A", hist: false, dist: 0.1},
-    {id: "MOSTEIRO STA CLARA-VELHA", pos: [40.2018, -8.4340], cota: 18.2, reg: "A", hist: true, dist: 0.1},
+    {id: "DOCAS DO MONDEGO", pos: [40.202750, -8.426389], cota: 18.0, reg: "A", hist: false, dist: 0.1},
+    {id: "MOSTEIRO STA CLARA-VELHA", pos: [40.202652, -8.433220], cota: 17.0, reg: "A", hist: true, dist: 0.1},
     {id: "BAIXA (RIO / MARGEM)", pos: [40.2091, -8.4320], cota: 19.5, reg: "A", hist: true, dist: 0.1},
     {id: "AV. EMÍDIO NAVARRO (PORTAGEM-HOTEL ASTÓRIA)", pos: [40.2073, -8.4308], cota: 19.0, reg: "A", hist: true, dist: 0.15},
     {id: "PARQUE VERDE (POLO II)", pos: [40.1967, -8.4297], cota: 18.0, reg: "A", hist: true, dist: 0.15},
