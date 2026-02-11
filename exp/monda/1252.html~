@@ -403,7 +403,8 @@
 
 const localidades = [
     // REGIAO A - MONTANTE (Ordenados por Proximidade ao Açude)
-    {id: "ETA DA BOAVISTA", pos: [40.1947, -8.4190], cota: 22.0, reg: "A", hist: false, dist: 0.0},
+    {id: "ETA-02: BOAVISTA OPERACIONAL", pos: [40.189819, -8.422121], cota: 21.5, reg: "A", dist: 0.1},
+    {id: "ETA-01 DA BOAVISTA", pos: [40.1947, -8.4190], cota: 22.0, reg: "B", hist: false, dist: 0.0},
     {id: "DOCAS DO MONDEGO", pos: [40.2078, -8.4312], cota: 18.6, reg: "A", hist: false, dist: 0.1},
     {id: "MOSTEIRO STA CLARA-VELHA", pos: [40.2018, -8.4340], cota: 18.2, reg: "A", hist: true, dist: 0.1},
     {id: "SC-01: JARDIM STA CLARA VELHA", pos: [40.201477, -8.432601], cota: 15.2, reg: "A", dist: 1.1},
@@ -480,10 +481,12 @@ const localidades = [
     // REGIAO B - JUSANTE
     {id: "LUGAR DA BRUNHEIRA", pos: [40.2155, -8.4520], cota: 19.5, reg: "B", hist: false, dist: 1.2},
     {id: "CENTRO HÍPICO DE COIMBRA", pos: [40.2225, -8.4650], cota: 17.8, reg: "B", hist: true, dist: 1.5},
+    {id: "CH-02: PICADEIRO C. HÍPICO", pos: [40.220796, -8.470451], cota: 16.5, reg: "B", dist: 1.8},
     {id: "CHOUPAL (ENTRADA)", pos: [40.2220, -8.4480], cota: 13.5, reg: "B", hist: false, dist: 2.0},
     {id: "SÃO JOÃO DO CAMPO (GÂNDARAS)", pos: [40.24219, -8.50449], cota: 14.5, reg: "B", hist: false, dist: 3.5},
     {id: "EIRAS (TÚNEL/PASSAGEM INFERIOR)", pos: [40.2485, -8.4312], cota: 21.0, reg: "B", hist: true, dist: 5.2},
     {id: "RIBEIRA DE EIRAS (ZONA BAIXA)", pos: [40.2536, -8.4251], cota: 22.5, reg: "B", hist: true, dist: 5.5},
+    {id: "MA-01: S. MARTINHO (CAMPO)", pos: [40.217518, -8.550270], cota: 11.2, reg: "B", dist: 14.2},
     
     // EIXO CRÍTICO RIBEIRA DE FRADES 40.206458, -8.493151
     {id: "RB. de Frades Cota linha Caminho de Ferro (barreira )", pos: [40.206458, -8.49315], cota: 13.8, reg: "B", dist: 6.9},
