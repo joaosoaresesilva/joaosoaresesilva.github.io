@@ -36,7 +36,7 @@
 <body>
 
 <div class="sar-header">
-    <div>FONTE: <b>APA (INFOAGUA) + IH (MARÉ)</b></div>
+    <div>FONTE: <b>APA + MARÉ</b></div>
     <div>SINC STATUS: <b id="syncStatus">---</b></div>
     <div>MARÉ (FIG): <b id="mareStatus">---</b></div>
 </div>
@@ -45,19 +45,46 @@
 
 <div class="main-container">
     <div class="panel">
+
+        <!-- CAUDAL -->
         <div class="data-card">
             <h3>CAUDAL AFL(Q)</h3>
             <div id="valFlow" class="value-display">---</div><small>m³/s</small>
         </div>
+
+        <!-- COTA -->
         <div class="data-card">
             <h3>COTA AÇUDE (hA)</h3>
             <div id="valCota" class="value-display">---</div><small>m (Nível Real)</small>
         </div>
+
+        <!-- MARÉ -->
         <div class="data-card">
             <h3>MARÉ (M)</h3>
-            <div id="valMare" class="value-display" style="color: #00d2ff;">---</div><small>m</small>
+            <div id="valMare" class="value-display" style="color: #00d2ff;">---</div>
+            <small>m</small>
+
+            <!-- Selector de modo -->
+            <div style="margin-top:10px;">
+                <label><input type="radio" name="mareMode" value="auto" checked onchange="changeMareMode()"> Automático</label><br>
+                <label><input type="radio" name="mareMode" value="manual" onchange="changeMareMode()"> Manual</label>
+            </div>
+
+            <!-- Entrada manual -->
+            <div id="manualInput" style="margin-top:10px; display:none;">
+                <input 
+                    id="mareManual" 
+                    type="number" 
+                    step="0.01" 
+                    placeholder="Valor da maré"
+                    style="width: 120px; background:#111; color:#00d2ff; border:1px solid #333; padding:4px;"
+                >
+                <button onclick="setMareManual()" style="padding:4px 8px; margin-left:5px;">OK</button>
+            </div>
         </div>
+
     </div>
+
     <div class="sidebar">
         <table id="mainTable">
             <thead>
@@ -70,10 +97,11 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+    /* MAPA */
     const map = L.map('map', {zoomControl: false}).setView([40.2085, -8.4310], 14);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-    const localidades = [
+   const localidades = [
         {id: "ETA-02: BOAVISTA OPERACIONAL", pos: [40.189819, -8.422121], cota: 21.5, reg: "A", dist: 0.1},
         {id: "DOCAS DO MONDEGO", pos: [40.202750, -8.426389], cota: 18.0, reg: "A", dist: 0.1},
         {id: "MOSTEIRO STA CLARA-VELHA", pos: [40.202652, -8.433220], cota: 17.0, reg: "A", dist: 0.1},
@@ -103,7 +131,9 @@
         {id: "DIAG-20: FOZ (TERMINAL)", pos: [40.1450, -8.8950], cota: 12.8, reg: "B", dist: 48.5}
     ];
 
-    let apaQ = 0, apaH = 17.45, hMareReal = 0.8;
+
+    let apaQ = 0, apaH = 17.45, hMareReal = null;
+    let mareMode = "auto"; // auto | manual
     let markers = {};
 
     localidades.forEach(l => {
@@ -112,6 +142,55 @@
         }).addTo(map).bindTooltip(l.id, {direction: 'top', offset: [0, -5]});
     });
 
+    /* MODO DE MARÉ */
+    function changeMareMode() {
+        mareMode = document.querySelector('input[name="mareMode"]:checked').value;
+
+        if (mareMode === "manual") {
+            document.getElementById("manualInput").style.display = "block";
+            document.getElementById("mareStatus").innerText = "Modo Manual";
+        } else {
+            document.getElementById("manualInput").style.display = "none";
+            document.getElementById("mareStatus").innerText = "A obter...";
+            syncMare();
+        }
+    }
+
+    /* MARÉ MANUAL */
+    function setMareManual() {
+        const val = parseFloat(document.getElementById("mareManual").value);
+        if (!isNaN(val)) {
+            hMareReal = val;
+            document.getElementById("valMare").innerText = hMareReal.toFixed(2);
+            document.getElementById("mareStatus").innerText = hMareReal.toFixed(2) + "m (MANUAL)";
+            document.getElementById("mareStatus").style.color = "#00ff77";
+        }
+    }
+
+    /* MARÉ AUTOMÁTICA */
+    async function syncMare() {
+        if (mareMode !== "auto") return;
+
+        try {
+            const url = "https://www.hidrografico.pt/json/mare?zone=Figueira%20da%20Foz";
+            const res = await fetch(url);
+            const data = await res.json();
+
+            const valor = parseFloat(data.mare.hora_atual.altura);
+
+            if (!isNaN(valor)) {
+                hMareReal = valor;
+                document.getElementById("valMare").innerText = hMareReal.toFixed(2);
+                document.getElementById("mareStatus").innerText = hMareReal.toFixed(2) + "m (IH)";
+                document.getElementById("mareStatus").style.color = "#00d2ff";
+            }
+        } catch (e) {
+            document.getElementById("mareStatus").innerText = "ERRO MARÉ";
+            document.getElementById("mareStatus").style.color = "#ff3333";
+        }
+    }
+
+    /* APA */
     async function syncAPA() {
         try {
             const proxy = 'https://api.allorigins.win/get?url=';
@@ -119,55 +198,34 @@
             const res = await fetch(proxy + encodeURIComponent(targetUrl));
             const data = await res.json();
             const htmlContent = data.contents;
+
             const flowMatch = htmlContent.match(/([\d.,]+)\s*m3\/s/);
             const levelMatch = htmlContent.match(/([\d.,]+)\s*m(?!\d|\w)/);
+
             if (flowMatch) apaQ = parseFloat(flowMatch[1].replace(',', '.'));
             if (levelMatch) {
                 const val = parseFloat(levelMatch[1].replace(',', '.'));
                 if (val > 10) apaH = val;
             }
+
             document.getElementById('syncStatus').innerText = "OK: " + new Date().toLocaleTimeString();
             document.getElementById('syncStatus').style.color = "#00ff77";
+
         } catch (e) {
             document.getElementById('syncStatus').innerText = "ERRO APA";
             document.getElementById('syncStatus').style.color = "#ff3333";
         }
     }
 
-    async function syncMare() {
-        try {
-            const proxy = 'https://api.allorigins.win/get?url=';
-            const urlIH = "https://www.hidrografico.pt/json/mare.grafico.json.php?id=82";
-            const res = await fetch(proxy + encodeURIComponent(urlIH));
-            const data = await res.json();
-            let cleanContent = data.contents.trim();
-            const mareData = JSON.parse(cleanContent);
-            
-            if (mareData && mareData.dados && mareData.dados.length > 0) {
-                const ultimoRegisto = mareData.dados[mareData.dados.length - 1];
-                const valorNumerico = parseFloat(ultimoRegisto.valor);
-                
-                if (!isNaN(valorNumerico)) {
-                    hMareReal = valorNumerico;
-                    document.getElementById('valMare').innerText = hMareReal.toFixed(2);
-                    document.getElementById('mareStatus').innerText = hMareReal.toFixed(2) + "m (LIVE)";
-                    document.getElementById('mareStatus').style.color = "#00d2ff";
-                }
-            }
-        } catch (e) { 
-            console.error("Erro Maré:", e);
-            document.getElementById('mareStatus').innerText = "ERRO SINCR.";
-            document.getElementById('mareStatus').style.color = "#ff3333";
-        }
-    }
-
+    /* UI */
     function updateUI() {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = '';
         
         document.getElementById('valFlow').innerText = apaQ.toLocaleString();
         document.getElementById('valCota').innerText = apaH.toFixed(2);
-        document.getElementById('valMare').innerText = hMareReal.toFixed(2);
+        document.getElementById('valMare').innerText =
+            hMareReal !== null ? hMareReal.toFixed(2) : "---";
 
         localidades.forEach(l => {
             let hFinal;
@@ -177,7 +235,7 @@
                 let hJusanteBase = (apaH - 4.5);
                 let perdaCarga = l.dist * 0.05;
                 let pesoMare = Math.min(1, l.dist / 48.5); 
-                hFinal = hJusanteBase - perdaCarga + (apaQ / 5000) + (hMareReal * pesoMare);
+                hFinal = hJusanteBase - perdaCarga + (apaQ / 5000) + (hMareReal ? hMareReal * pesoMare : 0);
             }
 
             let diff = hFinal - l.cota;
@@ -202,7 +260,7 @@
             const mapUrl = `https://www.google.com/maps/search/?api=1&query=${l.pos[0]},${l.pos[1]}`;
             
             let cellLoc = row.insertCell(0);
-            cellLoc.innerHTML = `<a href="${mapUrl}" target="_blank" class="loc-link" title="Ver no Google Maps">
+            cellLoc.innerHTML = `<a href="${mapUrl}" target="_blank" class="loc-link">
                                     ${l.id} <small>↗</small>
                                  </a>`;
             
@@ -214,10 +272,14 @@
         });
     }
 
-    syncAPA(); syncMare();
+    /* ARRANQUE */
+    syncAPA();
+    syncMare();
+
     setInterval(syncAPA, 300000); 
     setInterval(syncMare, 600000); 
     setInterval(updateUI, 2000);
 </script>
 </body>
 </html>
+
