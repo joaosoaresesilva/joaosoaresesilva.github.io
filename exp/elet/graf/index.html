@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>Análise de Pressão: Mondego</title>
+    <title>Análise de Pressão: Monda-i </title>
     <style>
         body { font-family: 'Courier New', monospace; background: #fff; color: #000; padding: 20px; }
         .dashboard { display: grid; grid-template-columns: 300px 1fr; gap: 20px; }
@@ -38,27 +38,27 @@
     <div class="dashboard">
         <div class="controls">
             <div class="control-group">
-                <label><b>CAUDAL AGUI.ª (DC)</b></label><br>
+                <label><b>CAUDAL AGUI.ª-i (DC)</b></label><br>
                 <input type="range" id="q-in" min="0" max="4000" value="500">
                 <span id="val-q">500</span> m³/s
             </div>
 
             <div class="control-group">
-                <label><b>MARÉ FIGU.ª (AC)</b></label><br>
+                <label><b>MARÉ FIGU.ª-i (AC)</b></label><br>
                 <input type="range" id="m-in" min="-100" max="450" value="0">
                 <span id="val-m">0.0</span> m
             </div>
 
             <div class="control-group">
                 <label><b>ESTRAT. OBSER.
-                <button id="btn-alivio" onclick="toggleAlivio()">ABRIR PONTE CASAIS (M.E.)</button>
+                <button id="btn-alivio" onclick="toggleAlivio()">ABRIR DIQUE </button>
             </div>
 
             <div class="status-box" id="status">
                 STATUS: SISTEMA ESTÁVEL
             </div>
             <br>
-            <button onclick="resetSystem()" style="background: #666;">RESET SISTEMA</button>
+            <button onclick="resetSystem()" style="background: #666;">RESET</button>
         </div>
 
         <div class="chart-area">
@@ -97,7 +97,7 @@
         function toggleAlivio() {
             alivioAtivo = !alivioAtivo;
             document.getElementById('btn-alivio').classList.toggle('active-alivio');
-            document.getElementById('btn-alivio').innerText = alivioAtivo ? "ALÍVIO ATIVO" : "ABRIR PONTE CASAIS (M.E.)";
+            document.getElementById('btn-alivio').innerText = alivioAtivo ? "ALÍVIO ATIVO" : "ABRIR DIQUE EMERG.";
             update();
         }
 
@@ -125,7 +125,7 @@
                 // O impacto do caudal diminui ligeiramente com a distância, 
                 // mas a maré aumenta exponencialmente perto da foz.
                 let qEffect = (Q / 40) * z.k;
-                if (alivioAtivo && z.x > 20) qEffect *= beta; // Alívio afeta tudo após Casais
+                if (alivioAtivo && z.x > 20) qEffect *= beta; // Alívio afeta tudo a distabcia jusante dique aberto 
 
                 let mEffect = (M * 20) * z.d;
                 let pressure = qEffect + mEffect;
