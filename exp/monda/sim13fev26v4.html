@@ -2,69 +2,39 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>SISTEMA DE GESTÃO ADAPTATIVA - MONDEGO</title>
+    <title>SISTEMA BAZÓFIAS - EQUILÍBRIO ATIVO</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { margin: 0; font-family: 'Courier New', monospace; background: #050505; color: #d0d0d0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         #map { height: 35vh; width: 100%; background: #000; filter: grayscale(1) contrast(1.2) brightness(0.8); border-bottom: 2px solid #333; }
-        
-        .sar-header { background: rgba(0,0,0,0.9); padding: 5px 20px; display: flex; justify-content: space-between; font-size: 12px; border-bottom: 1px solid #444; color: #aaa; }
+        .sar-header { background: rgba(0,0,0,0.9); padding: 8px 20px; display: flex; justify-content: space-between; font-size: 11px; border-bottom: 1px solid #444; color: #aaa; }
         .sar-header b { color: #00d2ff; }
-        
         #timeDisplay { position: absolute; top: 50px; right: 20px; z-index: 1000; background: rgba(10, 10, 10, 0.9); padding: 10px; border: 1px solid #f1c40f; color: #f1c40f; text-align: right; }
         #simClock { font-size: 1.6em; font-weight: bold; display: block; }
-
         .main-container { display: flex; flex: 1; overflow: hidden; background: #0a0a0a; }
         .panel { flex: 1.6; padding: 15px; display: flex; flex-direction: column; gap: 8px; border-right: 1px solid #222; }
-        .sidebar { flex: 1.4; padding: 15px; background: #050505; overflow-y: auto; display: flex; flex-direction: column; }
-
+        .sidebar { flex: 1.4; padding: 15px; background: #050505; overflow-y: auto; }
         .slider-box { background: #111; padding: 8px; border: 1px solid #333; font-size: 0.8em; }
         .slider-box b { color: #f1c40f; }
         input[type=range] { width: 100%; accent-color: #f1c40f; }
-
         .automation-hub { background: #001a1a; border: 1px solid #00d2ff; padding: 12px; border-radius: 4px; }
         .hub-title { font-size: 10px; color: #ffffff; font-weight: bold; margin-bottom: 10px; text-transform: uppercase; border-bottom: 1px solid #004d4d; padding-bottom: 4px; }
-        .mode-option { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 11px; color: #ffffff; }
-
-        .graph-container { background: #000; border: 1px solid #333; height: 80px; position: relative; margin: 5px 0; }
+        .mode-option { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 11px; padding: 6px; color: #ffffff; }
+        .graph-container { background: #000; border: 1px solid #333; height: 80px; position: relative; display: flex; flex-direction: column; }
+        .graph-area { flex: 1; position: relative; overflow: hidden; }
         .bar-c { position: absolute; bottom: 0; width: 2px; background: #f1c40f; }
         .bar-b { position: absolute; bottom: 0; width: 2px; background: #00ffff; }
-
         table { width: 100%; font-size: 10px; border-collapse: collapse; }
-        th { border-bottom: 2px solid #444; padding: 5px; text-align: left; color: #00d2ff; }
-        td { padding: 5px; border-bottom: 1px solid #222; }
-
-        /* Estilos Log e Emergência */
-        .log-container { flex-grow: 1; margin-top: 10px; border: 1px solid #444; background: #000; height: 120px; overflow-y: auto; font-size: 10px; padding: 5px; }
-        .log-entry { margin-bottom: 4px; border-left: 2px solid #333; padding-left: 5px; }
-        .log-time { color: #f1c40f; margin-right: 5px; }
-        .log-msg-warn { color: #00ffff; }
-        .log-msg-crit { color: #e74c3c; font-weight: bold; }
-
-        #emergencyOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(139, 0, 0, 0.9); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; color: white; text-align: center; }
-        .emergency-box { border: 5px solid white; padding: 40px; background: #000; }
-        .blink-red { animation: blinker 0.5s linear infinite; color: #ff0000; }
-        @keyframes blinker { 50% { opacity: 0; } }
-        
-        .severe-risk { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
-        .at-risk { color: #f1c40f; }
+        th { border-bottom: 2px solid #444; padding: 8px; text-align: left; color: #00d2ff; position: sticky; top: 0; background: #050505; }
+        td { padding: 6px; border-bottom: 1px solid #222; }
+        .severe-risk { background: rgba(231, 76, 60, 0.15); color: #e74c3c; font-weight: bold; }
     </style>
 </head>
 <body>
-
-<div id="emergencyOverlay">
-    <div class="emergency-box">
-        <h1 class="blink-red">⚠️ TRANSBORDO CRÍTICO ⚠️</h1>
-        <p style="font-size: 1.5em;">COTA EM COIMBRA EXCEDEU OS 21.00m</p>
-        <p id="emergencyStats"></p>
-        <button onclick="resetEmergency()" style="background: white; color: black; padding: 15px 30px; border: none; font-weight: bold; cursor: pointer;">REINICIAR SISTEMA</button>
-    </div>
-</div>
-
 <div class="sar-header">
-    <div>SINC APA: <b id="lastSync">A CONECTAR...</b></div>
-    <div>ALGORITMO: <b>GESTÃO ADAPTATIVA + REFLUXO</b></div>
-    <div>STATUS: <b id="aiStatus" style="color:#2ecc71">NORMAL</b></div>
+    <div>APA SYNC: <b id="lastSync">A LIGAR...</b></div>
+    <div>MARÉ (IPMA): <b id="mareStatus">---</b></div>
+    <div>ALGORITMO: <b id="algStatus">EQUILÍBRIO ATIVO</b></div>
 </div>
 
 <div id="timeDisplay">
@@ -77,19 +47,20 @@
 <div class="main-container">
     <div class="panel">
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
-            <div class="slider-box">COTA APA (COIMBRA): <b id="txtInitC">--</b>m<input type="range" id="inpInitC" min="10.0" max="23.5" step="0.01" value="15.42"></div>
-            <div class="slider-box">CAUDAL AGUIEIRA (m³/s): <b id="txtFlow">--</b><input type="range" id="inpFlow" min="100" max="6000" step="1" value="800"></div>
-            <div class="slider-box">AÇUDE (ABERTURA): <b id="txtGates">90</b>%<input type="range" id="inpGates" min="0" max="100" value="90"></div>
+            <div class="slider-box">COTA (H): <b id="txtInitC">15.42</b>m<input type="range" id="inpInitC" min="10.0" max="23.5" step="0.01" value="15.42"></div>
+            <div class="slider-box">CAUDAL (Q): <b id="txtFlow">500</b>m³/s<input type="range" id="inpFlow" min="50" max="10000" step="1" value="500"></div>
+            <div class="slider-box">AÇUDE: <b id="txtGates">90</b>%<input type="range" id="inpGates" min="0" max="100" value="90"></div>
+        </div>
+        
+        <div class="graph-container">
+            <div class="graph-area" id="graphArea"></div>
         </div>
 
-        <div class="graph-container" id="graphArea"></div>
-
         <div class="automation-hub">
-            <div class="hub-title">Centro de Automação</div>
-            <label class="mode-option"><input type="radio" name="iaMode" value="manual" checked> MODO MANUAL</label>
-            <label class="mode-option"><input type="radio" name="iaMode" value="baixa"> PILOTO: PRIORIDADE BAIXA COIMBRA</label>
-            <label class="mode-option"><input type="radio" name="iaMode" value="total"> PILOTO: EQUILÍBRIO DE BACIA (ANTI-REFLUXO)</label>
-            <div id="aiMsg" style="font-size: 10px; color: #00d2ff; margin-top: 5px;">Aguardando ativação...</div>
+            <div class="hub-title">Automatização do Sistema</div>
+            <label class="mode-option"><input type="radio" name="iaMode" value="manual"> MODO MANUAL</label>
+            <label class="mode-option"><input type="radio" name="iaMode" value="baixa"> PRIORIDADE BAIXA COIMBRA (A)</label>
+            <label class="mode-option"><input type="radio" name="iaMode" value="total" checked> EQUILÍBRIO DE BACIA (A+B)</label>
         </div>
         
         <button id="btnRun" style="background: transparent; color: #2ecc71; border: 2px solid #2ecc71; padding: 12px; font-weight: bold; cursor: pointer; font-family: inherit;">INICIAR MONITORIZAÇÃO</button>
@@ -97,71 +68,133 @@
 
     <div class="sidebar">
         <table id="mainTable">
-            <thead><tr><th>LOCAL</th><th>COTA</th><th>NÍVEL</th><th>ESTADO</th></tr></thead>
+            <thead><tr><th>LOCAL</th><th>REF</th><th>NÍVEL</th><th>ESTADO</th></tr></thead>
             <tbody id="tableBody"></tbody>
         </table>
-
-        <div class="log-container" id="decisionLog">
-            <div style="color: #666; text-align: center; margin-top: 50px;">LOG DE DECISÕES VAZIO</div>
-        </div>
-        <button id="btnExport" style="margin-top: 5px; background: #222; color: #00d2ff; border: 1px solid #444; padding: 5px; font-size: 9px; cursor: pointer;">💾 EXPORTAR LOG (.TXT)</button>
     </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    const map = L.map('map').setView([40.2050, -8.4300], 12); 
+    const map = L.map('map', {zoomControl: false}).setView([40.2050, -8.4300], 13);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-    const sensores = [
-        {id: "PARQUE DR. MANUEL BRAGA", pos: [40.2055, -8.4290], cota: 20.1, reg: "A"},
-        {id: "BAIXA (RIO / MARGEM)", pos: [40.2091, -8.4320], cota: 19.5, reg: "A"},
-        {id: "MOSTEIRO STA CLARA-VELHA", pos: [40.2018, -8.4340], cota: 18.2, reg: "A"},
-        {id: "ADUANEIRA (BACIA SUL)", pos: [40.1939, -8.5388], cota: 13.2, reg: "B"},
-        {id: "MONTEMOR (BASE CASTELO)", pos: [40.1745, -8.6820], cota: 8.5, reg: "B"},
-        {id: "CHOUPAL (ENTRADA)", pos: [40.2220, -8.4480], cota: 13.5, reg: "B"}
-    ];
+const sensores = [
+    {id: "AV. eMÍDIO NAVARRO (PORTAGEM-HOTEL ASTÓRIA)", pos: [40.2073, -8.4308], cota: 20.1, reg: "A"},
+    {id: "ETA DA BOAVISTA", pos: [40.1947, -8.4190], cota: 22.0, reg: "A"},
+    {id: "DOCAS DO MONDEGO", pos: [40.2078, -8.4312], cota: 18.6, reg: "A"},
+    {id: "PAVILHÃO CENTRO DE PORTUGAL", pos: [40.1989, -8.4332], cota: 18.5, reg: "A"},
+    {id: "MOSTEIRO STA CLARA-VELHA", pos: [40.2018, -8.4340], cota: 18.2, reg: "A"},
+    {id: "BAIXA (RIO / MARGEM)", pos: [40.2091, -8.4320], cota: 19.5, reg: "A"},
+    {id: "PARQUE VERDE (POLO II)", pos: [40.1967, -8.4297], cota: 18.0, reg: "A"},
+    {id: "PARQUE VERDE (MARGEM)", pos: [40.2032, -8.4315], cota: 18.2, reg: "A"},
+    {id: "PARQUE DA CANÇÃO", pos: [40.2040, -8.4309], cota: 19.0, reg: "A"},
+    {id: "PARQUE DR. MANUEL BRAGA", pos: [40.2055, -8.4290], cota: 20.1, reg: "A"},
+    {id: "AAC - DESPORTOS NÁUTICOS", pos: [40.2000, -8.4287], cota: 18.3, reg: "A"},
+    {id: "RUA DA FEITORIA (STA CLARA)", pos: [40.2010, -8.4365], cota: 18.5, reg: "A"},
+    {id: "PARQUE VERDE (URSINHO)", pos: [40.2015, -8.4282], cota: 18.5, reg: "A"},
+    {id: "LARGO DA PORTAGEM", pos: [40.2085, -8.4310], cota: 20.3, reg: "A"},
+    {id: "ESTAÇÃO COIMBRA-A", pos: [40.2111, -8.4337], cota: 20.2, reg: "A"},
+    {id: "BAIXA (RUA DA SOFIA)", pos: [40.2115, -8.4312], cota: 21.0, reg: "A"},
+    {id: "LUGAR DA BRUNHEIRA", pos: [40.2155, -8.4520], cota: 19.5, reg: "B"},
+    {id: "CENTRO HÍPICO DE COIMBRA", pos: [40.2225, -8.4650], cota: 17.8, reg: "B"},
+    {id: "CHOUPAL (ENTRADA)", pos: [40.2220, -8.4480], cota: 13.5, reg: "B"},
+    {id: "ADÉMIA DE BAIXO (RIBEIRA DE EIRAS)", pos: [40.2425, -8.4520], cota: 18.5, reg: "B"},
+    {id: "RIBEIRA DE EIRAS (ZONA BAIXA)", pos: [40.2536, -8.4251], cota: 22.5, reg: "B"},
+    {id: "EIRAS (TÚNEL/PASSAGEM INFERIOR)", pos: [40.2485, -8.4312], cota: 21.0, reg: "B"},
+    {id: "SÃO JOÃO DO CAMPO (GÂNDARAS)", pos: [40.24219, -8.50449], cota: 14.5, reg: "B"},
+    {id: "TAVEIRO (COMERCIAL)", pos: [40.1910, -8.5060], cota: 14.2, reg: "B"},
+    {id: "VALADO TAVEIRO (BARREIRA)", pos: [40.1875, -8.5080], cota: 14.8, reg: "B"},
+    {id: "VILA POUCA (URBANO)", pos: [40.1850, -8.5150], cota: 13.5, reg: "B"},
+    {id: "ADUANEIRA (BACIA SUL)", pos: [40.1939, -8.5388], cota: 13.2, reg: "B"},
+    {id: "PAUL DE ARZILA (RESERVA)", pos: [40.1650, -8.5520], cota: 11.8, reg: "B"},
+    {id: "VALAS DRENAGEM (ARZILA-ANOBRA)", pos: [40.1550, -8.5600], cota: 12.1, reg: "B"},
+    {id: "VALE DA ANOBRA / ARUNCA", pos: [40.1450, -8.5680], cota: 12.5, reg: "B"},
+    {id: "VILA NOVA DE ANÇOS (CENTRO)", pos: [40.1105, -8.6415], cota: 18.5, reg: "B"},
+    {id: "ESTAÇÃO V. N. ANÇOS", pos: [40.1110, -8.6360], cota: 11.8, reg: "B"},
+    {id: "VILA NOVA DE ANÇOS (VALE SUL)", pos: [39.0223, -8.6424], cota: 11.2, reg: "B"},
+    {id: "LINHA DO NORTE (ALFARELOS/ARUNCA)", pos: [40.1185, -8.6380], cota: 10.8, reg: "B"},
+    {id: "VALE DO ARUNCA / LEITO MACRO", pos: [40.0665, -8.7500], cota: 9.5, reg: "B"},
+    {id: "MONTEMOR (BASE CASTELO)", pos: [40.1745, -8.6820], cota: 8.5, reg: "B"},
+    {id: "CAR MONTEMOR (PISTA)", pos: [40.1735, -8.6745], cota: 7.8, reg: "B"},
+    {id: "AMEAL (RESIDENCIAL)", pos: [40.1750, -8.5350], cota: 13.8, reg: "B"},
+    {id: "EN1 / IC2 (VILA POUCA)", pos: [40.1357, -8.4895], cota: 14.5, reg: "B"},
+    {id: "PEREIRA DO CAMPO", pos: [40.1580, -8.5850], cota: 11.5, reg: "B"},
+    {id: "MONTEMOR (BASE CASTELO/N111)", pos: [40.1745, -8.6820], cota: 8.5, reg: "B"},
+    {id: "VALE DO EXTREMO / VILA NOVA DA BARCA", pos: [40.1727, -8.6777], cota: 7.2, reg: "B"},
+    {id: "EREIRA (NÚCLEO ALTO)", pos: [40.1370, -8.7015], cota: 13.5, reg: "B"},
+    {id: "EREIRA (VILA)", pos: [40.1420, -8.6950], cota: 9.2, reg: "B"},
+    {id: "EREIRA (CAMPOS)", pos: [40.1420, -8.6950], cota: 8.2, reg: "B"},
+    {id: "VALA REAL / LEITO DIREITO (EREIRA)", pos: [40.2090, -8.7070], cota: 7.5, reg: "B"},
+    {id: "FIGUEIRA (SALINAS)", pos: [40.1450, -8.8250], cota: 2.5, reg: "B"}
+];
 
-    let visualMarkers = {}, logData = [], lastLogEvent = "";
-    let hC = 15.42, hB = 10.55, tempo = 0, rodando = false;
+    let visualMarkers = {};
+    let hC = 15.42, hB = 8.55, hMareReal = 0.8, tempo = 0, rodando = false;
     let simTime = new Date();
-    let bufferQ = new Array(40).fill(800); // Buffer de 40 min de delay
 
     sensores.forEach(s => {
-        L.circleMarker(s.pos, { radius: 3, color: '#00d2ff', fillOpacity: 1 }).addTo(map);
-        visualMarkers[s.id] = L.circle(s.pos, { radius: 0, color: '#f1c40f', weight: 1, fillOpacity: 0.2 }).addTo(map);
+        L.circleMarker(s.pos, { radius: 4, color: '#00d2ff', weight: 1, fillOpacity: 0.8 }).addTo(map);
+        visualMarkers[s.id] = L.circle(s.pos, { radius: 0, color: '#f1c40f', weight: 1, fillOpacity: 0.3 }).addTo(map);
     });
 
-    async function fetchDadosAPA() {
+    async function syncAPA() {
         try {
-            const url = 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://infoagua.apambiente.pt/pt/cheias/cheia-detalhe/1627743374');
-            const res = await fetch(url);
+            const res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://infoagua.apambiente.pt/pt/cheias/cheia-detalhe/1627743374'));
             const data = await res.json();
-            const html = data.contents;
-            const matchCota = html.match(/(\d+[.,]\d+)\s*m(?!\d|\/|3)/);
-            if (matchCota) {
-                hC = parseFloat(matchCota[1].replace(',', '.'));
-                document.getElementById('inpInitC').value = hC;
-                document.getElementById('txtInitC').innerText = hC.toFixed(2);
+            const flowMatch = data.contents.match(/([\d.,]+)\s*m3\/s/);
+            const levelMatch = data.contents.match(/([\d.,]+)\s*m(?!\d|\w|³)/);
+            if (flowMatch) { 
+                let f = parseFloat(flowMatch[1].replace(',', '.'));
+                document.getElementById('inpFlow').value = f; 
+                document.getElementById('txtFlow').innerText = f;
             }
-            document.getElementById('lastSync').innerText = new Date().toLocaleTimeString();
-        } catch (e) { console.log("Sincronização falhou."); }
+            if (levelMatch) hC = parseFloat(levelMatch[1].replace(',', '.'));
+            document.getElementById('lastSync').innerText = "OK " + new Date().toLocaleTimeString();
+        } catch (e) { document.getElementById('lastSync').innerText = "ERRO APA"; }
     }
 
-    function addLog(msg, type) {
-        if (lastLogEvent === msg) return;
-        lastLogEvent = msg;
-        const logBox = document.getElementById('decisionLog');
-        if (logBox.innerHTML.includes("VAZIO")) logBox.innerHTML = "";
+    function simular() {
+        if (!rodando) return;
         
-        const timestamp = simTime.toLocaleTimeString('pt-PT', {hour:'2-digit', minute:'2-digit'});
-        logData.push({hora: timestamp, msg: msg, cC: hC.toFixed(2), cB: hB.toFixed(2)});
-        
-        const div = document.createElement('div');
-        div.className = 'log-entry';
-        let color = type === 'refluxo' ? 'log-msg-warn' : (type === 'crit' ? 'log-msg-crit' : '');
-        div.innerHTML = `<span class="log-time">[${timestamp}]</span><span class="${color}">${msg}</span>`;
-        logBox.prepend(div);
+        let flow = parseInt(document.getElementById('inpFlow').value);
+        let gatesInp = document.getElementById('inpGates');
+        let mode = document.querySelector('input[name="iaMode"]:checked').value;
+
+        // --- LÓGICA DE PILOTO AUTOMÁTICO (CORRIGIDA) ---
+        if (mode === "baixa") {
+            if (hC > 18.5) gatesInp.value = Math.min(100, parseInt(gatesInp.value) + 2);
+            else if (hC < 15.0) gatesInp.value = Math.max(0, parseInt(gatesInp.value) - 1);
+        } 
+        else if (mode === "total") {
+            // Algoritmo de Equilíbrio: Olha para Coimbra (hC) e Ereira (hB)
+            let riscoCoimbra = hC - 18.0; 
+            let riscoBaixoMondego = hB - 11.5;
+
+            if (riscoCoimbra > riscoBaixoMondego) {
+                // Coimbra está mais em perigo -> Abre comportas
+                gatesInp.value = Math.min(100, parseInt(gatesInp.value) + 2);
+            } else if (riscoBaixoMondego > 1.0) {
+                // Baixo Mondego está a inundar -> Fecha para reter em Coimbra
+                gatesInp.value = Math.max(0, parseInt(gatesInp.value) - 2);
+            }
+        }
+
+        // Atualização visual da percentagem
+        document.getElementById('txtGates').innerText = gatesInp.value;
+        let abert = parseInt(gatesInp.value) / 100;
+
+        // Física Simplificada
+        let alvoHC = 13.0 + (flow / 1800) + ((1 - abert) * 9.5);
+        hC += (alvoHC - hC) * 0.1;
+
+        let alvoHB = 4.0 + (flow / 2200) + (abert * 8.5) + (hMareReal * 0.5);
+        hB += (alvoHB - hB) * 0.08;
+
+        tempo++;
+        simTime.setMinutes(simTime.getMinutes() + 1);
+        updateUI();
+        desenharGrafico();
     }
 
     function updateUI() {
@@ -172,54 +205,16 @@
             let diff = nivel - s.cota;
             let row = tbody.insertRow();
             if (diff > 0) {
-                row.className = diff > 0.8 ? 'severe-risk' : 'at-risk';
-                visualMarkers[s.id].setRadius(20 + diff * 500);
+                visualMarkers[s.id].setRadius(20 + diff * 350);
+                row.className = 'severe-risk';
             } else { visualMarkers[s.id].setRadius(0); }
             row.insertCell(0).innerText = s.id;
             row.insertCell(1).innerText = s.cota + "m";
             row.insertCell(2).innerText = nivel.toFixed(2) + "m";
-            row.insertCell(3).innerText = diff > 0 ? "CHEIA" : "OK";
+            row.insertCell(3).innerText = diff > 0 ? "⚠️ CHEIA" : "OK";
         });
         document.getElementById('simClock').innerText = simTime.toLocaleTimeString('pt-PT');
         document.getElementById('elapsed').innerText = `T+ ${tempo} MIN`;
-    }
-
-    function simular() {
-        if (!rodando) return;
-        if (hC > 21.0) { rodando = false; triggerEmergency(); return; }
-
-        let qIn = parseInt(document.getElementById('inpFlow').value);
-        bufferQ.push(qIn);
-        let qChegada = bufferQ.shift();
-
-        let gates = document.getElementById('inpGates');
-        let mode = document.querySelector('input[name="iaMode"]:checked').value;
-
-        if (mode === "total") {
-            if (hC > 19.8 && hB < 12.0) {
-                gates.value = Math.min(100, parseInt(gates.value) + 2);
-                addLog("Ação: Abertura para alívio de Coimbra.", "default");
-            } else if (hB >= 12.0 && hC > 19.8) {
-                gates.value = Math.max(0, parseInt(gates.value) - 1);
-                addLog("VETO: Travamento por risco de refluxo em Montemor.", "refluxo");
-            }
-        } else if (mode === "baixa" && hC > 19.5) {
-            gates.value = Math.min(100, parseInt(gates.value) + 2);
-        }
-
-        let abertura = parseInt(gates.value) / 100;
-        document.getElementById('txtGates').innerText = gates.value;
-
-        // Hidráulica Adaptativa
-        let alvoHC = 14.0 + (qChegada / 2200) + ((1 - abertura) * 7.5);
-        hC += (alvoHC - hC) * 0.15;
-        let alvoHB = 7.0 + (qChegada / 3500) + (abertura * 8.5);
-        hB += (alvoHB - hB) * 0.1;
-
-        simTime.setMinutes(simTime.getMinutes() + 1);
-        tempo++;
-        updateUI();
-        desenharGrafico();
     }
 
     function desenharGrafico() {
@@ -227,41 +222,20 @@
         const x = (tempo * 2) % area.offsetWidth;
         if (x < 2) area.innerHTML = '';
         const bc = document.createElement('div'); bc.className = 'bar-c'; 
-        bc.style.left = x + 'px'; bc.style.height = (hC - 10) * 5 + 'px';
+        bc.style.left = x + 'px'; bc.style.height = Math.max(0, (hC - 10) * 6) + 'px';
         area.appendChild(bc);
-    }
-
-    function triggerEmergency() {
-        document.getElementById('emergencyOverlay').style.display = 'flex';
-        document.getElementById('emergencyStats').innerText = `Cota: ${hC.toFixed(2)}m | Caudal: ${document.getElementById('inpFlow').value}m3/s`;
-        addLog("COLAPSO DO SISTEMA: TRANSBORDO!", "crit");
-    }
-
-    function resetEmergency() {
-        document.getElementById('emergencyOverlay').style.display = 'none';
-        hC = 15.42; tempo = 0; rodando = false;
-        document.getElementById('btnRun').innerText = "INICIAR MONITORIZAÇÃO";
-        updateUI();
+        const bb = document.createElement('div'); bb.className = 'bar-b'; 
+        bb.style.left = x + 'px'; bb.style.height = Math.max(0, (hB - 2) * 6) + 'px';
+        area.appendChild(bb);
     }
 
     document.getElementById('btnRun').onclick = function() {
         rodando = !rodando;
         this.innerText = rodando ? "PARAR MONITORIZAÇÃO" : "INICIAR MONITORIZAÇÃO";
-        this.style.borderColor = rodando ? "#e74c3c" : "#2ecc71";
     };
 
-    document.getElementById('btnExport').onclick = function() {
-        let txt = "RELATÓRIO DE CRISE MONDEGO\n\n";
-        logData.forEach(l => txt += `[${l.hora}] ${l.msg} (C:${l.cC}m B:${l.cB}m)\n`);
-        const blob = new Blob([txt], {type: 'text/plain'});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = "log_mondego.txt";
-        a.click();
-    };
-
-    fetchDadosAPA();
     setInterval(simular, 1000);
+    syncAPA();
 </script>
 </body>
 </html>
