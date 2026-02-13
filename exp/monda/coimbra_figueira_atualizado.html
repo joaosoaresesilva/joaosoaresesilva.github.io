@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>SISTEMA BAZÓFIAS - EQUILÍBRIO ATIVO</title>
+    <title>MONDEGO CAUDAL</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { margin: 0; font-family: 'Courier New', monospace; background: #050505; color: #d0d0d0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -138,22 +138,50 @@ const sensores = [
         visualMarkers[s.id] = L.circle(s.pos, { radius: 0, color: '#f1c40f', weight: 1, fillOpacity: 0.3 }).addTo(map);
     });
 
-    async function syncAPA() {
+   async function syncAPA() {
         try {
-            const res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://infoagua.apambiente.pt/pt/cheias/cheia-detalhe/1627743374'));
+            const proxy = 'https://api.allorigins.win/get?url=';
+            const targetUrl = 'https://infoagua.apambiente.pt/pt/cheias/cheia-detalhe/1627743374';
+            const res = await fetch(proxy + encodeURIComponent(targetUrl) + '&cache=' + new Date().getTime());
             const data = await res.json();
-            const flowMatch = data.contents.match(/([\d.,]+)\s*m3\/s/);
-            const levelMatch = data.contents.match(/([\d.,]+)\s*m(?!\d|\w|³)/);
-            if (flowMatch) { 
+            const html = data.contents;
+
+            // 1. Extração de Caudal (Q)
+            const flowMatch = html.match(/([\d.,]+)\s*m3\/s/);
+            if (flowMatch) {
                 let f = parseFloat(flowMatch[1].replace(',', '.'));
-                document.getElementById('inpFlow').value = f; 
+                document.getElementById('inpFlow').value = f;
                 document.getElementById('txtFlow').innerText = f;
             }
-            if (levelMatch) hC = parseFloat(levelMatch[1].replace(',', '.'));
-            document.getElementById('lastSync').innerText = "OK " + new Date().toLocaleTimeString();
-        } catch (e) { document.getElementById('lastSync').innerText = "ERRO APA"; }
-    }
 
+            // 2. Extração de Cota (H) com filtro de segurança
+            // Procuramos todos os valores seguidos de "m" e escolhemos o que faz sentido para o Açude
+            const levelMatches = html.matchAll(/([\d.,]+)\s*m(?!\d|\w|³)/g);
+            let cotaEncontrada = null;
+
+            for (const match of levelMatches) {
+                let v = parseFloat(match[1].replace(',', '.'));
+                // O valor real da cota no Açude raramente baixa de 14m ou sobe de 25m
+                if (v > 16.0 && v < 26.0) { 
+                    cotaEncontrada = v;
+                    break; 
+                }
+            }
+
+            if (cotaEncontrada) {
+                hC = cotaEncontrada;
+                // ATUALIZAÇÃO DA UI
+                document.getElementById('inpInitC').value = hC;
+                document.getElementById('txtInitC').innerText = hC.toFixed(2);
+            }
+
+            document.getElementById('lastSync').innerText = "OK " + new Date().toLocaleTimeString();
+            document.getElementById('lastSync').style.color = "#00ff77";
+        } catch (e) { 
+            document.getElementById('lastSync').innerText = "ERRO APA"; 
+            document.getElementById('lastSync').style.color = "#ff4444";
+        }
+    }
     function simular() {
         if (!rodando) return;
         
