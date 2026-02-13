@@ -104,6 +104,7 @@ const localidades = [
 
     // --- DISTÂNCIA 0.3 a 1.5 km (EXPANSÃO E VALES URBANOS) ---
     {id: "AAC - DESPORTOS NÁUTICOS", pos: [40.2000, -8.4287], cota: 18.3, muro: 18.3, reg: "A", dist: 0.3},
+    {id: "SC-02: RUA DE BAIXO (STA CLARA)", pos: [40.203155, -8.434007], cota: 16.2, muro: 18.0, reg: "A", dist: 0.12},
     {id: "SC-01: JARDIM STA CLARA VELHA", pos: [40.201477, -8.432601], cota: 15.2, muro: 16.5, reg: "A", dist: 1.1},
     {id: "VALE DAS FLORES (ZONA BAIXA)", pos: [40.1972, -8.4115], cota: 25.0, muro: 26.0, reg: "A", dist: 1.4},
     {id: "COSELHAS (VALE)", pos: [40.2205, -8.4350], cota: 18.5, muro: 19.5, reg: "A", dist: 1.5},
@@ -156,26 +157,55 @@ const localidades = [
         }
     }
 
-    async function syncMare() {
-        if (mareMode !== "auto") return;
-        try {
-            const proxy = 'https://api.allorigins.win/get?url=';
-            const targetUrl = 'https://pt.tideschart.com/Portugal/Coimbra/Figueira-da-Foz/';
-            const res = await fetch(proxy + encodeURIComponent(targetUrl));
-            const data = await res.json();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(data.contents, 'text/html');
-            const mareElement = doc.querySelector('.tide-now-value, .unit-pile');
-            if (mareElement) {
-                const val = parseFloat(mareElement.innerText.replace(',', '.'));
-                if (!isNaN(val)) {
-                    hMareReal = val;
-                    document.getElementById("mareStatus").innerText = hMareReal.toFixed(2) + "m (LIVE)";
-                    document.getElementById("mareStatus").style.color = "#00d2ff";
+   async function syncMare() {
+    if (mareMode !== "auto") return;
+    try {
+        const proxy = 'https://api.allorigins.win/get?url=';
+        const targetUrl = 'https://www.ipma.pt/pt/maritima/costeira/index.jsp?selPorto=figueira_da_foz';
+        
+        const res = await fetch(proxy + encodeURIComponent(targetUrl) + '&cache=' + new Date().getTime());
+        const data = await res.json();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(data.contents, 'text/html');
+
+        // O IPMA usa tabelas com a classe "dadostabela" ou ID "tabela_mares"
+        const rows = doc.querySelectorAll('table.dadostabela tr, #tabela_mares tr');
+        let closestHeight = null;
+        let minDiff = Infinity;
+        const agora = new Date();
+
+        rows.forEach(row => {
+            const cols = row.querySelectorAll('td');
+            if (cols.length >= 3) {
+                // Formato esperado: [Hora (HH:mm), Fenómeno, Altura (m)]
+                const horaStr = cols[0].innerText.trim();
+                const alturaStr = cols[2].innerText.replace(',', '.').trim();
+                
+                const [horas, minutos] = horaStr.split(':').map(Number);
+                if (!isNaN(horas)) {
+                    const dataMare = new Date();
+                    dataMare.setHours(horas, minutos, 0);
+
+                    // Calcula a diferença de tempo para encontrar a maré mais próxima de "agora"
+                    const diff = Math.abs(agora - dataMare);
+                    if (diff < minDiff) {
+                        minDiff = diff;
+                        closestHeight = parseFloat(alturaStr);
+                    }
                 }
             }
-        } catch (e) { console.error("Erro Maré"); }
+        });
+
+        if (closestHeight !== null) {
+            hMareReal = closestHeight;
+            document.getElementById("mareStatus").innerText = hMareReal.toFixed(2) + "m (IPMA)";
+            document.getElementById("mareStatus").style.color = "#00d2ff";
+        }
+    } catch (e) { 
+        console.error("Erro IPMA:", e);
+        document.getElementById("mareStatus").innerText = "ERRO IPMA";
     }
+}
 
     async function syncAPA() {
     try {
