@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>MONDEGO RIO - MONITOR</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; font-family: 'Courier New', monospace; background: #050505; color: #d0d0d0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        #map { height: 35vh; width: 100%; background: #000; filter: grayscale(1) contrast(1.2) brightness(0.7); border-bottom: 2px solid #0044ff; }
+        
+        /* Animação para pontos em perigo */
+        @keyframes pulse {
+            0% { stroke-width: 2; stroke-opacity: 1; }
+            50% { stroke-width: 12; stroke-opacity: 0.4; }
+            100% { stroke-width: 2; stroke-opacity: 1; }
+        }
+        .marker-alagado { animation: pulse 1.5s infinite; }
+
+        .sar-header { background: #111; padding: 10px 20px; display: flex; justify-content: space-between; font-size: 11px; border-bottom: 1px solid #333; color: #00d2ff; }
+        .main-container { display: flex; flex: 1; overflow: hidden; }
+        .panel { flex: 0.8; padding: 15px; display: flex; flex-direction: column; gap: 12px; border-right: 1px solid #222; background: #0a0a0a; overflow-y: auto; }
+        .sidebar { flex: 2.2; padding: 10px; background: #050505; overflow-y: auto; }
+        .data-card { background: #111; padding: 10px; border: 1px solid #333; border-left: 4px solid #00d2ff; }
+        .value-display { font-size: 1.8em; font-weight: bold; color: #fff; letter-spacing: -1px; }
+        table { width: 100%; font-size: 10px; border-collapse: collapse; }
+        th { border-bottom: 2px solid #444; padding: 10px; text-align: left; color: #00d2ff; position: sticky; top: 0; background: #050505; z-index: 10; }
+        td { padding: 8px; border-bottom: 1px solid #1a1a1a; color: #ffffff; }
+        
+        /* Estilo dos Links na Tabela */
+        .loc-link { color: #ffffff; text-decoration: none; display: block; width: 100%; }
+        .loc-link:hover { color: #00d2ff; background: rgba(0, 210, 255, 0.1); }
+        .loc-link i { font-size: 8px; margin-left: 5px; opacity: 0.5; }
+
+        .status-alagado { color: #ff3333 !important; font-weight: bold; background: rgba(255,0,0,0.1); }
+        .status-provavel { color: #ffa500 !important; font-weight: bold; }
+        .status-seco { color: #00ff77 !important; }
+    </style>
+</head>
+<body>
+
+<div class="sar-header">
+    <div>FONTE: <b>APA (INFOAGUA) + IH (MARÉ)</b></div>
+    <div>SINC STATUS: <b id="syncStatus">---</b></div>
+    <div>MARÉ (FIG): <b id="mareStatus">---</b></div>
+</div>
+
+<div id="map"></div>
+
+<div class="main-container">
+    <div class="panel">
+        <div class="data-card">
+            <h3>CAUDAL AFL(Q)</h3>
+            <div id="valFlow" class="value-display">---</div><small>m³/s</small>
+        </div>
+        <div class="data-card">
+            <h3>COTA AÇUDE (hA)</h3>
+            <div id="valCota" class="value-display">---</div><small>m (Nível Real)</small>
+        </div>
+        <div class="data-card">
+            <h3>MARÉ (M)</h3>
+            <div id="valMare" class="value-display" style="color: #00d2ff;">---</div><small>m</small>
+        </div>
+    </div>
+    <div class="sidebar">
+        <table id="mainTable">
+            <thead>
+                <tr><th>ID PONTO / LOCALIDADE</th><th>SOLO (Z)</th><th>NÍVEL (h)</th><th>ESTADO</th></tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const map = L.map('map', {zoomControl: false}).setView([40.2085, -8.4310], 14);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+const localidades = [
+    // --- MONTANTE E CIDADE (DISTÂNCIA 0.0 A 1.1) ---
+    //{id: "ETA-01 DA BOAVISTA", pos: [40.1947, -8.4190], cota: 22.0, reg: "A", hist: false, dist: 0.0},
+    {id: "ETA-02: BOAVISTA OPERACIONAL", pos: [40.189819, -8.422121], cota: 21.5, reg: "A", dist: 0.1},
+    {id: "DOCAS DO MONDEGO", pos: [40.202750, -8.426389], cota: 18.0, reg: "A", hist: false, dist: 0.1},
+    {id: "MOSTEIRO STA CLARA-VELHA", pos: [40.202652, -8.433220], cota: 17.0, reg: "A", hist: true, dist: 0.1},
+    {id: "BAIXA (RIO / MARGEM)", pos: [40.2091, -8.4320], cota: 19.5, reg: "A", hist: true, dist: 0.1},
+    {id: "AV. EMÍDIO NAVARRO (PORTAGEM-HOTEL ASTÓRIA)", pos: [40.2073, -8.4308], cota: 19.0, reg: "A", hist: true, dist: 0.15},
+    {id: "PARQUE VERDE (POLO II)", pos: [40.1967, -8.4297], cota: 18.0, reg: "A", hist: true, dist: 0.15},
+    {id: "LARGO DA PORTAGEM (HOTEL ASTÓRIA)", pos: [40.207820, -8.431250], cota: 20.0, reg: "A", dist: 0.15},
+    {id: "CITY-01: B. PORTUGAL", pos: [40.207450, -8.429752], cota: 19.0, reg: "A", dist: 0.20},
+    {id: "BAIXA (COIMBRA-A / RUA DA SOTA (SARGETAS))", pos: [40.208445, -8.432143], cota: 19.0, reg: "A", dist: 0.2},
+    {id: "PRAÇA DO COMÉRCIO (CENTRO)", pos: [40.208397, -8.429412], cota: 19.9, reg: "A", dist: 0.2},
+    {id: "PAVILHÃO CENTRO DE PORTUGAL", pos: [40.1989, -8.4332], cota: 18.5, reg: "A", dist: 0.2, hist: true},
+    {id: "PARQUE VERDE (MARGEM)", pos: [40.2032, -8.4315], cota: 18.2, reg: "A", hist: true, dist: 0.2},
+    {id: "PARQUE DA CANÇÃO", pos: [40.2040, -8.4309], cota: 19.0, reg: "A", hist: true, dist: 0.2},
+    {id: "PARQUE DR. MANUEL BRAGA", pos: [40.204291, -8.426844], cota: 20.1, reg: "A", hist: true, dist: 0.2},
+    {id: "CITY-02: L. PORTAGEM", pos: [40.2085, -8.4312], cota: 19.5, reg: "A", dist: 0.25},
+    {id: "AAC - DESPORTOS NÁUTICOS", pos: [40.2000, -8.4287], cota: 18.3, reg: "A", hist: true, dist: 0.3},
+    {id: "RUA DA FEITORIA (STA CLARA)", pos: [40.2010, -8.4365], cota: 18.5, reg: "A", hist: true, dist: 0.3},
+    {id: "CITY-03: FERR. BORGES", pos: [40.2089, -8.4305], cota: 19.7, reg: "A", dist: 0.30},
+    {id: "PARQUE VERDE (URSINHO)", pos: [40.202062, -8.425786], cota: 18.5, reg: "A", hist: true, dist: 0.4},
+    {id: "LARGO DA PORTAGEM (GERAL)", pos: [40.2085, -8.4310], cota: 20.3, reg: "A", hist: true, dist: 0.4},
+    {id: "CITY-04: P. COMÉRCIO S", pos: [40.2095, -8.4298], cota: 19.8, reg: "A", dist: 0.35},
+    {id: "CITY-05: TERR. ERVA", pos: [40.2104, -8.4302], cota: 19.8, reg: "A", dist: 0.40},
+    {id: "CITY-06: P. COMÉRCIO N", pos: [40.2102, -8.4292], cota: 20.2, reg: "A", dist: 0.45},
+    {id: "BAIXA (RUA DA SOFIA)", pos: [40.2115, -8.4312], cota: 21.0, reg: "A", hist: true, dist: 0.5},
+    {id: "ESTAÇÃO COIMBRA-A", pos: [40.2111, -8.4337], cota: 20.2, reg: "A", hist: true, dist: 0.5},
+    {id: "CITY-07: VISC. DA LUZ", pos: [40.2108, -8.4288], cota: 20.5, reg: "A", dist: 0.50},
+    {id: "CITY-08: S. TIAGO", pos: [40.2111, -8.4295], cota: 20.8, reg: "A", dist: 0.55},
+    {id: "URB-05: PISCINAS", pos: [40.2045, -8.4300], cota: 19.0, reg: "A", dist: 0.55},
+    {id: "CITY-09: P. 8 MAIO", pos: [40.2114, -8.4291], cota: 21.1, reg: "A", dist: 0.58},
+    {id: "CITY-10: CÂMARA MUNIC.", pos: [40.2118, -8.4289], cota: 21.3, reg: "A", dist: 0.60},
+    {id: "PRAÇA 8 DE MAIO (SANTA CRUZ)", pos: [40.211472, -8.429183], cota: 21.3, reg: "A", dist: 0.6},
+    {id: "ST-01: COIMBRA-A", pos: [40.20967, -8.43319], cota: 19.8, reg: "A", dist: 0.6},
+    {id: "RUA DA SOFIA (CENTRO)", pos: [40.2125, -8.4308], cota: 21.5, reg: "A", dist: 0.65},
+    {id: "ST-02: ADUANA", pos: [40.2105, -8.4340], cota: 19.6, reg: "A", dist: 0.65},
+    {id: "URB-06: DOCAS NORTE", pos: [40.2035, -8.4305], cota: 19.0, reg: "A", dist: 0.70},
+    {id: "ST-03: MARGINAL N", pos: [40.2115, -8.4350], cota: 19.7, reg: "A", dist: 0.7},
+    {id: "ST-04: VIADUTO IP3", pos: [40.2125, -8.4360], cota: 19.5, reg: "A", dist: 0.75},
+    {id: "URB-07: PASSEIO RIB.", pos: [40.2025, -8.4312], cota: 19.0, reg: "A", dist: 0.80},
+    {id: "ST-05: JARDIM NORTE", pos: [40.2135, -8.4370], cota: 19.4, reg: "A", dist: 0.8},
+    {id: "VG-01: SRA CARMO", pos: [40.2012, -8.4355], cota: 17.8, reg: "A", dist: 0.8},
+    //{id: "ST-06: CASAS DO SAL", pos: [40.2145, -8.4380], cota: 20.2, reg: "A", dist: 0.85},
+    {id: "VG-02: EXPLORATÓRIO", pos: [40.1995, -8.4345], cota: 18.0, reg: "A", dist: 0.85},
+    {id: "URB-08: ESTAÇÃO ELEV.", pos: [40.2015, -8.4320], cota: 19.0, reg: "A", dist: 0.90},
+    {id: "ST-07: PONTÃO VALA", pos: [40.2150, -8.4390], cota: 19.3, reg: "A", dist: 0.9},
+    {id: "VG-03: PISTA CICLÁVEL", pos: [40.1980, -8.4335], cota: 18.2, reg: "A", dist: 0.9},
+    {id: "ST-08: ACESSO AÇUDE", pos: [40.2152, -8.4400], cota: 19.5, reg: "A", dist: 0.95},
+    {id: "URB-09: RAMPA AÇUDE", pos: [40.2005, -8.4330], cota: 19.0, reg: "A", dist: 1.00},
+    {id: "ST-09: MARGEM AÇUDE", pos: [40.2155, -8.4405], cota: 20.0, reg: "A", dist: 1.0},
+    {id: "VG-04: ROTUNDA SARAIVA", pos: [40.1965, -8.4325], cota: 19.5, reg: "A", dist: 1.0},
+    {id: "ST-10: PONTE AÇUDE", pos: [40.215545, -8.44012], cota: 20.5, reg: "A", dist: 1.05},
+    {id: "URB-10: MURO AÇUDE", pos: [40.1995, -8.4340], cota: 19.0, reg: "A", dist: 1.10},
+    {id: "VG-05: ENCOSTA BAIXA", pos: [40.1950, -8.4315], cota: 22.0, reg: "A", dist: 1.1},
+    {id: "SC-01: JARDIM STA CLARA VELHA", pos: [40.201477, -8.432601], cota: 15.2, reg: "A", dist: 1.1},
+    {id: "SC-02: EDIFÍCIO INT. STA CLARA", pos: [40.201437, -8.432443], cota: 15.8, reg: "A", dist: 1.1},
+
+    // --- JUSANTE PROXIMIDADE (DISTÂNCIA 1.2 A 9.0) ---
+    {id: "LUGAR DA BRUNHEIRA", pos: [40.2155, -8.4520], cota: 19.5, reg: "B", hist: false, dist: 1.2},
+    {id: "VG-06: ACESSO V. GAMA", pos: [40.1935, -8.4305], cota: 25.0, reg: "A", dist: 1.2},
+    {id: "VG-07: PLATAFORMA 01", pos: [40.1920, -8.4295], cota: 30.0, reg: "A", dist: 1.3},
+    {id: "VG-08: PARQUE ESTAC.", pos: [40.1905, -8.4285], cota: 38.0, reg: "A", dist: 1.4},
+    {id: "CENTRO HÍPICO DE COIMBRA", pos: [40.2225, -8.4650], cota: 17.8, reg: "B", hist: true, dist: 1.5},
+    {id: "CH-02: PICADEIRO C. HÍPICO", pos: [40.220796, -8.470451], cota: 16.5, reg: "B", dist: 1.8},
+    {id: "CHOUPAL (ENTRADA)", pos: [40.2220, -8.4480], cota: 13.5, reg: "B", hist: false, dist: 2.0},
+    {id: "CV-05: ALTO DO ZORRO", pos: [40.1875, -8.4220], cota: 40.0, reg: "A", dist: 2.4},
+    {id: "CV-04: ESTRADA VELHA", pos: [40.1862, -8.4150], cota: 32.0, reg: "A", dist: 2.8},
+    {id: "CV-03: VALE FLORES SUL", pos: [40.1850, -8.4080], cota: 25.0, reg: "A", dist: 3.2},
+    {id: "SÃO JOÃO DO CAMPO (GÂNDARAS)", pos: [40.24219, -8.50449], cota: 14.5, reg: "B", hist: false, dist: 3.5},
+    {id: "EIRAS (TÚNEL/PASSAGEM INFERIOR)", pos: [40.2485, -8.4312], cota: 21.0, reg: "B", hist: true, dist: 5.2},
+    {id: "RIBEIRA DE EIRAS (ZONA BAIXA)", pos: [40.2536, -8.4251], cota: 22.5, reg: "B", hist: true, dist: 5.5},
+    {id: "ADÉMIA DE BAIXO (RIBEIRA DE EIRAS)", pos: [40.2425, -8.4520], cota: 18.5, reg: "B", hist: true, dist: 6.2},
+    {id: "RB. FRADES (VALA DO MEIO)", pos: [40.2135, -8.4850], cota: 12.8, reg: "B", dist: 6.5},
+    {id: "RB. FRADES (ESTRADA DO CAMPO)", pos: [40.2110, -8.4910], cota: 12.8, reg: "B", dist: 6.8},
+    {id: "RB. de Frades Cota linha Caminho de Ferro (barreira )", pos: [40.206458, -8.49315], cota: 13.8, reg: "B", dist: 6.9},
+    {id: "RB. DE BAIXO (R. DO VALADO)", pos: [40.206479, -8.493372], cota: 13.8, reg: "B", dist: 6.9},
+    {id: "RIBEIRA DE FRADES (R. ORVIEIRA)", pos: [40.209042, -8.494766], cota: 14.2, reg: "B", dist: 7.0},
+    {id: "RB-05: R. ORVIEIRA 87(TUNEL POR BAIXO LINHA COMPOIO)", pos: [40.206570, -8.496602], cota: 13.5, reg: "B", dist: 7.1},
+    {id: "RIBEIRA DE FRADES (CAMPOS)", pos: [40.208939, -8.498833], cota: 12.8, reg: "B", dist: 7.2},
+    {id: "DIAG-02: TAVEIRO (CAMPOS)", pos: [40.1985, -8.5020], cota: 12.8, reg: "B", dist: 8.5},
+    {id: "TAVEIRO (COMERCIAL)", pos: [40.1910, -8.5060], cota: 14.2, reg: "B", hist: false, dist: 8.5},
+    {id: "VALADO TAVEIRO (BARREIRA)", pos: [40.1875, -8.5080], cota: 14.8, reg: "B", hist: false, dist: 8.7},
+    {id: "VILA POUCA (URBANO)", pos: [40.1850, -8.5150], cota: 13.5, reg: "B", hist: true, dist: 9.0},
+
+    // --- CAMPOS E BAIXO MONDEGO (DISTÂNCIA 10.2 A 38.5) ---
+    {id: "DIAG-03: VILA POUCA (LIMITE)", pos: [40.1890, -8.5150], cota: 12.8, reg: "B", dist: 10.2},
+    {id: "ADUANEIRA (BACIA SUL)", pos: [40.1939, -8.5388], cota: 13.2, reg: "B", hist: true, dist: 10.5},
+    {id: "AMEAL (RESIDENCIAL)", pos: [40.1750, -8.5350], cota: 13.8, reg: "B", hist: false, dist: 11.5},
+    {id: "DIAG-04: AMIEIRA (ENCERRAMENTO)", pos: [40.1820, -8.5280], cota: 12.8, reg: "B", dist: 12.0},
+    {id: "EN1 / IC2 (VILA POUCA)", pos: [40.1357, -8.4895], cota: 14.5, reg: "B", hist: false, dist: 12.0},
+    {id: "ARZ-01: PAUL SEDE", pos: [40.1655, -8.5520], cota: 11.8, reg: "B", dist: 13.5},
+    {id: "ARZ-02: VALA VALADO", pos: [40.1680, -8.5480], cota: 11.8, reg: "B", dist: 13.8},
+    {id: "ARZ-03: PASSADIÇOS", pos: [40.1705, -8.5440], cota: 11.5, reg: "B", dist: 14.1},
+    {id: "MA-01: S. MARTINHO (CAMPO)", pos: [40.217518, -8.550270], cota: 11.2, reg: "B", dist: 14.2},
+    {id: "DIAG-05: AMEAL (VALE)", pos: [40.1750, -8.5450], cota: 12.8, reg: "B", dist: 14.5},
+    {id: "ARZ-04: DIQUE SUL", pos: [40.1730, -8.5400], cota: 12.5, reg: "B", dist: 14.5},
+    {id: "ARZ-05: ESTRADA CAMPO", pos: [40.1755, -8.5360], cota: 12.2, reg: "B", dist: 14.8},
+    {id: "ARZ-06: VALA REAL J", pos: [40.1780, -8.5320], cota: 12.0, reg: "B", dist: 15.2},
+    {id: "ARZ-07: ZONA ARROZAL", pos: [40.1805, -8.5280], cota: 11.9, reg: "B", dist: 15.6},
+    {id: "ARZ-08: LIMITE LEITO", pos: [40.1830, -8.5240], cota: 12.4, reg: "B", dist: 16.0},
+    {id: "ARZ-09: MARGEM ESQ.", pos: [40.1855, -8.5200], cota: 12.1, reg: "B", dist: 16.5},
+    {id: "DIAG-06: ARZILA (BORDA)", pos: [40.1680, -8.5620], cota: 12.8, reg: "B", dist: 16.8},
+    {id: "ARZ-10: MONDEGO RIO", pos: [40.1880, -8.5160], cota: 11.8, reg: "B", dist: 17.0},
+    {id: "ARZ-10: ARZILA (LARGO DA IGREJA)", pos: [40.183264, -8.551125], cota: 11.8, reg: "B", dist: 17.0},
+    {id: "PEREIRA DO CAMPO", pos: [40.1580, -8.5850], cota: 11.5, reg: "B", hist: false, dist: 18.0},
+    {id: "DIAG-07: PEREIRA (BAIXA)", pos: [40.1590, -8.5850], cota: 12.8, reg: "B", dist: 19.2},
+    {id: "LINHA DO NORTE (ALFARELOS/ARUNCA)", pos: [40.1185, -8.6380], cota: 10.8, reg: "B", hist: true, dist: 20.0},
+    {id: "DIAG-08: FORMOSAL (VALE)", pos: [40.1520, -8.6050], cota: 12.8, reg: "B", dist: 21.5},
+    {id: "VALE DO ARUNCA / LEITO MACRO", pos: [40.0665, -8.7500], cota: 9.5, reg: "B", hist: true, dist: 22.0},
+    {id: "ESTAÇÃO V. N. ANÇOS", pos: [40.1110, -8.6360], cota: 11.8, reg: "B", hist: true, dist: 23.0},
+    {id: "DIAG-09: SANTO VARÃO (CAMPOS)", pos: [40.1450, -8.6250], cota: 12.8, reg: "B", dist: 24.0},
+    {id: "VILA NOVA DE ANÇOS (CENTRO)", pos: [40.1105, -8.6415], cota: 18.5, reg: "B", hist: false, dist: 24.0},
+    {id: "VILA NOVA DE ANÇOS (VALE SUL)", pos: [40.1023, -8.6424], cota: 11.2, reg: "B", hist: true, dist: 24.5},
+    {id: "DIAG-10: ALFARELOS (BORDA)", pos: [40.1380, -8.6480], cota: 12.8, reg: "B", dist: 26.5},
+    {id: "MONTEMOR (BASE CASTELO)", pos: [40.1745, -8.6820], cota: 8.5, reg: "B", hist: true, dist: 27.5},
+    {id: "CAR MONTEMOR (PISTA)", pos: [40.1735, -8.6745], cota: 7.8, reg: "B", hist: true, dist: 28.0},
+    {id: "VALE DO EXTREMO / VILA NOVA DA BARCA", pos: [40.1727, -8.6777], cota: 7.2, reg: "B", hist: true, dist: 28.5},
+    {id: "DIAG-11: MONTEMOR (LIMITE SUL)", pos: [40.1550, -8.6750], cota: 12.8, reg: "B", dist: 29.0},
+    {id: "EREIRA (VILA)", pos: [40.1420, -8.6950], cota: 9.2, reg: "B", hist: false, dist: 29.0},
+    {id: "EREIRA (NÚCLEO ALTO)", pos: [40.1370, -8.7015], cota: 13.5, reg: "B", hist: false, dist: 30.0},
+    {id: "VALA REAL / LEITO DIREITO (EREIRA)", pos: [40.1490, -8.7070], cota: 7.5, reg: "B", hist: true, dist: 31.0},
+    {id: "DIAG-12: VERRIDE (VÁRZEA)", pos: [40.1480, -8.6950], cota: 12.8, reg: "B", dist: 31.5},
+    {id: "DIAG-13: REVELES (PÉ SERRA)", pos: [40.1350, -8.7200], cota: 12.8, reg: "B", dist: 33.8},
+    {id: "DIAG-14: QUINTA DO CANAL", pos: [40.1280, -8.7450], cota: 12.8, reg: "B", dist: 36.2},
+    {id: "DIAG-15: MAIORCA (CAMPOS)", pos: [40.1420, -8.7750], cota: 12.8, reg: "B", dist: 38.5},
+
+    // --- ESTUÁRIO E FIGUEIRA (DISTÂNCIA 41.0 A 48.5) ---
+    {id: "DIAG-16: VILA VERDE", pos: [40.1350, -8.8050], cota: 12.8, reg: "B", dist: 41.0},
+    {id: "FIGUEIRA (SALINAS)", pos: [40.1450, -8.8250], cota: 2.5, reg: "B", hist: false, dist: 41.0},
+    {id: "DIAG-17: FONTELA", pos: [40.1420, -8.8320], cota: 12.8, reg: "B", dist: 43.5},
+    {id: "DIAG-18: SALGUEIRO", pos: [40.1320, -8.8550], cota: 12.8, reg: "B", dist: 45.8},
+    {id: "DIAG-19: GALA", pos: [40.1250, -8.8780], cota: 12.8, reg: "B", dist: 47.5},
+    {id: "DIAG-20: FOZ (TERMINAL)", pos: [40.1450, -8.8950], cota: 12.8, reg: "B", dist: 48.5}
+];
+
+
+    let apaQ = 0, apaH = 17.45, hMareReal = 0.8;
+    let markers = {};
+
+    // Inicializar Marcadores Técnicos
+    localidades.forEach(l => {
+        markers[l.id] = L.circleMarker(l.pos, {
+            radius: 5,
+            weight: 1,
+            color: '#fff',
+            fillColor: '#00ff77',
+            fillOpacity: 0.9
+        }).addTo(map).bindTooltip(l.id, {direction: 'top', offset: [0, -5]});
+    });
+
+    async function syncAPA() {
+        try {
+            const proxy = 'https://api.allorigins.win/get?url=';
+            const targetUrl = 'https://infoagua.apambiente.pt/pt/cheias/cheia-detalhe/1627743374';
+            const res = await fetch(proxy + encodeURIComponent(targetUrl));
+            const data = await res.json();
+            const htmlContent = data.contents;
+            const flowMatch = htmlContent.match(/([\d.,]+)\s*m3\/s/);
+            const levelMatch = htmlContent.match(/([\d.,]+)\s*m(?!\d|\w)/);
+            if (flowMatch) apaQ = parseFloat(flowMatch[1].replace(',', '.'));
+            if (levelMatch) {
+                const val = parseFloat(levelMatch[1].replace(',', '.'));
+                if (val > 10) apaH = val;
+            }
+            document.getElementById('syncStatus').innerText = "OK: " + new Date().toLocaleTimeString();
+            document.getElementById('syncStatus').style.color = "#00ff77";
+        } catch (e) {
+            document.getElementById('syncStatus').innerText = "ERRO APA";
+            document.getElementById('syncStatus').style.color = "#ff3333";
+        }
+    }
+
+    async function syncMare() {
+        try {
+            const proxy = 'https://api.allorigins.win/get?url=';
+            const urlIH = "https://www.hidrografico.pt/json/mare.grafico.json.php?id=82";
+            const res = await fetch(proxy + encodeURIComponent(urlIH));
+            const data = await res.json();
+            const mareData = JSON.parse(data.contents);
+            hMareReal = parseFloat(mareData.dados[mareData.dados.length - 1].valor);
+        } catch (e) { console.log("Erro Maré"); }
+    }
+
+    function updateUI() {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+        
+        document.getElementById('valFlow').innerText = apaQ.toLocaleString();
+        document.getElementById('valCota').innerText = apaH.toFixed(2);
+        document.getElementById('valMare').innerText = hMareReal.toFixed(2);
+        document.getElementById('mareStatus').innerText = hMareReal.toFixed(1) + "m";
+
+        localidades.forEach(l => {
+            let hFinal;
+            if (l.reg === "A") {
+                hFinal = apaH + (apaQ / 15000); 
+            } else {
+                let hJusanteBase = (apaH - 4.5);
+                let perdaCarga = l.dist * 0.06;
+                let pesoMare = Math.max(0, 1 - (l.dist / 35));
+                hFinal = hJusanteBase - perdaCarga + (apaQ / 4500) + (hMareReal * 0.6 * pesoMare);
+            }
+
+            let diff = hFinal - l.cota;
+            let status = diff >= 0 ? "ALAGADO" : (diff >= -0.7 ? "PROVÁVEL" : "SECO");
+            let sColor = diff >= 0 ? "#ff3333" : (diff >= -0.7 ? "#ffa500" : "#00ff77");
+
+            // Atualização do Marcador
+            markers[l.id].setStyle({
+                fillColor: sColor,
+                radius: diff >= 0 ? 8 : 5,
+                color: diff >= 0 ? '#fff' : '#ffffff33'
+            });
+
+            if (diff >= 0) {
+                if (markers[l.id].getElement()) markers[l.id].getElement().classList.add('marker-alagado');
+                markers[l.id].bringToFront();
+            } else {
+                if(markers[l.id].getElement()) markers[l.id].getElement().classList.remove('marker-alagado');
+            }
+
+            // --- CRIAÇÃO DA LINHA DA TABELA COM LINK GOOGLE MAPS ---
+            let row = tbody.insertRow();
+            
+            // Link Dinâmico: Usa coordenadas para abrir no Google Maps em modo satélite
+            const mapUrl = `https://www.google.com/maps/search/?api=1&query=${l.pos[0]},${l.pos[1]}`;
+            
+            let cellLoc = row.insertCell(0);
+            cellLoc.innerHTML = `<a href="${mapUrl}" target="_blank" class="loc-link" title="Ver no Google Maps">
+                                    ${l.id} <small>↗</small>
+                                 </a>`;
+            
+            row.insertCell(1).innerText = l.cota.toFixed(1) + "m";
+            row.insertCell(2).innerText = hFinal.toFixed(2) + "m";
+            let cStatus = row.insertCell(3);
+            cStatus.innerText = status;
+            cStatus.className = diff >= 0 ? "status-alagado" : (diff >= -0.7 ? "status-provavel" : "status-seco");
+        });
+    }
+
+    syncAPA(); syncMare();
+    setInterval(syncAPA, 300000); 
+    setInterval(syncMare, 600000); 
+    setInterval(updateUI, 2000);
+</script>
+</body>
+</html>

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>BAZOFIA - MONITOR</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; font-family: 'Courier New', monospace; background: #050505; color: #d0d0d0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        #map { height: 35vh; width: 100%; background: #000; filter: grayscale(1) contrast(1.2) brightness(0.7); border-bottom: 2px solid #0044ff; }
+        
+        @keyframes pulse {
+            0% { stroke-width: 2; stroke-opacity: 1; }
+            50% { stroke-width: 12; stroke-opacity: 0.4; }
+            100% { stroke-width: 2; stroke-opacity: 1; }
+        }
+        .marker-alagado { animation: pulse 1.5s infinite; }
+
+        .sar-header { background: #111; padding: 10px 20px; display: flex; justify-content: space-between; font-size: 11px; border-bottom: 1px solid #333; color: #00d2ff; }
+        .main-container { display: flex; flex: 1; overflow: hidden; }
+        .panel { flex: 0.8; padding: 15px; display: flex; flex-direction: column; gap: 12px; border-right: 1px solid #222; background: #0a0a0a; overflow-y: auto; }
+        .sidebar { flex: 2.2; padding: 10px; background: #050505; overflow-y: auto; }
+        .data-card { background: #111; padding: 10px; border: 1px solid #333; border-left: 4px solid #00d2ff; }
+        .value-display { font-size: 1.8em; font-weight: bold; color: #fff; letter-spacing: -1px; }
+        table { width: 100%; font-size: 10px; border-collapse: collapse; }
+        th { border-bottom: 2px solid #444; padding: 10px; text-align: left; color: #00d2ff; position: sticky; top: 0; background: #050505; z-index: 10; }
+        td { padding: 8px; border-bottom: 1px solid #1a1a1a; color: #ffffff; }
+        
+        .loc-link { color: #ffffff; text-decoration: none; display: block; width: 100%; }
+        .loc-link:hover { color: #00d2ff; background: rgba(0, 210, 255, 0.1); }
+
+        .status-alagado { color: #ff3333 !important; font-weight: bold; background: rgba(255,0,0,0.1); }
+        .status-provavel { color: #ffa500 !important; font-weight: bold; }
+        .status-seco { color: #00ff77 !important; }
+    </style>
+</head>
+<body>
+
+<div class="sar-header">
+    <div>FONTE: <b>APA (INFOAGUA) + IH (MARÉ)</b></div>
+    <div>SINC STATUS: <b id="syncStatus">---</b></div>
+    <div>MARÉ (FIG): <b id="mareStatus">---</b></div>
+</div>
+
+<div id="map"></div>
+
+<div class="main-container">
+    <div class="panel">
+        <div class="data-card">
+            <h3>CAUDAL AFL(Q)</h3>
+            <div id="valFlow" class="value-display">---</div><small>m³/s</small>
+        </div>
+        <div class="data-card">
+            <h3>COTA AÇUDE (hA)</h3>
+            <div id="valCota" class="value-display">---</div><small>m (Nível Real)</small>
+        </div>
+        <div class="data-card">
+            <h3>MARÉ (M)</h3>
+            <div id="valMare" class="value-display" style="color: #00d2ff;">---</div><small>m</small>
+        </div>
+    </div>
+    <div class="sidebar">
+        <table id="mainTable">
+            <thead>
+                <tr><th>ID PONTO / LOCALIDADE</th><th>SOLO (Z)</th><th>NÍVEL (h)</th><th>ESTADO</th></tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const map = L.map('map', {zoomControl: false}).setView([40.2085, -8.4310], 14);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+ const localidades = [
+    // --- MONTANTE E CIDADE ---
+    {id: "ETA-02: BOAVISTA OPERACIONAL", pos: [40.189819, -8.422121], cota: 21.5, reg: "A", dist: 0.1},
+    {id: "DOCAS DO MONDEGO", pos: [40.202750, -8.426389], cota: 18.0, reg: "A", dist: 0.1},
+    {id: "MOSTEIRO STA CLARA-VELHA", pos: [40.202652, -8.433220], cota: 17.0, reg: "A", dist: 0.1},
+    {id: "BAIXA (RIO / MARGEM)", pos: [40.2091, -8.4320], cota: 19.5, reg: "A", dist: 0.1},
+    {id: "AV. EMÍDIO NAVARRO", pos: [40.2073, -8.4308], cota: 19.0, reg: "A", dist: 0.15},
+    {id: "PARQUE VERDE (POLO II)", pos: [40.1967, -8.4297], cota: 18.0, reg: "A", dist: 0.15},
+    {id: "LARGO DA PORTAGEM (HOTEL ASTÓRIA)", pos: [40.207820, -8.431250], cota: 20.0, reg: "A", dist: 0.15},
+    {id: "CITY-01: B. PORTUGAL", pos: [40.207450, -8.429752], cota: 19.0, reg: "A", dist: 0.20},
+    {id: "BAIXA (COIMBRA-A / RUA DA SOTA)", pos: [40.208445, -8.432143], cota: 19.0, reg: "A", dist: 0.2},
+    {id: "PRAÇA DO COMÉRCIO (CENTRO)", pos: [40.208397, -8.429412], cota: 19.9, reg: "A", dist: 0.2},
+    {id: "PAVILHÃO CENTRO DE PORTUGAL", pos: [40.1989, -8.4332], cota: 18.5, reg: "A", dist: 0.2},
+    {id: "PARQUE DR. MANUEL BRAGA", pos: [40.204291, -8.426844], cota: 20.1, reg: "A", dist: 0.2},
+    {id: "AAC - DESPORTOS NÁUTICOS", pos: [40.2000, -8.4287], cota: 18.3, reg: "A", dist: 0.3},
+    {id: "SC-01: JARDIM STA CLARA VELHA", pos: [40.201477, -8.432601], cota: 15.2, reg: "A", dist: 1.1},
+
+    // --- JUSANTE PROXIMIDADE ---
+    {id: "LUGAR DA BRUNHEIRA", pos: [40.2155, -8.4520], cota: 19.5, reg: "B", dist: 1.2},
+    {id: "CENTRO HÍPICO DE COIMBRA", pos: [40.2225, -8.4650], cota: 17.8, reg: "B", dist: 1.5},
+    {id: "CH-02: PICADEIRO C. HÍPICO", pos: [40.220796, -8.470451], cota: 16.5, reg: "B", dist: 1.8},
+    {id: "SÃO JOÃO DO CAMPO (GÂNDARAS)", pos: [40.24219, -8.50449], cota: 14.5, reg: "B", dist: 3.5},
+    {id: "RB. de Frades (LINHA C. FERRO)", pos: [40.206458, -8.49315], cota: 13.8, reg: "B", dist: 6.9},
+    {id: "TAVEIRO (COMERCIAL)", pos: [40.1910, -8.5060], cota: 14.2, reg: "B", dist: 8.5},
+    {id: "VILA POUCA (URBANO)", pos: [40.1850, -8.5150], cota: 13.5, reg: "B", dist: 9.0},
+
+    // --- BAIXO MONDEGO ---
+    {id: "ARZILA (LARGO DA IGREJA)", pos: [40.183264, -8.551125], cota: 11.8, reg: "B", dist: 17.0},
+    {id: "PEREIRA DO CAMPO", pos: [40.1580, -8.5850], cota: 11.5, reg: "B", dist: 18.0},
+    {id: "MONTEMOR (BASE CASTELO)", pos: [40.1745, -8.6820], cota: 8.5, reg: "B", dist: 27.5},
+    {id: "CAR MONTEMOR (PISTA)", pos: [40.1735, -8.6745], cota: 7.8, reg: "B", dist: 28.0},
+    {id: "FIGUEIRA (SALINAS)", pos: [40.1450, -8.8250], cota: 2.5, reg: "B", dist: 41.0},
+    {id: "DIAG-20: FOZ (TERMINAL)", pos: [40.1450, -8.8950], cota: 12.8, reg: "B", dist: 48.5}
+
+    ];
+
+    let apaQ = 0, apaH = 17.45, hMareReal = 0.8;
+    let markers = {};
+
+    localidades.forEach(l => {
+        markers[l.id] = L.circleMarker(l.pos, {
+            radius: 5, weight: 1, color: '#fff', fillColor: '#00ff77', fillOpacity: 0.9
+        }).addTo(map).bindTooltip(l.id, {direction: 'top', offset: [0, -5]});
+    });
+
+    async function syncAPA() {
+        try {
+            const proxy = 'https://api.allorigins.win/get?url=';
+            const targetUrl = 'https://infoagua.apambiente.pt/pt/cheias/cheia-detalhe/1627743374';
+            const res = await fetch(proxy + encodeURIComponent(targetUrl));
+            const data = await res.json();
+            const htmlContent = data.contents;
+            const flowMatch = htmlContent.match(/([\d.,]+)\s*m3\/s/);
+            const levelMatch = htmlContent.match(/([\d.,]+)\s*m(?!\d|\w)/);
+            if (flowMatch) apaQ = parseFloat(flowMatch[1].replace(',', '.'));
+            if (levelMatch) {
+                const val = parseFloat(levelMatch[1].replace(',', '.'));
+                if (val > 10) apaH = val;
+            }
+            document.getElementById('syncStatus').innerText = "OK: " + new Date().toLocaleTimeString();
+            document.getElementById('syncStatus').style.color = "#00ff77";
+        } catch (e) {
+            document.getElementById('syncStatus').innerText = "ERRO APA";
+            document.getElementById('syncStatus').style.color = "#ff3333";
+        }
+    }
+
+    async function syncMare() {
+        try {
+            const proxy = 'https://api.allorigins.win/get?url=';
+            const urlIH = "https://www.hidrografico.pt/json/mare.grafico.json.php?id=82";
+            const res = await fetch(proxy + encodeURIComponent(urlIH));
+            const data = await res.json();
+            const mareData = JSON.parse(data.contents);
+            
+            if (mareData && mareData.dados) {
+                const agora = new Date();
+                let registoMaisProximo = mareData.dados.reduce((prev, curr) => {
+                    const dataPrev = new Date(prev.data.replace(/-/g, '/'));
+                    const dataCurr = new Date(curr.data.replace(/-/g, '/'));
+                    return (Math.abs(dataCurr - agora) < Math.abs(dataPrev - agora) ? curr : prev);
+                });
+                hMareReal = parseFloat(registoMaisProximo.valor);
+                document.getElementById('mareStatus').innerText = hMareReal.toFixed(2) + "m";
+                document.getElementById('mareStatus').style.color = "#00d2ff";
+            }
+        } catch (e) { 
+            document.getElementById('mareStatus').innerText = "ERRO IH";
+            document.getElementById('mareStatus').style.color = "#ff3333";
+        }
+    }
+
+function updateUI() {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+        
+        document.getElementById('valFlow').innerText = apaQ.toLocaleString();
+        document.getElementById('valCota').innerText = apaH.toFixed(2);
+        document.getElementById('valMare').innerText = hMareReal.toFixed(2);
+        document.getElementById('mareStatus').innerText = hMareReal.toFixed(1) + "m";
+
+        localidades.forEach(l => {
+            let hFinal;
+            if (l.reg === "A") {
+                // Regime de Montante/Albufeira: Influência direta do caudal e cota do açude
+                hFinal = apaH + (apaQ / 15000); 
+            } else {
+                // Regime B: Jusante e Estuário
+                let hJusanteBase = (apaH - 4.5);
+                let perdaCarga = l.dist * 0.05; // Ajustado para 0.05 para não "afundar" demasiado o rio
+                
+                // --- AJUSTE REGIME ESTUARINO ---
+                // O peso da maré agora aumenta linearmente com a distância (l.dist / 48.5)
+                // Na Figueira (48.5km) o impacto é de quase 100% da maré real
+                let pesoMare = Math.min(1, l.dist / 48.5); 
+                
+                // hFinal = Base - Perda + Caudal + Influência da Maré (Aumenta na Foz)
+                hFinal = hJusanteBase - perdaCarga + (apaQ / 5000) + (hMareReal * pesoMare);
+            }
+
+            let diff = hFinal - l.cota;
+            let status = diff >= 0 ? "ALAGADO" : (diff >= -0.7 ? "PROVÁVEL" : "SECO");
+            let sColor = diff >= 0 ? "#ff3333" : (diff >= -0.7 ? "#ffa500" : "#00ff77");
+
+            // Atualização do Marcador
+            if (markers[l.id]) {
+                markers[l.id].setStyle({
+                    fillColor: sColor,
+                    radius: diff >= 0 ? 8 : 5,
+                    color: diff >= 0 ? '#fff' : '#ffffff33'
+                });
+
+                if (diff >= 0) {
+                    if (markers[l.id].getElement()) markers[l.id].getElement().classList.add('marker-alagado');
+                    markers[l.id].bringToFront();
+                } else {
+                    if(markers[l.id].getElement()) markers[l.id].getElement().classList.remove('marker-alagado');
+                }
+            }
+
+            // --- TABELA E LINK GOOGLE MAPS CORRIGIDO ---
+            let row = tbody.insertRow();
+            // Correção da interpolação do link e modo satélite (&t=k)
+            const mapUrl = `https://www.google.com/maps/search/?api=1&query=${l.pos[0]},${l.pos[1]}&t=k`;
+            
+            let cellLoc = row.insertCell(0);
+            cellLoc.innerHTML = `<a href="${mapUrl}" target="_blank" class="loc-link" title="Ver no Google Maps">
+                                    ${l.id} <small>↗</small>
+                                 </a>`;
+            
+            row.insertCell(1).innerText = l.cota.toFixed(1) + "m";
+            row.insertCell(2).innerText = hFinal.toFixed(2) + "m";
+            let cStatus = row.insertCell(3);
+            cStatus.innerText = status;
+            cStatus.className = diff >= 0 ? "status-alagado" : (diff >= -0.7 ? "status-provavel" : "status-seco");
+        });
+    }
+
+    syncAPA(); syncMare();
+    setInterval(syncAPA, 300000); 
+    setInterval(syncMare, 600000); 
+    setInterval(updateUI, 2000);
+</script>
+</body>
+</html>

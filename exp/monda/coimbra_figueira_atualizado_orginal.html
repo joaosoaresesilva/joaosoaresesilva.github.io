@@ -2,12 +2,12 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>MONDEGO CAUDAL</title>
+    <title>GESTÃO ADAPTATIVA (MONDEGO)</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { margin: 0; font-family: 'Courier New', monospace; background: #050505; color: #d0d0d0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         #map { height: 35vh; width: 100%; background: #000; filter: grayscale(1) contrast(1.2) brightness(0.8); border-bottom: 2px solid #333; }
-        .sar-header { background: rgba(0,0,0,0.9); padding: 8px 20px; display: flex; justify-content: space-between; font-size: 11px; border-bottom: 1px solid #444; color: #aaa; }
+        .sar-header { background: rgba(0,0,0,0.9); padding: 5px 20px; display: flex; justify-content: space-between; font-size: 12px; border-bottom: 1px solid #444; color: #aaa; }
         .sar-header b { color: #00d2ff; }
         #timeDisplay { position: absolute; top: 50px; right: 20px; z-index: 1000; background: rgba(10, 10, 10, 0.9); padding: 10px; border: 1px solid #f1c40f; color: #f1c40f; text-align: right; }
         #simClock { font-size: 1.6em; font-weight: bold; display: block; }
@@ -17,24 +17,31 @@
         .slider-box { background: #111; padding: 8px; border: 1px solid #333; font-size: 0.8em; }
         .slider-box b { color: #f1c40f; }
         input[type=range] { width: 100%; accent-color: #f1c40f; }
+        
         .automation-hub { background: #001a1a; border: 1px solid #00d2ff; padding: 12px; border-radius: 4px; }
         .hub-title { font-size: 10px; color: #ffffff; font-weight: bold; margin-bottom: 10px; text-transform: uppercase; border-bottom: 1px solid #004d4d; padding-bottom: 4px; }
-        .mode-option { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 11px; padding: 6px; color: #ffffff; }
-        .graph-container { background: #000; border: 1px solid #333; height: 80px; position: relative; display: flex; flex-direction: column; }
+        .mode-option { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 11px; padding: 6px; border-radius: 3px; transition: 0.3s; color: #ffffff; }
+        .status-msg { font-size: 10px; color: #ffffff; margin-top: 5px; font-style: italic; opacity: 0.8; }
+        
+        .graph-container { background: #000; border: 1px solid #333; height: 100px; position: relative; display: flex; flex-direction: column; }
         .graph-area { flex: 1; position: relative; overflow: hidden; }
         .bar-c { position: absolute; bottom: 0; width: 2px; background: #f1c40f; }
-        .bar-b { position: absolute; bottom: 0; width: 2px; background: #00ffff; }
-        table { width: 100%; font-size: 10px; border-collapse: collapse; }
-        th { border-bottom: 2px solid #444; padding: 8px; text-align: left; color: #00d2ff; position: sticky; top: 0; background: #050505; }
-        td { padding: 6px; border-bottom: 1px solid #222; }
+        .bar-b { position: absolute; bottom: 0; width: 2px; background: #00ffff; } /* Cor alterada para Ciano */
+        
+        table { width: 100%; font-size: 11px; border-collapse: collapse; }
+        th { border-bottom: 2px solid #444; padding: 8px; text-align: left; color: #00d2ff; }
+        td { padding: 8px; border-bottom: 1px solid #222; }
+        .at-risk { background: rgba(241, 196, 15, 0.1); color: #f1c40f; }
         .severe-risk { background: rgba(231, 76, 60, 0.15); color: #e74c3c; font-weight: bold; }
+        .backwater-risk { background: rgba(0, 255, 255, 0.1); color: #00ffff; }
     </style>
 </head>
 <body>
+
 <div class="sar-header">
-    <div>APA SYNC: <b id="lastSync">A LIGAR...</b></div>
-    <div>MARÉ (IPMA): <b id="mareStatus">---</b></div>
-    <div>ALGORITMO: <b id="algStatus">EQUILÍBRIO ATIVO</b></div>
+    <div>SINC APA: <b id="lastSync">A CONECTAR...</b></div>
+    <div>ALGORITMO: <b>GESTÃO ADAPTATIVA</b></div>
+    <div>FONTE: <b>ESTAÇÃO COIMBRA (AÇUDE-PONTE)</b></div>
 </div>
 
 <div id="timeDisplay">
@@ -47,28 +54,36 @@
 <div class="main-container">
     <div class="panel">
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
-            <div class="slider-box">COTA (H): <b id="txtInitC">15.42</b>m<input type="range" id="inpInitC" min="10.0" max="23.5" step="0.01" value="15.42"></div>
-            <div class="slider-box">CAUDAL (Q): <b id="txtFlow">500</b>m³/s<input type="range" id="inpFlow" min="50" max="10000" step="1" value="500"></div>
-            <div class="slider-box">AÇUDE: <b id="txtGates">90</b>%<input type="range" id="inpGates" min="0" max="100" value="90"></div>
+            <div class="slider-box">COTA  (APA): <b id="txtInitC">--</b>m<input type="range" id="inpInitC" min="10.0" max="23.5" step="0.01" value="15.42"></div>
+            <div class="slider-box">CAUDAL AFLU (APA): <b id="txtFlow">--</b><input type="range" id="inpFlow" min="100" max="12000" step="1" value="2100"></div>
+            <div class="slider-box">ABERURA AÇUDE: <b id="txtGates">90</b>%<input type="range" id="inpGates" min="0" max="100" value="90"></div>
         </div>
-        
+
         <div class="graph-container">
             <div class="graph-area" id="graphArea"></div>
         </div>
 
         <div class="automation-hub">
-            <div class="hub-title">Automatização do Sistema</div>
-            <label class="mode-option"><input type="radio" name="iaMode" value="manual"> MODO MANUAL</label>
-            <label class="mode-option"><input type="radio" name="iaMode" value="baixa"> PRIORIDADE BAIXA COIMBRA (A)</label>
-            <label class="mode-option"><input type="radio" name="iaMode" value="total" checked> EQUILÍBRIO DE BACIA (A+B)</label>
+            <div class="hub-title">Automatização </div>
+            <label class="mode-option">
+                <input type="radio" name="iaMode" value="manual" checked> <span>MODO MANUAL(controla apenas abertura do açude..)</span>
+            </label>
+            <label class="mode-option">
+                <input type="radio" name="iaMode" value="baixa" title="Foca no nível hC para proteger a Baixa"> <span>PILOTO: PRIORIDADE BAIXA COIMBRA</span>
+            </label>
+            <label class="mode-option">
+                <input type="radio" name="iaMode" value="total" title="Equilibra hC e hB para evitar travamento"> <span>PILOTO: EQUILÍBRIO DE BACIA</span>
+            </label>
+            <div id="aiMsg" class="status-msg">Pronto para monitorizar dados reais...</div>
         </div>
         
-        <button id="btnRun" style="background: transparent; color: #2ecc71; border: 2px solid #2ecc71; padding: 12px; font-weight: bold; cursor: pointer; font-family: inherit;">INICIAR MONITORIZAÇÃO</button>
+        <button id="btnRun" style="background: transparent; color: #2ecc71; border-color: #2ecc71; padding: 12px; font-weight: bold; cursor: pointer; font-family: inherit;">INICIAR MONITORIZAÇÃO</button>
     </div>
 
     <div class="sidebar">
+        <h4 style="margin: 0 0 10px 0; color:#f1c40f; font-size: 0.9em;">📡 DADOS</h4>
         <table id="mainTable">
-            <thead><tr><th>LOCAL</th><th>REF</th><th>NÍVEL</th><th>ESTADO</th></tr></thead>
+            <thead><tr><th>LOCAL</th><th>COTA REF</th><th>NÍVEL ATUAL</th><th>ESTADO</th></tr></thead>
             <tbody id="tableBody"></tbody>
         </table>
     </div>
@@ -76,8 +91,10 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    const map = L.map('map', {zoomControl: false}).setView([40.2050, -8.4300], 13);
+    const map = L.map('map').setView([40.1850, -8.6000], 11); 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+   
 
 const sensores = [
     {id: "AV. eMÍDIO NAVARRO (PORTAGEM-HOTEL ASTÓRIA)", pos: [40.2073, -8.4308], cota: 20.1, reg: "A"},
@@ -129,141 +146,133 @@ const sensores = [
     {id: "FIGUEIRA (SALINAS)", pos: [40.1450, -8.8250], cota: 2.5, reg: "B"}
 ];
 
+
     let visualMarkers = {};
-    let hC = 15.42, hB = 8.55, hMareReal = 0.8, tempo = 0, rodando = false;
+    let hC = 15.42, hB = 10.55, tempo = 0, rodando = false;
     let simTime = new Date();
 
     sensores.forEach(s => {
-        L.circleMarker(s.pos, { radius: 4, color: '#00d2ff', weight: 1, fillOpacity: 0.8 }).addTo(map);
-        visualMarkers[s.id] = L.circle(s.pos, { radius: 0, color: '#f1c40f', weight: 1, fillOpacity: 0.3 }).addTo(map);
+        L.circleMarker(s.pos, { radius: 3, color: '#00d2ff', weight: 1, fillOpacity: 0.8 }).addTo(map);
+        const circle = L.circle(s.pos, { radius: 0, color: '#444', weight: 1, opacity: 0.6, fillColor: '#f1c40f', fillOpacity: 0.2 }).addTo(map);
+        visualMarkers[s.id] = { circle };
     });
 
-   async function syncAPA() {
+    async function fetchDadosAPA() {
+        const urlAPA = 'https://infoagua.apambiente.pt/pt/cheias/cheia-detalhe/1627743374';
+        const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(urlAPA);
+        
         try {
-            const proxy = 'https://api.allorigins.win/get?url=';
-            const targetUrl = 'https://infoagua.apambiente.pt/pt/cheias/cheia-detalhe/1627743374';
-            const res = await fetch(proxy + encodeURIComponent(targetUrl) + '&cache=' + new Date().getTime());
-            const data = await res.json();
+            const response = await fetch(proxy);
+            const data = await response.json();
             const html = data.contents;
+            const matchCaudal = html.match(/(\d+[.,]?\d*)\s*m3\/s/);
+            const matchCota = html.match(/(\d+[.,]\d+)\s*m(?!\d|\/|3)/);
 
-            // 1. Extração de Caudal (Q)
-            const flowMatch = html.match(/([\d.,]+)\s*m3\/s/);
-            if (flowMatch) {
-                let f = parseFloat(flowMatch[1].replace(',', '.'));
-                document.getElementById('inpFlow').value = f;
-                document.getElementById('txtFlow').innerText = f;
+            if (matchCaudal) {
+                const valFlow = parseFloat(matchCaudal[1].replace(',', '.'));
+                document.getElementById('inpFlow').value = valFlow;
+                document.getElementById('txtFlow').innerText = valFlow;
             }
-
-            // 2. Extração de Cota (H) com filtro de segurança
-            // Procuramos todos os valores seguidos de "m" e escolhemos o que faz sentido para o Açude
-            const levelMatches = html.matchAll(/([\d.,]+)\s*m(?!\d|\w|³)/g);
-            let cotaEncontrada = null;
-
-            for (const match of levelMatches) {
-                let v = parseFloat(match[1].replace(',', '.'));
-                // O valor real da cota no Açude raramente baixa de 14m ou sobe de 25m
-                if (v > 16.0 && v < 26.0) { 
-                    cotaEncontrada = v;
-                    break; 
-                }
-            }
-
-            if (cotaEncontrada) {
-                hC = cotaEncontrada;
-                // ATUALIZAÇÃO DA UI
+            if (matchCota) {
+                hC = parseFloat(matchCota[1].replace(',', '.'));
                 document.getElementById('inpInitC').value = hC;
                 document.getElementById('txtInitC').innerText = hC.toFixed(2);
             }
-
-            document.getElementById('lastSync').innerText = "OK " + new Date().toLocaleTimeString();
-            document.getElementById('lastSync').style.color = "#00ff77";
-        } catch (e) { 
-            document.getElementById('lastSync').innerText = "ERRO APA"; 
-            document.getElementById('lastSync').style.color = "#ff4444";
-        }
-    }
-    function simular() {
-        if (!rodando) return;
-        
-        let flow = parseInt(document.getElementById('inpFlow').value);
-        let gatesInp = document.getElementById('inpGates');
-        let mode = document.querySelector('input[name="iaMode"]:checked').value;
-
-        // --- LÓGICA DE PILOTO AUTOMÁTICO (CORRIGIDA) ---
-        if (mode === "baixa") {
-            if (hC > 18.5) gatesInp.value = Math.min(100, parseInt(gatesInp.value) + 2);
-            else if (hC < 15.0) gatesInp.value = Math.max(0, parseInt(gatesInp.value) - 1);
-        } 
-        else if (mode === "total") {
-            // Algoritmo de Equilíbrio: Olha para Coimbra (hC) e Ereira (hB)
-            let riscoCoimbra = hC - 18.0; 
-            let riscoBaixoMondego = hB - 11.5;
-
-            if (riscoCoimbra > riscoBaixoMondego) {
-                // Coimbra está mais em perigo -> Abre comportas
-                gatesInp.value = Math.min(100, parseInt(gatesInp.value) + 2);
-            } else if (riscoBaixoMondego > 1.0) {
-                // Baixo Mondego está a inundar -> Fecha para reter em Coimbra
-                gatesInp.value = Math.max(0, parseInt(gatesInp.value) - 2);
-            }
-        }
-
-        // Atualização visual da percentagem
-        document.getElementById('txtGates').innerText = gatesInp.value;
-        let abert = parseInt(gatesInp.value) / 100;
-
-        // Física Simplificada
-        let alvoHC = 13.0 + (flow / 1800) + ((1 - abert) * 9.5);
-        hC += (alvoHC - hC) * 0.1;
-
-        let alvoHB = 4.0 + (flow / 2200) + (abert * 8.5) + (hMareReal * 0.5);
-        hB += (alvoHB - hB) * 0.08;
-
-        tempo++;
-        simTime.setMinutes(simTime.getMinutes() + 1);
-        updateUI();
-        desenharGrafico();
+            document.getElementById('lastSync').innerText = new Date().toLocaleTimeString();
+            updateUI();
+        } catch (err) { console.error("Erro na sincronização."); }
     }
 
     function updateUI() {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = '';
         sensores.forEach(s => {
-            let nivel = (s.reg === "A") ? hC : hB;
+            let nivel = (s.reg === "C") ? hC : hB;
             let diff = nivel - s.cota;
+            let visual = visualMarkers[s.id];
             let row = tbody.insertRow();
+            
             if (diff > 0) {
-                visualMarkers[s.id].setRadius(20 + diff * 350);
-                row.className = 'severe-risk';
-            } else { visualMarkers[s.id].setRadius(0); }
-            row.insertCell(0).innerText = s.id;
-            row.insertCell(1).innerText = s.cota + "m";
-            row.insertCell(2).innerText = nivel.toFixed(2) + "m";
-            row.insertCell(3).innerText = diff > 0 ? "⚠️ CHEIA" : "OK";
+                visual.circle.setRadius(20 + diff * 600);
+                if (diff > 0.8) {
+                    row.className = 'severe-risk';
+                    visual.circle.setStyle({ color: '#e74c3c', fillColor: '#e74c3c', fillOpacity: 0.3 });
+                } else {
+                    row.className = (s.reg === "B") ? 'backwater-risk' : 'at-risk';
+                    let cor = (s.reg === "B") ? '#00ffff' : '#f1c40f';
+                    visual.circle.setStyle({ color: cor, fillColor: cor, fillOpacity: 0.2 });
+                }
+                row.insertCell(0).innerText = s.id; row.insertCell(1).innerText = s.cota + "m";
+                row.insertCell(2).innerText = nivel.toFixed(2) + "m"; row.insertCell(3).innerText = "CHEIA";
+            } else {
+                visual.circle.setRadius(0);
+                row.insertCell(0).innerText = s.id; row.insertCell(1).innerText = s.cota + "m";
+                row.insertCell(2).innerText = nivel.toFixed(2) + "m"; row.insertCell(3).innerText = "OK";
+            }
         });
         document.getElementById('simClock').innerText = simTime.toLocaleTimeString('pt-PT');
         document.getElementById('elapsed').innerText = `T+ ${tempo} MIN`;
+    }
+
+    function simular() {
+        let flow = parseInt(document.getElementById('inpFlow').value);
+        let gatesInput = document.getElementById('inpGates');
+        let mode = document.querySelector('input[name="iaMode"]:checked').value;
+
+        if (mode === "baixa" && hC > 19.5) {
+            gatesInput.value = Math.min(100, parseInt(gatesInput.value) + 2);
+        } else if (mode === "total") {
+            if (hC > 19.8) gatesInput.value = Math.min(100, parseInt(gatesInput.value) + 3);
+            if (hB > 12.5) gatesInput.value = Math.max(0, parseInt(gatesInput.value) - 4);
+        }
+
+        let abertura = parseInt(gatesInput.value) / 100;
+        document.getElementById('txtGates').innerText = gatesInput.value;
+
+        // Modelagem Hidráulica Adaptativa
+        let alvoHC = 14.0 + (flow / 2000) + ((1 - abertura) * 6.5); 
+        hC += (alvoHC - hC) * 0.1;
+
+        let alvoHB = 7.0 + (flow / 3000) + (abertura * 7.5);
+        hB += (alvoHB - hB) * 0.08;
+
+        simTime.setMinutes(simTime.getMinutes() + 1);
+        tempo++;
+        updateUI();
+        desenharGrafico();
     }
 
     function desenharGrafico() {
         const area = document.getElementById('graphArea');
         const x = (tempo * 2) % area.offsetWidth;
         if (x < 2) area.innerHTML = '';
+        
         const bc = document.createElement('div'); bc.className = 'bar-c'; 
-        bc.style.left = x + 'px'; bc.style.height = Math.max(0, (hC - 10) * 6) + 'px';
+        bc.style.left = x + 'px'; bc.style.height = Math.max(0, (hC - 10) * 8) + 'px';
         area.appendChild(bc);
+        
         const bb = document.createElement('div'); bb.className = 'bar-b'; 
-        bb.style.left = x + 'px'; bb.style.height = Math.max(0, (hB - 2) * 6) + 'px';
+        bb.style.left = x + 'px'; bb.style.height = Math.max(0, (hB - 5) * 8) + 'px';
         area.appendChild(bb);
     }
 
     document.getElementById('btnRun').onclick = function() {
         rodando = !rodando;
         this.innerText = rodando ? "PARAR MONITORIZAÇÃO" : "INICIAR MONITORIZAÇÃO";
+        this.style.borderColor = rodando ? "#e74c3c" : "#2ecc71";
+        this.style.color = rodando ? "#e74c3c" : "#2ecc71";
     };
 
-    setInterval(simular, 1000);
-    syncAPA();
+    document.getElementById('inpInitC').oninput = function() { hC = parseFloat(this.value); document.getElementById('txtInitC').innerText = hC.toFixed(2); updateUI(); };
+    document.getElementById('inpFlow').oninput = function() { document.getElementById('txtFlow').innerText = this.value; };
+    document.getElementById('inpGates').oninput = function() { document.getElementById('txtGates').innerText = this.value; };
+
+    fetchDadosAPA();
+    setInterval(fetchDadosAPA, 300000);
+    setInterval(() => { if(rodando) simular(); }, 1000);
+    updateUI();
 </script>
 </body>
 </html>
+
+
