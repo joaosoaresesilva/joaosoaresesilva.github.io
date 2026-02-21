@@ -1,303 +1,48 @@
-<!DOCTYPE html>
-<html lang="pt">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <meta charset="UTF-8">
-    <title>PROTÓTIPO - BAZOFIA_MONITOR</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-        body { margin: 0; font-family: 'Courier New', monospace; background: #050505; color: #d0d0d0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        #map { height: 35vh; width: 100%; background: #000; filter: grayscale(1) contrast(1.2) brightness(0.7); border-bottom: 2px solid #0044ff; }
-        
-        @keyframes pulse {
-            0% { stroke-width: 2; stroke-opacity: 1; }
-            50% { stroke-width: 12; stroke-opacity: 0.4; }
-            100% { stroke-width: 2; stroke-opacity: 1; }
-        }
-        .marker-alagado { animation: pulse 1.5s infinite; }
-        .sar-header { background: #111; padding: 10px 20px; display: flex; justify-content: space-between; font-size: 11px; border-bottom: 1px solid #333; color: #00d2ff; }
-        .main-container { display: flex; flex: 1; overflow: hidden; }
-        .panel { flex: 0.8; padding: 15px; display: flex; flex-direction: column; gap: 12px; border-right: 1px solid #222; background: #0a0a0a; overflow-y: auto; }
-        .sidebar { flex: 2.2; padding: 10px; background: #050505; overflow-y: auto; }
-        .data-card { background: #111; padding: 10px; border: 1px solid #333; border-left: 4px solid #00d2ff; }
-        .value-display { font-size: 1.8em; font-weight: bold; color: #fff; letter-spacing: -1px; }
-        table { width: 100%; font-size: 10px; border-collapse: collapse; }
-        th { border-bottom: 2px solid #444; padding: 10px; text-align: left; color: #00d2ff; position: sticky; top: 0; background: #050505; z-index: 10; }
-        td { padding: 8px; border-bottom: 1px solid #1a1a1a; color: #ffffff; }
-        
-        .loc-link { color: #ffffff; text-decoration: none; display: block; width: 100%; }
-        .loc-link:hover { color: #00d2ff; background: rgba(0, 210, 255, 0.1); }
-        
-        /* Cores de Status */
-        .status-galgamento { color: #ff3333 !important; font-weight: bold; }
-        .status-refluxo { color: #ffa500 !important; font-weight: bold; }
-        .status-risco { color: #ffff00 !important; font-weight: bold; }
-        .status-seco { color: #00ff77 !important; }
-    </style>
+  <title>João Silva's web page - Coimbra</title>
+  <meta http-equiv="Content-Type"
+ content="text/html; charset=iso-8859-1">
 </head>
 <body>
-
-<div class="sar-header">
-    <div>FONTE: <b>APA + TIDESCHART (FIG)</b></div>
-    <div>SINC STATUS: <b id="syncStatus">---</b></div>
-    <div>MARÉ (FIG): <b id="mareStatus">---</b></div>
+<center><br>
+<img alt="Photo" src="prof_pic.jpg" style="height: 200px; width: 200px;"><br>
+<p><small><b><font face="Arial"><font color="#000068"><font size="+1"><small>João C. Silva<br>
+<br>
+</small></font></font></font></b></small></p>
+</center>
+<hr size="1" width="100%">
+<ul style="margin-left: 40px;">
+  <big> </big><li><small> <font face="Arial,Helvetica">Trainer, <a href="http://talentus.pt">Professional</a>
+&nbsp; (short <a href="ShortCV.pdf">CV)</a></font></small></li></ul>
+<ul style="margin-left: 40px;">
+</ul>  
+<hr size="1" width="100%">
+<h4 style="margin-left: 40px;"><small><a class="mozTocH4" name="mozTocId615057"></a>
+<font face="Arial,Helvetica"><big style="font-weight: bold;"><big>Teaching:</big></big></font></small><span style="font-family: arial;"></span></h4>
+<h4 style="margin-left: 40px;"><a class="mozTocH2" name="mozTocId842787"></a></h4>
+<div style="line-height: 18pt; text-align: justify; margin-left: 40px;"><big><font color="black"><small><small><i>Curso Técnico/a de Informática – Instalação e Gestão de Redes:</i></font></small></small><span style="font-family: arial;">&nbsp;<small><small><a href="https://catalogo.anqep.gov.pt/ufcdDetalhe/818">0838 - Linux - administração</a>/ <a href="https://catalogo.anqep.gov.pt/ufcdDetalhe/819">0839 - Linux - serviços de rede</a>/ <a href="https://catalogo.anqep.gov.pt/ufcdDetalhe/820">0840 - Servidores web</a>/ <a href="https://catalogo.anqep.gov.pt/ufcdDetalhe/821"> 0841 - Servidores Web e Acesso à Internet.</a></small></small></span></big><small><br><small><small><span style="font-family: arial;"></span><span style="font-family: arial;"></span></small>
+<span  style="font-family: arial;"><big><font color="black"><i>Curso Técnico/a de Eletricidade,Automação e Computadores:</i> </font><a href="https://catalogo.anqep.gov.pt/ufcdDetalhe/4048">4564 - Gestão da manutenção-introdução/</a> <a href="https://catalogo.anqep.gov.pt/ufcdDetalhe/5328">6008 - Análise de circuitos em corrente continua/</a> <a href="https://catalogo.anqep.gov.pt/ufcdDetalhe/5329">6009 - Magnetismo e eletromagnetismo/ 6010 - Corrente alternada/</a> <a href="https://catalogo.anqep.gov.pt/ufcdDetalhe/5331"> 6011 - Semicondutores/</a> <a href="https://catalogo.anqep.gov.pt/ufcdDetalhe/5332"> 6012 - Transístor bipolar/</a> <a href="https://catalogo.anqep.gov.pt/ufcdDetalhe/5345"> 6025 - Circuitos combinatórios/</a> <a href="https://catalogo.anqep.gov.pt/ufcdDetalhe/353685"> 6075 - Instalações elétricas generalidades/</a> <a href="https://catalogo.anqep.gov.pt/ufcdDetalhe/353681"> 6040 - Higiene e segurança no trabalho.</a></big></span></small><span style="font-family: arial;"></span></small><span style="font-family: arial;"></span><span style="font-family: arial;"><br>
+</span></div>
+<br>
+<span style="font-family: arial;"></span>
+<hr size="1" width="100%">
+<div style="margin-left: 40px;"><small><b><u><font  face="Arial,Helvetica"><font size="-1"><small>Address / Endere&ccedil;o:</small></font></font></u></b> </small><br>
+<small><font face="Arial,Helvetica"><font size="-1"><small>João C G Silva</small></font></font> </small><br>
+<small><font face="Arial,Helvetica"><font size="-1"><small><a href="http://www.talentus.pt/">Centro de Formação Talentus</a></small></font></font></small><br>
+<small><font face="Arial,Helvetica"><font size="-1"><small><a
+ href="http://www.talentus.pt/">Talentus</a>- Edificio Avenida</small></font></font></small><br>
+<small><font face="Arial,Helvetica"><font size="-1"><small>Dias da  </small></font></font></small><br>
+<small><font face="Arial,Helvetica"><font size="-1"><small>3000 <a href="https://www.visitportugal.com/pt-pt/node/73754">Coimbra</a>
+</small></font></font></small><br>
+<small><font face="Arial,Helvetica"><font size="-1"><small>PORTUGAL&nbsp;</small></font></font></small><br>
+<small><font face="Arial,Helvetica"><font size="-1"><small>email:<a href="mailto:joaosoaresesilva@gmail.com">joaosoaresesilva@gmail.com</a></font></font></div><br>
+</small></font></font></small></p>
+<div style="text-align: right;"><br>
 </div>
 
-<div id="map"></div>
+<p><li><a href="aulas/"><font color="red">>_</font</a></p>
 
-<div class="main-container">
-    <div class="panel">
-        <div class="data-card">
-            <h3>CAUDAL AFL(Q)</h3>
-            <div id="valFlow" class="value-display">---</div><small>m³/s</small>
-        </div>
-        <div class="data-card">
-            <h3>COTA AÇUDE (hA)</h3>
-            <div id="valCota" class="value-display">---</div><small>m (Nível Real)</small>
-        </div>
-        <div class="data-card">
-            <h3>MARÉ (M)</h3>
-            <div id="valMare" class="value-display" style="color: #00d2ff;">---</div>
-            <small>m</small>
-            <div style="margin-top:10px; font-size: 10px;">
-                <label><input type="radio" name="mareMode" value="auto" checked onchange="changeMareMode()"> Automático</label><br>
-                <label><input type="radio" name="mareMode" value="manual" onchange="changeMareMode()"> Manual</label>
-            </div>
-            <div id="manualInput" style="margin-top:10px; display:none;">
-                <input id="mareManual" type="number" step="0.01" style="width: 60px; background:#111; color:#00d2ff; border:1px solid #333;">
-                <button onclick="setMareManual()">OK</button>
-            </div>
-        </div>
-    </div>
-    <div class="sidebar">
-        <table id="mainTable">
-            <thead>
-                <tr><th>ID PONTO / LOCALIDADE</th><th>SOLO (Y)</th><th>NÍVEL (h)</th><th>ESTADO</th></tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-        </table>
-    </div>
-</div>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
-    const map = L.map('map', {zoomControl: false}).setView([40.2085, -8.4310], 13);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
-
-const localidades = [
-    // --- DISTÂNCIA 0.0 a 0.1 km (NÚCLEO CENTRAL) ---
-    {id: "DOCAS DO MONDEGO", pos: [40.202750, -8.426389], cota: 17.5, muro: 17.5, reg: "A", dist: 0.05},
-    {id: "MOSTEIRO STA CLARA-VELHA", pos: [40.202652, -8.433220], cota: 17.0, muro: 18.5, reg: "A", dist: 0.08},
-    {id: "RUA DA SOTA", pos: [40.2081, -8.4306], cota: 18.2, muro: 19.8, reg: "A", dist: 0.1},
-    {id: "BAIXA (RIO / MARGEM)", pos: [40.2091, -8.4320], cota: 19.5, muro: 19.8, reg: "A", dist: 0.1},
-    {id: "ETA-02: BOAVISTA OPERACIONAL", pos: [40.189819, -8.422121], cota: 21.5, muro: 22.5, reg: "A", dist: 0.1},
-
-    // --- DISTÂNCIA 0.15 a 0.2 km (ZONA RIBEIRINHA URBANA) ---
-    {id: "AV. EMÍDIO NAVARRO", pos: [40.2073, -8.4308], cota: 19.0, muro: 19.8, reg: "A", dist: 0.15},
-    {id: "PARQUE VERDE (POLO II)", pos: [40.1967, -8.4297], cota: 18.0, muro: 19.5, reg: "A", dist: 0.15},
-    {id: "LARGO DA PORTAGEM (HOTEL ASTÓRIA)", pos: [40.207820, -8.431250], cota: 20.0, muro: 20.5, reg: "A", dist: 0.15},
-    {id: "RUA DO BRASIL (ZONA SUL)", pos: [40.2015, -8.4210], cota: 20.0, muro: 21.0, reg: "A", dist: 0.18},
-    {id: "CITY-01: B. PORTUGAL", pos: [40.207450, -8.429752], cota: 19.0, muro: 19.8, reg: "A", dist: 0.20},
-    {id: "BEIRA RIO (ESTAÇÃO A)", pos: [40.208117, -8.430630], cota: 19.0, muro: 19.8, reg: "A", dist: 0.2},
-    {id: "PRAÇA DO COMÉRCIO (CENTRO)", pos: [40.208397, -8.429412], cota: 19.9, muro: 20.5, reg: "A", dist: 0.2},
-    {id: "PAVILHÃO CENTRO DE PORTUGAL", pos: [40.1989, -8.4332], cota: 18.5, muro: 18.5, reg: "A", dist: 0.2},
-    {id: "PARQUE DR. MANUEL BRAGA", pos: [40.204291, -8.426844], cota: 20.1, muro: 20.8, reg: "A", dist: 0.2},
-
-    // --- DISTÂNCIA 0.3 a 1.5 km (EXPANSÃO E VALES URBANOS) ---
-    {id: "AAC - DESPORTOS NÁUTICOS", pos: [40.2000, -8.4287], cota: 18.3, muro: 18.3, reg: "A", dist: 0.3},
-    {id: "SC-02: RUA DE BAIXO (STA CLARA)", pos: [40.203155, -8.434007], cota: 16.2, muro: 18.0, reg: "A", dist: 0.12},
-    {id: "SC-01: JARDIM STA CLARA VELHA", pos: [40.201477, -8.432601], cota: 15.2, muro: 16.5, reg: "A", dist: 1.1},
-    {id: "VALE DAS FLORES (ZONA BAIXA)", pos: [40.1972, -8.4115], cota: 25.0, muro: 26.0, reg: "A", dist: 1.4},
-    {id: "COSELHAS (VALE)", pos: [40.2205, -8.4350], cota: 18.5, muro: 19.5, reg: "A", dist: 1.5},
-
-    // --- DISTÂNCIA > 5.0 km (JUSANTE / BAIXO MONDEGO) ---
-    {id: "RIBEIRA DE EIRAS", pos: [40.2350, -8.4480], cota: 15.0, muro: 16.5, reg: "B", dist: 5.0},
-
-
-/*     // --- BAIXO MONDEGO E JUSANTE (Regime B - Maré) ---
-    {id: "LUGAR DA BRUNHEIRA", pos: [40.2155, -8.4520], cota: 19.5, muro: 20.5, reg: "B", dist: 1.2},
-    {id: "CENTRO HÍPICO DE COIMBRA", pos: [40.2225, -8.4650], cota: 17.8, muro: 18.8, reg: "B", dist: 1.5},
-    {id: "CH-02: PICADEIRO C. HÍPICO", pos: [40.220796, -8.470451], cota: 16.5, muro: 17.5, reg: "B", dist: 1.8},
-    {id: "SÃO JOÃO DO CAMPO (GÂNDARAS)", pos: [40.24219, -8.50449], cota: 14.5, muro: 15.5, reg: "B", dist: 3.5},
-    {id: "RB. de Frades (LINHA C. FERRO)", pos: [40.206458, -8.49315], cota: 13.8, muro: 14.8, reg: "B", dist: 6.9},
-    {id: "TAVEIRO (COMERCIAL)", pos: [40.1910, -8.5060], cota: 14.2, muro: 15.5, reg: "B", dist: 8.5},
-    {id: "VILA POUCA (URBANO)", pos: [40.1850, -8.5150], cota: 13.5, muro: 14.5, reg: "B", dist: 9.0},
-    {id: "ARZILA (LARGO DA IGREJA)", pos: [40.183264, -8.551125], cota: 11.8, muro: 12.8, reg: "B", dist: 17.0},
-    {id: "PEREIRA DO CAMPO", pos: [40.1580, -8.5850], cota: 11.5, muro: 12.5, reg: "B", dist: 18.0},
-    {id: "MONTEMOR (BASE CASTELO)", pos: [40.1745, -8.6820], cota: 8.5, muro: 9.5, reg: "B", dist: 27.5},
-    {id: "R. PORTO DA CAL - MONTEMOR (ZONA TÉCNICA)", pos: [40.177230, -8.664614], cota: 7.2, muro: 8.5, reg: "B", dist: 28.2},
-    {id: "CAR MONTEMOR (PISTA)", pos: [40.1735, -8.6745], cota: 7.8, muro: 8.5, reg: "B", dist: 28.0},
-    {id: "ALQUEIDÃO (CAMPOS)", pos: [40.109686, -8.791666], cota: 3.5, muro: 4.5, reg: "B", dist: 12.0},
-    {id: "SOURE (CENTRO)", pos: [40.080305, -8.643837], cota: 7.5, muro: 8.5, reg: "B", dist: 15.0},
-    {id: "FIGUEIRA (SALINAS)", pos: [40.1450, -8.8250], cota: 2.5, muro: 3.5, reg: "B", dist: 41.0},
-    {id: "DIAG-20: FOZ (TERMINAL)", pos: [40.148094, -8.848346], cota: 12.8, muro: 14.0, reg: "B", dist: 48.5},
-    {id: ": FOZ ", pos: [40.148094, -8.848346], cota: 2.0, muro: 3.0, reg: "B", dist: 48.5} */
-];
-
-    let apaQ = 0, apaH = 17.45, hMareReal = 0.8;
-    let mareMode = "auto";
-    let markers = {};
-
-    localidades.forEach(l => {
-        markers[l.id] = L.circleMarker(l.pos, {
-            radius: 5, weight: 1, color: '#fff', fillColor: '#00ff77', fillOpacity: 0.9
-        }).addTo(map).bindTooltip(l.id, {direction: 'top', offset: [0, -5]});
-    });
-
-    function changeMareMode() {
-        mareMode = document.querySelector('input[name="mareMode"]:checked').value;
-        document.getElementById("manualInput").style.display = (mareMode === "manual") ? "block" : "none";
-        if (mareMode === "auto") syncMare();
-    }
-
-    function setMareManual() {
-        const val = parseFloat(document.getElementById("mareManual").value);
-        if (!isNaN(val)) {
-            hMareReal = val;
-            document.getElementById("mareStatus").innerText = hMareReal.toFixed(2) + "m (MANUAL)";
-        }
-    }
-
-   async function syncMare() {
-    if (mareMode !== "auto") return;
-    try {
-        const proxy = 'https://api.allorigins.win/get?url=';
-        const targetUrl = 'https://www.ipma.pt/pt/maritima/costeira/index.jsp?selPorto=figueira_da_foz';
-        
-        const res = await fetch(proxy + encodeURIComponent(targetUrl) + '&cache=' + new Date().getTime());
-        const data = await res.json();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(data.contents, 'text/html');
-
-        // O IPMA usa tabelas com a classe "dadostabela" ou ID "tabela_mares"
-        const rows = doc.querySelectorAll('table.dadostabela tr, #tabela_mares tr');
-        let closestHeight = null;
-        let minDiff = Infinity;
-        const agora = new Date();
-
-        rows.forEach(row => {
-            const cols = row.querySelectorAll('td');
-            if (cols.length >= 3) {
-                // Formato esperado: [Hora (HH:mm), Fenómeno, Altura (m)]
-                const horaStr = cols[0].innerText.trim();
-                const alturaStr = cols[2].innerText.replace(',', '.').trim();
-                
-                const [horas, minutos] = horaStr.split(':').map(Number);
-                if (!isNaN(horas)) {
-                    const dataMare = new Date();
-                    dataMare.setHours(horas, minutos, 0);
-
-                    // Calcula a diferença de tempo para encontrar a maré mais próxima de "agora"
-                    const diff = Math.abs(agora - dataMare);
-                    if (diff < minDiff) {
-                        minDiff = diff;
-                        closestHeight = parseFloat(alturaStr);
-                    }
-                }
-            }
-        });
-
-        if (closestHeight !== null) {
-            hMareReal = closestHeight;
-            document.getElementById("mareStatus").innerText = hMareReal.toFixed(2) + "m (IPMA)";
-            document.getElementById("mareStatus").style.color = "#00d2ff";
-        }
-    } catch (e) { 
-        console.error("Erro IPMA:", e);
-        document.getElementById("mareStatus").innerText = "ERRO IPMA";
-    }
-}
-
-    async function syncAPA() {
-    try {
-        const proxy = 'https://api.allorigins.win/get?url=';
-        // URL direta para os dados de tempo real do Açude de Coimbra
-        const targetUrl = 'https://infoagua.apambiente.pt/pt/cheias/cheia-detalhe/1627743374';
-        
-        const res = await fetch(proxy + encodeURIComponent(targetUrl) + '&cache=' + new Date().getTime());
-        const data = await res.json();
-        const html = data.contents;
-
-        // RegEx melhorado para procurar os valores numéricos perto das unidades m3/s e m
-        // Procura por números com vírgula ou ponto antes de "m3/s"
-        const flowMatch = html.match(/([\d.,]+)\s*m3\/s/);
-        // Procura especificamente pela Cota (valor decimal seguido de "m")
-        const levelMatch = html.match(/([\d.,]+)\s*m(?!\d|\w|³)/);
-
-        if (flowMatch) {
-            let flowVal = flowMatch[1].replace(',', '.');
-            apaQ = parseFloat(flowVal);
-        }
-
-        if (levelMatch) {
-            // Filtramos para pegar o valor que faça sentido para a cota (geralmente entre 14 e 25m no Açude)
-            const matches = html.matchAll(/([\d.,]+)\s*m(?!\d|\w|³)/g);
-            for (const match of matches) {
-                let val = parseFloat(match[1].replace(',', '.'));
-                if (val > 15 && val < 30) { // Range esperado para o Açude de Coimbra
-                    apaH = val;
-                    break;
-                }
-            }
-        }
-
-        document.getElementById('syncStatus').innerText = "OK: " + new Date().toLocaleTimeString();
-        document.getElementById('syncStatus').style.color = "#00ff77";
-    } catch (e) { 
-        console.error("Erro sincronização APA:", e);
-        document.getElementById('syncStatus').innerText = "ERRO APA (AGURADE 5 MIN...)"; 
-        document.getElementById('syncStatus').style.color = "#ff3333";
-    }
-}
-
-    function updateUI() {
-        const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '';
-        document.getElementById('valFlow').innerText = apaQ.toLocaleString();
-        document.getElementById('valCota').innerText = apaH.toFixed(2);
-        document.getElementById('valMare').innerText = hMareReal ? hMareReal.toFixed(2) : "---";
-
-        localidades.forEach(l => {
-            let hFinal;
-            if (l.reg === "A") {
-                hFinal = apaH + (apaQ / 15000); 
-            } else {
-                let hJusanteBase = (apaH - 4.5);
-                let pesoMare = Math.min(1, l.dist / 48.5); 
-                hFinal = hJusanteBase - (l.dist * 0.05) + (apaQ / 5000) + (hMareReal * pesoMare);
-            }
-
-            let status = "SECO";
-            let sClass = "status-seco";
-            let sColor = "#00ff77";
-
-            if (hFinal > l.muro) {
-                status = "GALGAMENTO"; sClass = "status-galgamento"; sColor = "#ff3333";
-            } else if (hFinal > l.cota) {
-                status = "REFLUXO"; sClass = "status-refluxo"; sColor = "#ffa500";
-            } else if (hFinal > (l.cota - 0.5)) {
-                status = "RISCO"; sClass = "status-risco"; sColor = "#ffff00";
-            }
-
-            if (markers[l.id]) {
-                markers[l.id].setStyle({ fillColor: sColor, radius: status === "GALGAMENTO" ? 10 : 5 });
-                if (status === "GALGAMENTO") markers[l.id].getElement().classList.add('marker-alagado');
-                else if (markers[l.id].getElement()) markers[l.id].getElement().classList.remove('marker-alagado');
-            }
-
-            let row = tbody.insertRow();
-            row.insertCell(0).innerHTML = `<a href="https://www.google.com/maps?q=${l.pos[0]},${l.pos[1]}&t=k" target="_blank" class="loc-link">${l.id} ↗</a>`;
-            row.insertCell(1).innerText = l.cota.toFixed(1) + "m";
-            row.insertCell(2).innerText = hFinal.toFixed(2) + "m";
-            let cStatus = row.insertCell(3);
-            cStatus.innerText = status;
-            cStatus.className = sClass;
-        });
-    }
-
-    syncAPA(); syncMare();
-    setInterval(syncAPA, 300000); 
-    setInterval(syncMare, 600000); 
-    setInterval(updateUI, 1000);
-</script>
 </body>
 </html>
