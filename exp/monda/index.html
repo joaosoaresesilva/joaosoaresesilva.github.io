@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>BAZOFIA MONITOR </title>
+    <title>ESBOÇO DE UM MONITOR PARA O BAZOFIA</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { margin: 0; font-family: 'Courier New', monospace; background: #050505; color: #d0d0d0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -226,7 +226,7 @@ const localidades = [
                 }
             }
             document.getElementById('syncStatus').innerText = "OK: " + new Date().toLocaleTimeString();
-        } catch (e) { document.getElementById('syncStatus').innerText = "ERRO APA"; }
+        } catch (e) { document.getElementById('syncStatus').innerText = "ERRO SINC. APA - AGURADE 5MIN"; }
     }
 
     async function syncMare() {
