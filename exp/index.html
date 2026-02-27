@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Deposição de Areia: Aguieira - Coimbra</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: sans-serif; max-width: 900px; margin: 20px auto; padding: 20px; background-color: #f4f7f6; }
+        .container { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .controls { margin-bottom: 30px; text-align: center; }
+        input[type=range] { width: 80%; cursor: pointer; }
+        .value-display { font-size: 1.2em; font-weight: bold; color: #2c3e50; }
+        h2 { color: #2980b9; }
+        p { color: #666; line-height: 1.6; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Simulador de Dinâmica Fluvial (Aguieira - Coimbra)</h2>
+    <p>Ajuste o caudal para observar como a deposição de areia se comporta ao longo dos ~45km de percurso. 
+       Note que perto do Açude (distância 45km), a velocidade da água cai e a deposição aumenta.</p>
+
+    <div class="controls">
+        <label for="caudal">Caudal do Rio: <span class="value-display" id="caudalVal">1250</span> m³/s</label><br>
+        <input type="range" id="caudal" min="500" max="2000" value="1250" step="50">
+    </div>
+
+    <canvas id="sedimentChart"></canvas>
+
+    <div style="margin-top: 20px; font-size: 0.9em; color: #7f8c8d;">
+        <strong>Nota Técnica:</strong> Esta simulação assume uma diminuição exponencial da velocidade à medida que se aproxima do efeito de remanso do açude. O eixo Y representa a taxa de deposição relativa ($kg/m^2$).
+    </div>
+</div>
+
+<script>
+    const ctx = document.getElementById('sedimentChart').getContext('2d');
+    const caudalInput = document.getElementById('caudal');
+    const caudalVal = document.getElementById('caudalVal');
+
+    const labels = [];
+    for (let i = 0; i <= 45; i += 1) {
+        labels.push(i + " km");
+    }
+
+    let sedimentChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Areia Depositada (Média Estimada)',
+                data: [],
+                borderColor: '#e67e22',
+                backgroundColor: 'rgba(230, 126, 34, 0.2)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            scales: {
+                x: { title: { display: true, text: 'Distância a partir da Aguieira (km)' } },
+                y: { 
+                    beginAtZero: true, 
+                    title: { display: true, text: 'Massa de Areia Acumulada (Unidades Relativas)' },
+                    max: 100
+                }
+            }
+        }
+    });
+
+    function updateSim() {
+        const Q = parseInt(caudalInput.value);
+        caudalVal.textContent = Q;
+
+        const newData = [];
+        for (let x = 0; x <= 45; x++) {
+            // Modelo simplificado: A deposição aumenta com a distância (aproximação ao açude)
+            // e diminui inversamente com o quadrado do caudal (mais energia = menos depósito)
+            // Deposição = (k * x^2) / Q
+            const fatorProximidade = Math.pow(x / 45, 3); 
+            const forcaArrasto = Q / 500;
+            let deposito = (150 * fatorProximidade) / forcaArrasto;
+            
+            // Adiciona uma pequena variação aleatória para realismo
+            deposito = Math.max(0, deposito + Math.sin(x) * 2);
+            newData.push(deposito.toFixed(2));
+        }
+
+        sedimentChart.data.datasets[0].data = newData;
+        sedimentChart.update();
+    }
+
+    caudalInput.addEventListener('input', updateSim);
+    updateSim(); // Inicializar
+</script>
+
+</body>
+</html>
