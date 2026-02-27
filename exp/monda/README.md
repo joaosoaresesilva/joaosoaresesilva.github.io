@@ -4,7 +4,7 @@ O **BAZOFIA_MONITOR** é um dashboard de monitorização hidrológica em tempo r
 
 ---
 
-## 🚀 Funcionalidades Principais
+## Funcionalidades Principais
 
 * **Monitorização em Tempo Real:** Integração via proxy com dados da APA (Agência Portuguesa do Ambiente) e IPMA/Tideschart( ainda por testar).
 * **Cálculo Dinâmico de Risco:** Algoritmo que cruza o caudal afluente ($Q$), a cota do Açude de Coimbra ($hA$) e a influência das marés na Figueira da Foz.
@@ -14,7 +14,7 @@ O **BAZOFIA_MONITOR** é um dashboard de monitorização hidrológica em tempo r
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
+## Tecnologias Utilizadas
 
 * **Frontend:** HTML5, CSS3 (Modern Dark UI), JavaScript (ES6+).
 * **Mapas:** [Leaflet.js](https://leafletjs.com/) com tiles Dark Mode da CartoDB.
@@ -23,7 +23,7 @@ O **BAZOFIA_MONITOR** é um dashboard de monitorização hidrológica em tempo r
 
 ---
 
-## 📊 Indicadores de Estado
+##  Indicadores de Estado
 
 O sistema classifica cada ponto monitorizado em quatro estados distintos:
 
@@ -43,11 +43,11 @@ O sistema classifica cada ponto monitorizado em quatro estados distintos:
 
 ---
 
-## ⚠️ Isenção de Responsabilidade (Disclaimer)
+## Isenção de Responsabilidade (Disclaimer)
 
 Este software é um **protótipo conceptual** realizado com auxílio de IA. Os cálculos de nível e as previsões de galgamento baseiam-se em fórmulas simplificadas para fins de demonstração e não devem ser utilizados como única fonte para decisões de segurança civil ou proteção de bens. Consulta sempre os avisos oficiais da **Proteção Civil** e da **APA**.
 
 ---
 
 **Desenvolvido por:** [João Silva/joaosoaresesilva.github.io]  
-**Localização:** Coimbra, Portugal 🇵🇹
+**Localização:** Coimbra, Portugal 
