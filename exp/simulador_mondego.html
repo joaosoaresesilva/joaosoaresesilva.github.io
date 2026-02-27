@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Deposição: Aguieira - Coimbra</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            max-width: 1000px; 
+            margin: 20px auto; 
+            padding: 20px; 
+            background-color: #eef2f3; 
+        }
+        .container { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08); 
+        }
+        .header { text-align: center; border-bottom: 2px solid #3498db; margin-bottom: 25px; padding-bottom: 10px; }
+        .controls { 
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px; 
+            text-align: center; 
+            border: 1px solid #dee2e6;
+        }
+        input[type=range] { width: 70%; cursor: pointer; height: 10px; }
+        .value-display { font-size: 1.4em; font-weight: bold; color: #d35400; }
+        .explanation { 
+            margin-top: 25px; 
+            padding: 15px; 
+            background: #fff3cd; 
+            border-left: 5px solid #ffecb5;
+            font-size: 0.95em;
+            color: #856404;
+        }
+        h2 { color: #2c3e50; margin-top: 0; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>Dinâmica de Sedimentos: Aguieira → Açude de Coimbra</h2>
+        <p>Modelo de Transporte Sólido em Regime de Cheia</p>
+    </div>
+
+    <div class="controls">
+        <label for="caudal"><strong>Caudal do Rio Mondego:</strong> <span class="value-display" id="caudalVal">1250</span> m³/s</label><br><br>
+        <input type="range" id="caudal" min="500" max="2000" value="1250" step="50">
+        <div style="display: flex; justify-content: space-between; width: 70%; margin: 5px auto; font-size: 0.8em; color: #666;">
+            <span>Estio (500)</span>
+            <span>Cheia Moderada</span>
+            <span>Tempestade (2000)</span>
+        </div>
+    </div>
+
+    <canvas id="sedimentChart" height="120"></canvas>
+
+    <div class="explanation">
+        <strong>Análise do Especialista:</strong> 
+        <div id="dynamicText">
+            Neste caudal, o equilíbrio entre transporte e deposição é moderado.
+        </div>
+    </div>
+</div>
+
+<script>
+    const ctx = document.getElementById('sedimentChart').getContext('2d');
+    const caudalInput = document.getElementById('caudal');
+    const caudalVal = document.getElementById('caudalVal');
+    const dynamicText = document.getElementById('dynamicText');
+
+    const labels = [];
+    for (let i = 0; i <= 45; i += 1) {
+        labels.push(i + " km");
+    }
+
+    let sedimentChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Areia Depositada no Leito (kg/m² estimados)',
+                data: [],
+                borderColor: '#2980b9',
+                backgroundColor: 'rgba(41, 128, 185, 0.1)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: { 
+                    title: { display: true, text: 'Percurso desde a Barragem da Aguieira' },
+                    grid: { display: false }
+                },
+                y: { 
+                    beginAtZero: true, 
+                    title: { display: true, text: 'Concentração de Depósito' },
+                    max: 400
+                }
+            },
+            plugins: {
+                legend: { position: 'top' }
+            }
+        }
+    });
+
+    function updateSim() {
+        const Q = parseInt(caudalInput.value);
+        caudalVal.textContent = Q;
+
+        const newData = [];
+        for (let x = 0; x <= 45; x++) {
+            // 1. Carga Sólida de Entrada: Aumenta exponencialmente com a erosão da tempestade
+            const cargaEntrada = Math.pow(Q, 1.5) * 0.005; 
+
+            // 2. Capacidade de Transporte: Depende da velocidade. 
+            // Perto do km 45 (Açude), a velocidade cai por causa da albufeira.
+            const fatorDistancia = x / 45;
+            const perdaVelocidade = Math.pow(fatorDistancia, 5); // Remanso do açude
+            
+            const capacidadeLocal = (Q * 0.1) * (1 - (perdaVelocidade * 0.95));
+
+            // 3. Deposição: O que sobra quando a carga excede a capacidade
+            let deposito = cargaEntrada - capacidadeLocal;
+            
+            // Ruído geológico natural
+            deposito += Math.random() * 5;
+
+            newData.push(Math.max(10, deposito).toFixed(2));
+        }
+
+        // Atualização do texto explicativo baseado no caudal
+        if (Q > 1600) {
+            dynamicText.innerHTML = "<strong>Cenário de Tempestade:</strong> O elevado caudal provoca erosão severa a montante. O rio transporta tanta areia que, ao chegar à zona de águas lentas antes do Açude, a capacidade de transporte colapsa, resultando no assoreamento massivo que observou.";
+        } else if (Q < 800) {
+            dynamicText.innerHTML = "<strong>Cenário de Estio:</strong> O baixo caudal tem pouca carga sedimentar. A deposição é mínima e localizada apenas junto à face do açude.";
+        } else {
+            dynamicText.innerHTML = "<strong>Regime de Transição:</strong> Existe um equilíbrio. A maior parte da areia é transportada em suspensão, com deposição gradual ao longo do leito.";
+        }
+
+        sedimentChart.data.datasets[0].data = newData;
+        sedimentChart.update();
+    }
+
+    caudalInput.addEventListener('input', updateSim);
+    updateSim(); // Inicialização
+</script>
+
+</body>
+</html>
