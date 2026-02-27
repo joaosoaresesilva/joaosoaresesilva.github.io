@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Mondego: Piloto Automático de Comportas</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; max-width: 1000px; margin: 20px auto; padding: 20px; background-color: #f0f4f8; }
+        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .header { text-align: center; color: #2c3e50; border-bottom: 3px solid #3498db; margin-bottom: 20px; }
+        .controls { background: #fff; padding: 20px; border: 1px solid #d1d9e6; border-radius: 8px; margin-bottom: 20px; }
+        .auto-panel { background: #e8f4fd; padding: 15px; border-radius: 8px; border-left: 5px solid #3498db; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
+        .status-badge { padding: 5px 15px; border-radius: 20px; font-weight: bold; text-transform: uppercase; font-size: 0.8em; }
+        .status-open { background: #27ae60; color: white; }
+        .status-closed { background: #e74c3c; color: white; }
+        input[type=range] { width: 100%; }
+        .explanation { font-size: 0.9em; line-height: 1.5; color: #555; background: #fef9e7; padding: 15px; border-radius: 8px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>Simulador de Gestão Automatizada: Açude de Coimbra</h2>
+    </div>
+
+    <div class="auto-panel">
+        <div>
+            <strong>MODO: Piloto Automático de Lavagem (Flushing)</strong><br>
+            <small>As comportas abrem automaticamente acima de 1600 m³/s</small>
+        </div>
+        <div id="gateStatus" class="status-badge status-closed">Comportas Fechadas</div>
+    </div>
+
+    <div class="controls">
+        <label><strong>Caudal do Rio:</strong> <span id="caudalVal" style="color:#d35400; font-size:1.2em;">1000</span> m³/s</label>
+        <input type="range" id="caudal" min="500" max="2500" value="1000" step="50">
+    </div>
+
+    <canvas id="sedimentChart" height="120"></canvas>
+
+    <div class="explanation">
+        <strong>Lógica do Especialista:</strong> No modo manual ou com comportas fechadas, o açude cria um "efeito de parede" que trava a água e deposita a areia. O <strong>Piloto Automático</strong> monitoriza o caudal: quando este excede o limite crítico de transporte, ele abre as comportas de fundo, transformando a albufeira num canal de alta velocidade que "empurra" a areia para fora do sistema.
+    </div>
+</div>
+
+<script>
+    const ctx = document.getElementById('sedimentChart').getContext('2d');
+    const caudalInput = document.getElementById('caudal');
+    const caudalVal = document.getElementById('caudalVal');
+    const gateStatus = document.getElementById('gateStatus');
+
+    const labels = Array.from({length: 46}, (_, i) => i + " km");
+
+    let sedimentChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Volume de Areia Acumulada',
+                data: [],
+                borderColor: '#2980b9',
+                backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            scales: { 
+                y: { beginAtZero: true, max: 500, title: { display: true, text: 'Massa de Sedimentos' } },
+                x: { title: { display: true, text: 'Distância da Aguieira ao Açude' } }
+            }
+        }
+    });
+
+    function updateSim() {
+        const Q = parseInt(caudalInput.value);
+        caudalVal.textContent = Q;
+        
+        // Lógica do Piloto Automático
+        const gatilhoLavagem = 1600; 
+        const comportasAbertas = Q >= gatilhoLavagem;
+
+        if (comportasAbertas) {
+            gateStatus.textContent = "Comportas Abertas (LAVAGEM ATIVA)";
+            gateStatus.className = "status-badge status-open";
+        } else {
+            gateStatus.textContent = "Comportas Fechadas (REPETAÇÃO)";
+            gateStatus.className = "status-badge status-closed";
+        }
+
+        const newData = [];
+        for (let x = 0; x <= 45; x++) {
+            const cargaEntrada = Math.pow(Q, 1.4) * 0.01;
+            
+            // Se as comportas estão abertas, a velocidade perto do açude (km 45) NÃO cai drasticamente
+            let fatorTravao = Math.pow(x / 45, 5);
+            if (comportasAbertas) {
+                // Reduz o efeito de remanso em 80% porque a água está a fluir livremente pelas comportas de fundo
+                fatorTravao = fatorTravao * 0.2; 
+            }
+
+            const capacidadeTransporte = (Q * 0.15) * (1 - (fatorTravao * 0.9));
+            let deposito = cargaEntrada - capacidadeTransporte;
+            
+            // Simular arraste de limpeza (scouring) junto ao açude se aberto
+            if (comportasAbertas && x > 35) {
+                deposito = deposito * 0.3; // A corrente limpa 70% do que depositaria
+            }
+
+            newData.push(Math.max(5, deposito).toFixed(2));
+        }
+
+        sedimentChart.data.datasets[0].data = newData;
+        // Mudar cor do gráfico se estiver em modo lavagem
+        sedimentChart.data.datasets[0].borderColor = comportasAbertas ? '#27ae60' : '#2980b9';
+        sedimentChart.update();
+    }
+
+    caudalInput.addEventListener('input', updateSim);
+    updateSim();
+</script>
+
+</body>
+</html>
