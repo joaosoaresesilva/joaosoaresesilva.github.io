@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aula 01: Introdução ao ggplot2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .hide-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scroll {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+    <!-- Chosen Palette: Warm Neutrals with Teal and Indigo Accents (bg-stone-50, text-stone-800, teal-600, indigo-600) -->
+    <!-- Application Structure Plan: The SPA is structured as an interactive educational module. It begins with a conceptual introduction to the 'Grammar of Graphics' using interactive cards. It then transitions into a 'Code Simulator' side-by-side view, which is the core interactive element, allowing students to step through R code and see the simulated visual output build layer by layer. Finally, it presents the practical exercises in a clean, expandable accordion format. This step-by-step layout was chosen because it mirrors the cognitive process of learning code: Concept -> Demonstration -> Practice. -->
+    <!-- Visualization & Content Choices: 
+         1. Grammar of Graphics -> Goal: Organize/Inform -> Method: Interactive Cards -> Interaction: Click to reveal details -> Justification: Breaks down theory into digestible chunks. 
+         2. Code Steps -> Goal: Change/Compare -> Method: Interactive Code & Chart Simulator (Chart.js Scatter) -> Interaction: 'Next/Prev' buttons to build the chart -> Justification: Crucial for demonstrating the 'layer' concept of ggplot2 dynamically without needing a real R backend. NO SVG/Mermaid used. 
+         3. Exercises -> Goal: Organize -> Method: Accordion -> Interaction: Toggle open/close -> Justification: Keeps the UI clean and allows students to focus on one problem at a time. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-stone-50 text-stone-800 font-sans antialiased">
+
+    <nav class="bg-indigo-900 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="text-xl font-bold tracking-wide">R DataViz Lab</div>
+            <div class="text-sm text-indigo-200">Aula 01: Gramática de Gráficos</div>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-4 py-8 space-y-16">
+
+        <header class="text-center max-w-3xl mx-auto space-y-4">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-stone-900">A Gramática de Gráficos com <span class="text-indigo-600">ggplot2</span></h1>
+            <p class="text-lg text-stone-600">Bem-vindos à primeira aula de Visualização de Dados em R. Explore interativamente como o `ggplot2` "pensa" e transforme dados brutos em narrativas visuais construindo gráficos camada a camada.</p>
+        </header>
+
+        <section id="teoria" class="bg-white rounded-2xl shadow-sm border border-stone-200 p-6 md:p-10">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-stone-900 border-b-2 border-teal-500 inline-block pb-1 mb-4">A Teoria das Camadas</h2>
+                <p class="text-stone-600">Nesta secção, exploramos a base teórica do ggplot2. A ideia central é que qualquer gráfico pode ser decomposto em camadas fundamentais. Clique nos cartões abaixo para entender cada um destes três pilares antes de passarmos ao código.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="layer-card cursor-pointer bg-stone-100 hover:bg-teal-50 border border-stone-200 rounded-xl p-6 transition-colors" data-layer="1">
+                    <div class="text-4xl mb-4 text-teal-600 font-bold">1</div>
+                    <h3 class="text-xl font-semibold mb-2">Data (Dados)</h3>
+                    <p class="text-sm text-stone-600">O material bruto. Onde os dados estão armazenados e quais as variáveis que queremos explorar.</p>
+                </div>
+                <div class="layer-card cursor-pointer bg-stone-100 hover:bg-teal-50 border border-stone-200 rounded-xl p-6 transition-colors" data-layer="2">
+                    <div class="text-4xl mb-4 text-teal-600 font-bold">2</div>
+                    <h3 class="text-xl font-semibold mb-2">Aesthetics (aes)</h3>
+                    <p class="text-sm text-stone-600">O mapeamento estético. Como as variáveis se ligam aos eixos (X, Y), cores, tamanhos e formas.</p>
+                </div>
+                <div class="layer-card cursor-pointer bg-stone-100 hover:bg-teal-50 border border-stone-200 rounded-xl p-6 transition-colors" data-layer="3">
+                    <div class="text-4xl mb-4 text-teal-600 font-bold">3</div>
+                    <h3 class="text-xl font-semibold mb-2">Geometries (geom)</h3>
+                    <p class="text-sm text-stone-600">A forma visual. O que é efetivamente desenhado no ecrã (pontos, barras, linhas, áreas).</p>
+                </div>
+            </div>
+            
+            <div id="layer-details" class="mt-8 p-6 bg-teal-50 border-l-4 border-teal-500 rounded-r-xl hidden">
+                <h4 id="layer-title" class="text-lg font-bold text-teal-900 mb-2"></h4>
+                <p id="layer-desc" class="text-teal-800"></p>
+            </div>
+        </section>
+
+        <section id="simulador" class="bg-stone-900 rounded-2xl shadow-xl overflow-hidden">
+            <div class="p-6 md:p-10 bg-stone-800 border-b border-stone-700">
+                <h2 class="text-2xl font-bold text-white mb-2">Simulador Passo-a-Passo</h2>
+                <p class="text-stone-300">Este simulador interativo replica a execução do código R. Utilize os botões para avançar em cada passo e observe como a adição de uma nova camada de código transforma o gráfico visualizado à direita. O conceito de "colar" camadas com o sinal de <code>+</code> torna-se aqui evidente.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2">
+                <div class="p-6 md:p-10 bg-stone-900 border-r border-stone-700 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-semibold text-teal-400">Código R</h3>
+                            <span id="step-counter" class="text-xs font-mono bg-stone-800 text-stone-400 px-3 py-1 rounded-full">Passo 1 de 5</span>
+                        </div>
+                        
+                        <div class="bg-black rounded-lg p-4 font-mono text-sm text-stone-300 overflow-x-auto border border-stone-800 min-h-[200px]" id="code-display">
+                        </div>
+
+                        <div class="mt-6 text-sm text-stone-400 h-16" id="step-explanation">
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4 mt-8">
+                        <button id="btn-prev" class="px-6 py-2 bg-stone-700 hover:bg-stone-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Anterior</button>
+                        <button id="btn-next" class="px-6 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-lg transition-colors font-medium shadow-lg shadow-teal-900">Avançar Passo</button>
+                    </div>
+                </div>
+
+                <div class="p-6 md:p-10 bg-white flex items-center justify-center">
+                    <div class="w-full">
+                        <h3 class="text-lg font-semibold text-stone-800 mb-6 text-center">Output Visual (Simulado)</h3>
+                        <div class="chart-container">
+                            <canvas id="ggplotSimulator"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="exercicios" class="bg-white rounded-2xl shadow-sm border border-stone-200 p-6 md:p-10">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-stone-900 border-b-2 border-indigo-500 inline-block pb-1 mb-4">Exercícios Práticos</h2>
+                <p class="text-stone-600">Agora é a sua vez. Após compreender a estrutura das camadas, teste os seus conhecimentos nestes 5 exercícios. Expanda cada um para ler o enunciado e as questões propostas. Tente resolver no seu ambiente RStudio antes de consultar o formador.</p>
+            </div>
+
+            <div class="space-y-4" id="accordion-container">
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-stone-900 text-stone-400 py-8 text-center mt-12">
+        <p class="text-sm">Desenvolvido interativamente para o plano de formação R DataViz.</p>
+    </footer>
+
+    <script>
+        const layerDetails = {
+            1: {
+                title: "1. A Camada de Dados (Data)",
+                desc: "No ggplot2, tudo começa com um dataframe. Utilizamos o argumento `data = dataset`. Se pararmos por aqui, o R apenas cria um fundo cinzento vazio, pois sabe de onde vêm os dados, mas não sabe o que fazer com eles."
+            },
+            2: {
+                title: "2. Mapeamento Estético (Aesthetics - aes)",
+                desc: "A função `aes()` cria as coordenadas. É aqui que dizemos que a coluna 'Cilindrada' deve ir para o eixo X e o 'Consumo' para o eixo Y. Também é aqui que mapeamos variáveis a cores ou tamanhos. O gráfico passa a ter eixos, mas continua sem dados visíveis."
+            },
+            3: {
+                title: "3. Geometrias (Geom)",
+                desc: "As funções começadas por `geom_` desenham efetivamente os dados. `geom_point()` faz um gráfico de dispersão, `geom_bar()` faz barras. Usamos o sinal `+` para colar a geometria às estéticas e dados previamente definidos."
+            }
+        };
+
+        const layerCards = document.querySelectorAll('.layer-card');
+        const detailContainer = document.getElementById('layer-details');
+        const layerTitle = document.getElementById('layer-title');
+        const layerDesc = document.getElementById('layer-desc');
+
+        layerCards.forEach(card => {
+            card.addEventListener('click', () => {
+                const layerId = card.getAttribute('data-layer');
+                layerTitle.textContent = layerDetails[layerId].title;
+                layerDesc.textContent = layerDetails[layerId].desc;
+                
+                layerCards.forEach(c => {
+                    c.classList.remove('bg-teal-100', 'border-teal-400');
+                    c.classList.add('bg-stone-100');
+                });
+                card.classList.remove('bg-stone-100');
+                card.classList.add('bg-teal-100', 'border-teal-400');
+                
+                detailContainer.classList.remove('hidden');
+            });
+        });
+
+        const simData = [
+            {x: 1.8, y: 29, class: 'compact'}, {x: 2.0, y: 31, class: 'compact'}, {x: 2.2, y: 27, class: 'compact'},
+            {x: 2.4, y: 26, class: 'midsize'}, {x: 2.5, y: 27, class: 'midsize'}, {x: 3.1, y: 25, class: 'midsize'},
+            {x: 3.5, y: 24, class: 'midsize'}, {x: 4.0, y: 20, class: 'suv'}, {x: 4.7, y: 15, class: 'suv'},
+            {x: 5.3, y: 14, class: 'suv'}, {x: 5.7, y: 13, class: 'suv'}, {x: 6.0, y: 12, class: 'suv'}
+        ];
+
+        const classColors = {
+            'compact': '#10b981', 
+            'midsize': '#3b82f6', 
+            'suv': '#ef4444'      
+        };
+
+        const steps = [
+            {
+                code: `<span class="text-stone-500"># 3. O Gráfico Base (Vazio)</span>\n<span class="text-indigo-400">ggplot</span>(data = mpg)`,
+                explanation: "Definimos os dados. Como não mapeamos nada (aes), o resultado é apenas uma tela em branco (simulada aqui vazia).",
+                chartState: { showAxes: false, showData: false, useColors: false, applyTheme: false }
+            },
+            {
+                code: `<span class="text-stone-500"># 4. Adicionando Estética (Eixos)</span>\n<span class="text-indigo-400">ggplot</span>(data = mpg, mapping = <span class="text-teal-400">aes</span>(x = displ, y = hwy))`,
+                explanation: "Com o aes(), dizemos o que vai para os eixos X e Y. O ggplot desenha as escalas, mas ainda não sabe como desenhar os dados.",
+                chartState: { showAxes: true, showData: false, useColors: false, applyTheme: false }
+            },
+            {
+                code: `<span class="text-stone-500"># 5. Adicionando a Geometria (Pontos)</span>\n<span class="text-indigo-400">ggplot</span>(data = mpg, mapping = <span class="text-teal-400">aes</span>(x = displ, y = hwy)) <span class="text-amber-400">+</span>\n  <span class="text-indigo-400">geom_point</span>()`,
+                explanation: "O sinal de + cola a camada geométrica. Agora vemos os pontos de dispersão a preto por defeito.",
+                chartState: { showAxes: true, showData: true, useColors: false, applyTheme: false }
+            },
+            {
+                code: `<span class="text-stone-500"># 6. Adicionando Cores Dinâmicas</span>\n<span class="text-indigo-400">ggplot</span>(data = mpg, mapping = <span class="text-teal-400">aes</span>(x = displ, y = hwy, <span class="text-pink-400">color</span> = class)) <span class="text-amber-400">+</span>\n  <span class="text-indigo-400">geom_point</span>()`,
+                explanation: "Ao colocar color = class DENTRO do aes(), o R mapeia automaticamente uma cor diferente para cada tipo de carro.",
+                chartState: { showAxes: true, showData: true, useColors: true, applyTheme: false }
+            },
+            {
+                code: `<span class="text-stone-500"># 7. Labels e Temas (Gráfico Final)</span>\n<span class="text-indigo-400">ggplot</span>(data = mpg, mapping = <span class="text-teal-400">aes</span>(x = displ, y = hwy, color = class)) <span class="text-amber-400">+</span>\n  <span class="text-indigo-400">geom_point</span>(size = 3, alpha = 0.7) <span class="text-amber-400">+</span>\n  <span class="text-indigo-400">labs</span>(\n    title = <span class="text-green-300">"Eficiência vs Cilindrada"</span>,\n    x = <span class="text-green-300">"Cilindrada (L)"</span>,\n    y = <span class="text-green-300">"Consumo (MPG)"</span>\n  ) <span class="text-amber-400">+</span>\n  <span class="text-indigo-400">theme_minimal</span>()`,
+                explanation: "Finalizamos o gráfico ajustando propriedades fixas fora do aes() (tamanho/transparência), adicionando textos limpos e aplicando um tema visual minimalista.",
+                chartState: { showAxes: true, showData: true, useColors: true, applyTheme: true }
+            }
+        ];
+
+        let currentStep = 0;
+        const codeDisplay = document.getElementById('code-display');
+        const stepExplanation = document.getElementById('step-explanation');
+        const stepCounter = document.getElementById('step-counter');
+        const btnPrev = document.getElementById('btn-prev');
+        const btnNext = document.getElementById('btn-next');
+
+        const ctx = document.getElementById('ggplotSimulator').getContext('2d');
+        let simChart = new Chart(ctx, {
+            type: 'scatter',
+            data: { datasets: [] },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 600 },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: false },
+                    title: { display: false }
+                },
+                scales: {
+                    x: { display: false },
+                    y: { display: false }
+                }
+            }
+        });
+
+        function updateSimulator() {
+            const step = steps[currentStep];
+            
+            codeDisplay.innerHTML = `<pre><code>${step.code}</code></pre>`;
+            stepExplanation.textContent = step.explanation;
+            stepCounter.textContent = `Passo ${currentStep + 1} de ${steps.length}`;
+
+            btnPrev.disabled = currentStep === 0;
+            btnNext.disabled = currentStep === steps.length - 1;
+
+            const state = step.chartState;
+
+            simChart.options.scales.x.display = state.showAxes;
+            simChart.options.scales.y.display = state.showAxes;
+
+            if (state.showAxes && !state.applyTheme) {
+                simChart.options.scales.x.title = { display: true, text: 'displ' };
+                simChart.options.scales.y.title = { display: true, text: 'hwy' };
+                simChart.options.plugins.title = { display: false };
+                Chart.defaults.font.family = 'sans-serif';
+            } else if (state.applyTheme) {
+                simChart.options.scales.x.title = { display: true, text: 'Cilindrada (L)', font: {weight: 'bold'} };
+                simChart.options.scales.y.title = { display: true, text: 'Consumo (MPG)', font: {weight: 'bold'} };
+                simChart.options.plugins.title = { display: true, text: 'Eficiência vs Cilindrada', font: {size: 16, weight: 'bold'}, padding: 20 };
+            }
+
+            if (state.applyTheme) {
+                simChart.options.scales.x.grid = { display: false };
+                simChart.options.scales.y.grid = { color: '#e5e7eb' };
+                simChart.options.plugins.legend = { display: true, position: 'right' };
+            } else {
+                simChart.options.scales.x.grid = { display: true, color: '#f3f4f6' };
+                simChart.options.scales.y.grid = { display: true, color: '#f3f4f6' };
+                simChart.options.plugins.legend = { display: false };
+            }
+
+            if (!state.showData) {
+                simChart.data.datasets = [];
+            } else {
+                if (state.useColors) {
+                    const classes = ['compact', 'midsize', 'suv'];
+                    const datasets = classes.map(cls => ({
+                        label: cls,
+                        data: simData.filter(d => d.class === cls),
+                        backgroundColor: classColors[cls],
+                        pointRadius: state.applyTheme ? 6 : 4,
+                        pointHoverRadius: state.applyTheme ? 8 : 5
+                    }));
+                    simChart.data.datasets = datasets;
+                } else {
+                    simChart.data.datasets = [{
+                        label: 'All Data',
+                        data: simData,
+                        backgroundColor: '#374151',
+                        pointRadius: 4
+                    }];
+                }
+            }
+
+            simChart.update();
+        }
+
+        btnNext.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateSimulator();
+            }
+        });
+
+        btnPrev.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateSimulator();
+            }
+        });
+
+        const exercises = [
+            {
+                title: "Exercício 1: Exploração Inicial",
+                content: "Utilize o dataset <code>mpg</code> que já vem no R.<br><br><ul class='list-disc pl-5 space-y-1'><li>Crie um gráfico de dispersão entre <code>cty</code> (consumo na cidade) e <code>hwy</code> (consumo na autoestrada).</li><li>O que observa na relação entre estas duas variáveis?</li></ul>"
+            },
+            {
+                title: "Exercício 2: Mapeamento de Cores e Formas",
+                content: "No gráfico anterior (exercício 1):<br><br><ul class='list-disc pl-5 space-y-1'><li>Mapeie a cor dos pontos à variável <code>drv</code> (tipo de tração: frente, trás ou 4x4).</li><li>Mapeie o formato (<code>shape</code>) dos pontos à mesma variável <code>drv</code>.</li><li><strong>Questão:</strong> O que acontece se mapear uma variável contínua (ex: <code>displ</code>) à estética <code>shape</code>? Porquê?</li></ul>"
+            },
+            {
+                title: "Exercício 3: Mapeamento Estático vs Dinâmico",
+                content: "Tente criar dois gráficos diferentes:<br><br><ol class='list-decimal pl-5 space-y-1'><li>Um gráfico de dispersão onde <strong>todos</strong> os pontos são azuis (<code>blue</code>).</li><li>Um gráfico de dispersão onde a cor dos pontos depende da variável <code>class</code>.</li></ol><br><p class='text-sm text-teal-700 bg-teal-50 p-3 rounded'><strong>Dica:</strong> Lembre-se que cores fixas ficam fora do <code>aes()</code>, cores baseadas em dados ficam dentro do <code>aes()</code>.</p>"
+            },
+            {
+                title: "Exercício 4: Introdução ao geom_smooth",
+                content: "Adicione uma linha de tendência ao seu gráfico de dispersão:<br><br><ul class='list-disc pl-5 space-y-1'><li>Utilize <code>+ geom_smooth()</code> após o <code>geom_point()</code>.</li><li>Experimente remover os pontos e deixar apenas a linha. O que acontece?</li></ul>"
+            },
+            {
+                title: "Exercício 5: Desafio Final (Personalização)",
+                content: "Crie o gráfico mais informativo que conseguir usando as variáveis <code>displ</code>, <code>hwy</code> e <code>cyl</code>.<br><br><ul class='list-disc pl-5 space-y-1'><li>Use <code>theme_light()</code>.</li><li>Adicione um título apelativo.</li><li>Altere o nome dos eixos para Português.</li></ul>"
+            }
+        ];
+
+        const accContainer = document.getElementById('accordion-container');
+        
+        exercises.forEach((ex, index) => {
+            const item = document.createElement('div');
+            item.className = 'border border-stone-200 rounded-lg overflow-hidden';
+            
+            const header = document.createElement('button');
+            header.className = 'w-full text-left px-6 py-4 bg-stone-50 hover:bg-stone-100 font-semibold text-stone-800 flex justify-between items-center focus:outline-none transition-colors';
+            header.innerHTML = `<span>${ex.title}</span><span class="text-xl transform transition-transform duration-200">+</span>`;
+            
+            const content = document.createElement('div');
+            content.className = 'px-6 py-0 max-h-0 overflow-hidden bg-white text-stone-600 transition-all duration-300 ease-in-out';
+            content.innerHTML = `<div class="py-4 border-t border-stone-100">${ex.content}</div>`;
+            
+            header.addEventListener('click', () => {
+                const isOpen = content.style.maxHeight;
+                
+                document.querySelectorAll('#accordion-container > div > div').forEach(c => {
+                    c.style.maxHeight = null;
+                });
+                document.querySelectorAll('#accordion-container button span:last-child').forEach(icon => {
+                    icon.textContent = '+';
+                    icon.classList.remove('rotate-45');
+                });
+
+                if (!isOpen) {
+                    content.style.maxHeight = content.scrollHeight + "px";
+                    header.querySelector('span:last-child').textContent = '+';
+                    header.querySelector('span:last-child').classList.add('rotate-45');
+                }
+            });
+
+            item.appendChild(header);
+            item.appendChild(content);
+            accContainer.appendChild(item);
+        });
+
+        updateSimulator();
+
+    </script>
+</body>
+</html>

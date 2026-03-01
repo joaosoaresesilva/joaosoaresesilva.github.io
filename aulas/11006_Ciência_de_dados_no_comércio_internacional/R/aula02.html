@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aula 02: Distribuições e Categorias</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .code-block {
+            font-family: monospace;
+            white-space: pre-wrap;
+            background-color: #1e293b;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+        .keyword { color: #c678dd; }
+        .function { color: #61afef; }
+        .string { color: #98c379; }
+        .comment-code { color: #5c6370; font-style: italic; }
+        
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #2563eb;
+            cursor: pointer;
+            margin-top: -8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #cbd5e1;
+            border-radius: 2px;
+        }
+    </style>
+    <!-- Chosen Palette: Slate and Blue (bg-slate-50, text-slate-800, blue-600 for interactions, slate-900 for code blocks) -->
+    <!-- Application Structure Plan: The SPA is structured as an interactive learning dashboard divided into functional learning modules based on the report's concepts. 1) Introduction to set the context. 2) Categorical Data module with interactive buttons to toggle between simple, stacked, and dodged bar charts. 3) Continuous Data module with a slider to adjust histogram bins and a toggle for density, illustrating distribution concepts dynamically. 4) Boxplot module using Plotly to demonstrate outliers and medians interactively. 5) An accordion-style Exercise Laboratory for self-assessment. This structure supports "learning by doing", allowing users to physically manipulate the variables (like binwidth or position) that the R code teaches conceptually. -->
+    <!-- Visualization & Content Choices: Report Info -> Goal -> Viz/Presentation Method -> Interaction -> Justification -> Library/Method
+         - Categorical Variables -> Compare categories -> Bar Chart -> Toggle buttons for position (dodge, stack) -> Shows how 'geom_bar' behaves with different mapping -> Chart.js (Canvas)
+         - Continuous Variables -> Show distribution -> Histogram/Density Line -> Slider for 'binwidth' & Toggle for Density -> Visually explains the impact of bins on data shape -> Chart.js (Canvas)
+         - Outliers/Medians -> Show statistical spread -> Boxplot -> Hover tooltips for quartiles -> Best standard method for visualizing distributions and outliers as requested in the text -> Plotly.js
+         - Exercises -> Organize tasks -> Accordion list -> Click to expand -> Keeps UI clean while providing full textual content. NO SVG/Mermaid used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased leading-relaxed">
+
+    <nav class="bg-blue-700 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <div class="font-bold text-xl tracking-tight">DataViz Lab</div>
+            <div class="text-sm font-medium text-blue-100">Aula 02: Distribuições e Categorias</div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-16">
+
+        <header class="max-w-3xl mx-auto text-center space-y-4">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight">Visualizar Distribuições e Categorias</h1>
+            <p class="text-lg text-slate-600">Explore como o R e o pacote <code class="bg-slate-200 px-1 rounded text-slate-700">ggplot2</code> respondem a perguntas fundamentais: "Qual é a frequência de cada categoria?" e "Como os valores se distribuem num intervalo?". Interaja com os painéis abaixo para compreender a lógica por trás do código.</p>
+        </header>
+
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 md:p-8 border-b border-slate-100 bg-slate-50">
+                <h2 class="text-2xl font-bold text-slate-800">1. Variáveis Categóricas: Gráficos de Barras</h2>
+                <p class="text-slate-600 mt-2">O <code class="font-mono text-sm">geom_bar</code> é especial porque, por defeito, ele faz a contagem dos dados por nós (estatística implícita). Interaja com os botões para ver como diferentes posições afetam a visualização e o código correspondente.</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-0">
+                <div class="lg:col-span-5 p-6 md:p-8 bg-white border-r border-slate-100 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Controlo Interativo</h3>
+                        <div class="space-y-3">
+                            <button id="btn-simple" class="w-full text-left px-4 py-3 rounded-lg border-2 border-blue-600 bg-blue-50 text-blue-700 font-medium transition-all">Gráfico Simples (Contagem)</button>
+                            <button id="btn-stacked" class="w-full text-left px-4 py-3 rounded-lg border-2 border-slate-200 hover:border-blue-300 text-slate-600 font-medium transition-all">Barras Empilhadas (Stacking)</button>
+                            <button id="btn-dodge" class="w-full text-left px-4 py-3 rounded-lg border-2 border-slate-200 hover:border-blue-300 text-slate-600 font-medium transition-all">Lado a Lado (Dodging)</button>
+                        </div>
+                    </div>
+                    <div class="mt-8">
+                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Código R (ggplot2)</h3>
+                        <div id="code-bars" class="code-block"></div>
+                    </div>
+                </div>
+                <div class="lg:col-span-7 p-6 md:p-8 bg-slate-50 flex items-center justify-center">
+                    <div class="chart-container">
+                        <canvas id="barChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 md:p-8 border-b border-slate-100 bg-slate-50">
+                <h2 class="text-2xl font-bold text-slate-800">2. Variáveis Contínuas: Histogramas e Densidade</h2>
+                <p class="text-slate-600 mt-2">Para ver onde os dados se concentram ao longo de um eixo contínuo. O parâmetro <code class="font-mono text-sm">binwidth</code> (ou bins) é crucial no histograma. Ajuste o seletor para entender o seu impacto.</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-0">
+                <div class="lg:col-span-5 p-6 md:p-8 bg-white border-r border-slate-100 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Controlo Interativo</h3>
+                        
+                        <div class="flex rounded-lg bg-slate-100 p-1 mb-6">
+                            <button id="btn-hist" class="flex-1 py-2 text-sm font-bold rounded bg-white text-blue-600 shadow-sm transition-all">Histograma</button>
+                            <button id="btn-dens" class="flex-1 py-2 text-sm font-bold rounded text-slate-500 hover:text-slate-700 transition-all">Densidade</button>
+                        </div>
+
+                        <div id="bin-control" class="space-y-2">
+                            <div class="flex justify-between">
+                                <label class="text-sm font-medium text-slate-700">Tamanho do Bin (Largura do Intervalo)</label>
+                                <span id="bin-value" class="text-sm font-bold text-blue-600">2</span>
+                            </div>
+                            <input type="range" id="bin-slider" min="1" max="10" value="2" step="1">
+                            <p class="text-xs text-slate-500 mt-1">Bins menores revelam mais ruído; bins maiores mostram a tendência geral.</p>
+                        </div>
+                    </div>
+                    <div class="mt-8">
+                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Código R (ggplot2)</h3>
+                        <div id="code-dist" class="code-block"></div>
+                    </div>
+                </div>
+                <div class="lg:col-span-7 p-6 md:p-8 bg-slate-50 flex items-center justify-center">
+                    <div class="chart-container">
+                        <canvas id="distChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 md:p-8 border-b border-slate-100 bg-slate-50">
+                <h2 class="text-2xl font-bold text-slate-800">3. Comparação: O Boxplot</h2>
+                <p class="text-slate-600 mt-2">Essencial para identificar valores atípicos (<em>outliers</em>), a mediana e a dispersão dos quartis em diferentes categorias simultaneamente.</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-0">
+                <div class="lg:col-span-5 p-6 md:p-8 bg-white border-r border-slate-100 flex flex-col justify-center">
+                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Análise Visual</h3>
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-start">
+                            <span class="text-blue-500 mr-2">&#9632;</span>
+                            <span class="text-sm text-slate-600">A linha central na caixa representa a <strong>Mediana</strong>.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-blue-500 mr-2">&#9632;</span>
+                            <span class="text-sm text-slate-600">A caixa contém 50% dos dados (do 1º ao 3º Quartil).</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-blue-500 mr-2">&#9632;</span>
+                            <span class="text-sm text-slate-600">Os pontos isolados fora das linhas são os <strong>Outliers</strong> (valores extremos).</span>
+                        </li>
+                    </ul>
+                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Código R (ggplot2)</h3>
+                    <div class="code-block"><span class="comment-code"># 6. Boxplot com coord_flip() para facilitar leitura</span>
+<span class="function">ggplot</span>(data = mpg, mapping = <span class="function">aes</span>(x = class, y = hwy)) +
+  <span class="function">geom_boxplot</span>(fill = <span class="string">"lightgrey"</span>) +
+  <span class="function">coord_flip</span>()</div>
+                </div>
+                <div class="lg:col-span-7 p-6 md:p-8 bg-slate-50 flex items-center justify-center">
+                    <div class="chart-container" id="boxplotChart"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-slate-900 rounded-2xl shadow-lg p-6 md:p-10 text-slate-300">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-white">Laboratório de Exercícios</h2>
+                <p class="mt-2 text-slate-400">Teste os seus conhecimentos aplicando as lógicas visuais exploradas acima. Clique em cada exercício para expandir o enunciado.</p>
+            </div>
+
+            <div class="space-y-4" id="exercise-accordion"></div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-100 py-8 mt-12 border-t border-slate-200 text-center">
+        <p class="text-slate-500 text-sm">Desenvolvido como ferramenta educacional interativa para análise de dados.</p>
+    </footer>
+
+    <script>
+        const mockClasses = ['compact', 'midsize', 'suv', '2seater', 'minivan', 'pickup', 'subcompact'];
+        const mockDrv = ['f', 'r', '4'];
+        
+        let mockMpgData = [];
+        const classDistribution = [47, 41, 62, 5, 11, 33, 35];
+        
+        classDistribution.forEach((count, index) => {
+            const cls = mockClasses[index];
+            for(let i=0; i<count; i++) {
+                let drv;
+                let hwyBase;
+                if(cls === 'suv' || cls === 'pickup') {
+                    drv = Math.random() > 0.2 ? '4' : (Math.random() > 0.5 ? 'r' : 'f');
+                    hwyBase = 15 + Math.random() * 10;
+                } else if(cls === 'compact' || cls === 'subcompact') {
+                    drv = Math.random() > 0.1 ? 'f' : '4';
+                    hwyBase = 25 + Math.random() * 15;
+                } else {
+                    drv = mockDrv[Math.floor(Math.random() * mockDrv.length)];
+                    hwyBase = 20 + Math.random() * 12;
+                }
+                
+                if(Math.random() > 0.95) {
+                    hwyBase += (Math.random() > 0.5 ? 10 : -5);
+                }
+
+                mockMpgData.push({
+                    class: cls,
+                    drv: drv,
+                    hwy: hwyBase
+                });
+            }
+        });
+
+        const codeSnippets = {
+            simple: `<span class="comment-code"># Gráfico de Barras Simples (Contagem automática)</span>\n<span class="function">ggplot</span>(data = mpg, mapping = <span class="function">aes</span>(x = class)) +\n  <span class="function">geom_bar</span>(fill = <span class="string">"steelblue"</span>) +\n  <span class="function">labs</span>(title = <span class="string">"Quantidade de Veículos por Classe"</span>)`,
+            stacked: `<span class="comment-code"># Barras Empilhadas (Stacking por Tração)</span>\n<span class="function">ggplot</span>(data = mpg, mapping = <span class="function">aes</span>(x = class, fill = drv)) +\n  <span class="function">geom_bar</span>() +\n  <span class="function">labs</span>(title = <span class="string">"Classe de Veículo por Tipo de Tração"</span>)`,
+            dodge: `<span class="comment-code"># Barras Lado a Lado (Dodging)</span>\n<span class="function">ggplot</span>(data = mpg, mapping = <span class="function">aes</span>(x = class, fill = drv)) +\n  <span class="function">geom_bar</span>(position = <span class="string">"dodge"</span>)`
+        };
+
+        let barChartInstance = null;
+        const ctxBar = document.getElementById('barChart').getContext('2d');
+        const codeBarsEl = document.getElementById('code-bars');
+        
+        const btnSimple = document.getElementById('btn-simple');
+        const btnStacked = document.getElementById('btn-stacked');
+        const btnDodge = document.getElementById('btn-dodge');
+
+        function updateBarButtons(activeBtn) {
+            [btnSimple, btnStacked, btnDodge].forEach(btn => {
+                btn.className = "w-full text-left px-4 py-3 rounded-lg border-2 border-slate-200 hover:border-blue-300 text-slate-600 font-medium transition-all";
+            });
+            activeBtn.className = "w-full text-left px-4 py-3 rounded-lg border-2 border-blue-600 bg-blue-50 text-blue-700 font-medium transition-all";
+        }
+
+        function renderBarChart(type) {
+            if(barChartInstance) barChartInstance.destroy();
+
+            const labels = mockClasses;
+            let datasets = [];
+            let isStacked = false;
+
+            if (type === 'simple') {
+                const dataCounts = labels.map(c => mockMpgData.filter(d => d.class === c).length);
+                datasets = [{
+                    label: 'Contagem Total',
+                    data: dataCounts,
+                    backgroundColor: '#4682b4',
+                    borderWidth: 0
+                }];
+                codeBarsEl.innerHTML = codeSnippets.simple;
+            } else {
+                const drvTypes = ['f', '4', 'r'];
+                const colors = ['#3b82f6', '#10b981', '#f59e0b']; 
+                const drvLabels = ['Frente (f)', 'Integral (4)', 'Traseira (r)'];
+
+                datasets = drvTypes.map((drv, i) => {
+                    return {
+                        label: drvLabels[i],
+                        data: labels.map(c => mockMpgData.filter(d => d.class === c && d.drv === drv).length),
+                        backgroundColor: colors[i]
+                    };
+                });
+
+                if (type === 'stacked') {
+                    isStacked = true;
+                    codeBarsEl.innerHTML = codeSnippets.stacked;
+                } else {
+                    isStacked = false;
+                    codeBarsEl.innerHTML = codeSnippets.dodge;
+                }
+            }
+
+            barChartInstance = new Chart(ctxBar, {
+                type: 'bar',
+                data: { labels: labels, datasets: datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: isStacked, grid: { display: false } },
+                        y: { stacked: isStacked, beginAtZero: true }
+                    },
+                    plugins: {
+                        legend: { display: type !== 'simple', position: 'top' }
+                    }
+                }
+            });
+        }
+
+        btnSimple.addEventListener('click', () => { updateBarButtons(btnSimple); renderBarChart('simple'); });
+        btnStacked.addEventListener('click', () => { updateBarButtons(btnStacked); renderBarChart('stacked'); });
+        btnDodge.addEventListener('click', () => { updateBarButtons(btnDodge); renderBarChart('dodge'); });
+
+        renderBarChart('simple');
+
+        let distChartInstance = null;
+        const ctxDist = document.getElementById('distChart').getContext('2d');
+        const binSlider = document.getElementById('bin-slider');
+        const binValueEl = document.getElementById('bin-value');
+        const btnHist = document.getElementById('btn-hist');
+        const btnDens = document.getElementById('btn-dens');
+        const binControlDiv = document.getElementById('bin-control');
+        const codeDistEl = document.getElementById('code-dist');
+
+        let isHistogram = true;
+        let currentBinWidth = parseInt(binSlider.value);
+
+        function generateHistogramData(binWidth) {
+            const hwyData = mockMpgData.map(d => d.hwy);
+            const min = Math.floor(Math.min(...hwyData));
+            const max = Math.ceil(Math.max(...hwyData));
+            
+            const bins = [];
+            const labels = [];
+            
+            for (let i = min; i <= max; i += binWidth) {
+                labels.push(`${i}-${i+binWidth}`);
+                const count = hwyData.filter(v => v >= i && v < i + binWidth).length;
+                bins.push(count);
+            }
+            return { labels, bins };
+        }
+
+        function renderDistChart() {
+            if(distChartInstance) distChartInstance.destroy();
+
+            if (isHistogram) {
+                binControlDiv.style.opacity = '1';
+                binControlDiv.style.pointerEvents = 'auto';
+                const histData = generateHistogramData(currentBinWidth);
+                
+                codeDistEl.innerHTML = `<span class="comment-code"># Histograma com binwidth ajustável</span>\n<span class="function">ggplot</span>(data = mpg, mapping = <span class="function">aes</span>(x = hwy)) +\n  <span class="function">geom_histogram</span>(binwidth = <span class="keyword">${currentBinWidth}</span>, fill = <span class="string">"firebrick"</span>, color = <span class="string">"white"</span>)`;
+
+                distChartInstance = new Chart(ctxDist, {
+                    type: 'bar',
+                    data: {
+                        labels: histData.labels,
+                        datasets: [{
+                            label: 'Contagem',
+                            data: histData.bins,
+                            backgroundColor: '#b22222',
+                            borderColor: '#ffffff',
+                            borderWidth: 1,
+                            barPercentage: 1.0,
+                            categoryPercentage: 1.0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: { x: { display: false }, y: { beginAtZero: true } },
+                        plugins: { legend: { display: false }, tooltip: { callbacks: { title: () => null } } }
+                    }
+                });
+            } else {
+                binControlDiv.style.opacity = '0.4';
+                binControlDiv.style.pointerEvents = 'none';
+                
+                codeDistEl.innerHTML = `<span class="comment-code"># Gráfico de Densidade (Versão suavizada)</span>\n<span class="function">ggplot</span>(data = mpg, mapping = <span class="function">aes</span>(x = hwy, fill = drv)) +\n  <span class="function">geom_density</span>(alpha = <span class="keyword">0.5</span>)`;
+
+                const histDataDens = generateHistogramData(2);
+                
+                distChartInstance = new Chart(ctxDist, {
+                    type: 'line',
+                    data: {
+                        labels: histDataDens.labels,
+                        datasets: [{
+                            label: 'Densidade (Aproximação)',
+                            data: histDataDens.bins,
+                            backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: { x: { display: false }, y: { display: false } },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+        }
+
+        binSlider.addEventListener('input', (e) => {
+            currentBinWidth = parseInt(e.target.value);
+            binValueEl.textContent = currentBinWidth;
+            if(isHistogram) renderDistChart();
+        });
+
+        btnHist.addEventListener('click', () => {
+            isHistogram = true;
+            btnHist.className = "flex-1 py-2 text-sm font-bold rounded bg-white text-blue-600 shadow-sm transition-all";
+            btnDens.className = "flex-1 py-2 text-sm font-bold rounded text-slate-500 hover:text-slate-700 transition-all";
+            renderDistChart();
+        });
+
+        btnDens.addEventListener('click', () => {
+            isHistogram = false;
+            btnDens.className = "flex-1 py-2 text-sm font-bold rounded bg-white text-blue-600 shadow-sm transition-all";
+            btnHist.className = "flex-1 py-2 text-sm font-bold rounded text-slate-500 hover:text-slate-700 transition-all";
+            renderDistChart();
+        });
+
+        renderDistChart();
+
+        function renderBoxplot() {
+            const dataToPlot = [];
+            mockClasses.forEach(cls => {
+                const vals = mockMpgData.filter(d => d.class === cls).map(d => d.hwy);
+                if(vals.length > 0) {
+                    dataToPlot.push({
+                        y: cls,
+                        x: vals,
+                        type: 'box',
+                        name: cls,
+                        orientation: 'h',
+                        marker: { color: '#94a3b8' },
+                        line: { color: '#334155' },
+                        fillcolor: '#e2e8f0'
+                    });
+                }
+            });
+
+            const layout = {
+                margin: { l: 80, r: 20, t: 20, b: 40 },
+                xaxis: { title: 'Autoestrada (MPG)', zeroline: false },
+                yaxis: { title: '', categoryorder: 'array', categoryarray: mockClasses },
+                showlegend: false,
+                paper_bgcolor: 'transparent',
+                plot_bgcolor: 'transparent',
+                autosize: true
+            };
+
+            const config = { responsive: true, displayModeBar: false };
+
+            Plotly.newPlot('boxplotChart', dataToPlot, layout, config);
+        }
+        
+        renderBoxplot();
+        window.addEventListener('resize', () => { Plotly.Plots.resize('boxplotChart'); });
+
+        const exercises = [
+            {
+                title: "Exercício 1: Frequência de Fabricantes",
+                content: "Utilize o dataset <code class='text-slate-900 bg-slate-200 px-1 rounded'>mpg</code>. Crie um gráfico de barras que mostre quantos modelos cada fabricante (<code class='text-slate-900 bg-slate-200 px-1 rounded'>manufacturer</code>) tem no dataset. Ordene as barras da maior para a menor (Dica: use <code class='text-slate-900 bg-slate-200 px-1 rounded'>fct_infreq</code> da biblioteca <code class='text-slate-900 bg-slate-200 px-1 rounded'>forcats</code>, que já vem no tidyverse)."
+            },
+            {
+                title: "Exercício 2: O impacto dos Bins",
+                content: "Crie dois histogramas da variável <code class='text-slate-900 bg-slate-200 px-1 rounded'>displ</code> (cilindrada):<br><br>1. Um com <code class='text-slate-900 bg-slate-200 px-1 rounded'>bins = 10</code>.<br>2. Outro com <code class='text-slate-900 bg-slate-200 px-1 rounded'>bins = 50</code>.<br><br><strong>Questão:</strong> Qual deles permite identificar melhor os padrões de agrupamento?"
+            },
+            {
+                title: "Exercício 3: Comparação de Consumo",
+                content: "Crie um gráfico de densidade para a variável <code class='text-slate-900 bg-slate-200 px-1 rounded'>cty</code> (consumo na cidade), mas desta vez utilize a estética <code class='text-slate-900 bg-slate-200 px-1 rounded'>color</code> para distinguir o número de cilindros (<code class='text-slate-900 bg-slate-200 px-1 rounded'>cyl</code>).<br><br><strong>Nota:</strong> Como <code class='text-slate-900 bg-slate-200 px-1 rounded'>cyl</code> é um número, converta-o para factor: <code class='text-slate-900 bg-slate-200 px-1 rounded'>aes(x = cty, color = factor(cyl))</code>."
+            },
+            {
+                title: "Exercício 4: Identificar Outliers",
+                content: "Crie um boxplot comparando o consumo na autoestrada (<code class='text-slate-900 bg-slate-200 px-1 rounded'>hwy</code>) entre os diferentes tipos de tração (<code class='text-slate-900 bg-slate-200 px-1 rounded'>drv</code>).<br><br><ul class='list-disc pl-5 mt-2 space-y-1'><li>Adicione uma cor diferente para cada tipo de tração.</li><li>Consegue identificar algum valor extremo (ponto isolado)? Em que categoria?</li></ul>"
+            },
+            {
+                title: "Exercício 5: Design e Transparência",
+                content: "Crie um gráfico de densidade sobreposto para <code class='text-slate-900 bg-slate-200 px-1 rounded'>hwy</code>, preenchido pela variável <code class='text-slate-900 bg-slate-200 px-1 rounded'>drv</code>. Use um nível de transparência (<code class='text-slate-900 bg-slate-200 px-1 rounded'>alpha</code>) que permita ver todas as curvas claramente. Retire a legenda do gráfico."
+            }
+        ];
+
+        const accContainer = document.getElementById('exercise-accordion');
+        
+        exercises.forEach((ex, index) => {
+            const item = document.createElement('div');
+            item.className = 'border border-slate-700 rounded-lg overflow-hidden bg-slate-800';
+            
+            const header = document.createElement('button');
+            header.className = 'w-full text-left px-6 py-4 hover:bg-slate-700 font-semibold text-slate-200 flex justify-between items-center focus:outline-none transition-colors';
+            header.innerHTML = `<span>${ex.title}</span><span class="text-xl text-blue-400 transform transition-transform duration-200">&#43;</span>`;
+            
+            const content = document.createElement('div');
+            content.className = 'px-6 py-0 max-h-0 overflow-hidden text-slate-300 transition-all duration-300 ease-in-out';
+            content.innerHTML = `<div class="py-4 border-t border-slate-700 leading-relaxed">${ex.content}</div>`;
+            
+            header.addEventListener('click', () => {
+                const isOpen = content.style.maxHeight;
+                
+                document.querySelectorAll('#exercise-accordion > div > div').forEach(c => {
+                    c.style.maxHeight = null;
+                });
+                document.querySelectorAll('#exercise-accordion button span:last-child').forEach(icon => {
+                    icon.innerHTML = '&#43;';
+                    icon.classList.remove('rotate-45', 'text-amber-400');
+                    icon.classList.add('text-blue-400');
+                });
+
+                if (!isOpen) {
+                    content.style.maxHeight = content.scrollHeight + "px";
+                    header.querySelector('span:last-child').innerHTML = '&#10005;'; 
+                    header.querySelector('span:last-child').classList.remove('text-blue-400');
+                    header.querySelector('span:last-child').classList.add('text-amber-400');
+                }
+            });
+
+            item.appendChild(header);
+            item.appendChild(content);
+            accContainer.appendChild(item);
+        });
+
+    </script>
+</body>
+</html>

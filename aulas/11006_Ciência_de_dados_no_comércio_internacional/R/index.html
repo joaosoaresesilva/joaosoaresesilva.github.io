@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Curso R DataViz - Portal de Aulas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .aula-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .aula-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-indigo-700 text-white py-12 shadow-md">
+        <div class="max-w-5xl mx-auto px-6 text-center">
+            <h1 class="text-4xl font-extrabold mb-4 text-white">Formação R & Data Visualization</h1>
+            <p class="text-indigo-100 text-lg max-w-2xl mx-auto">
+                Explora os conteúdos teóricos e as resoluções interativas de cada sessão. Seleciona um recurso abaixo.
+            </p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto px-6 py-12">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            
+            <!-- Aula 01 -->
+            <div class="aula-card bg-white p-8 rounded-2xl border border-slate-200 flex flex-col">
+                <div class="flex justify-between items-start mb-4">
+                    <span class="bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full uppercase">Módulo 1</span>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-900 mb-2">Aula 01: Gramática de Gráficos</h2>
+                <p class="text-slate-600 mb-6 flex-grow">Fundamentos do ggplot2, mapeamento estético e camadas básicas.</p>
+                <div class="flex gap-4">
+                    <a href="aula01.html" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">Conteúdo Teórico</a>
+                    <span class="text-slate-300">|</span>
+                    <a href="r01.html" class="text-sm font-semibold text-emerald-600 hover:text-emerald-800 transition-colors">Resolução (r01)</a>
+                </div>
+            </div>
+
+            <!-- Aula 02 -->
+            <div class="aula-card bg-white p-8 rounded-2xl border border-slate-200 flex flex-col">
+                <div class="flex justify-between items-start mb-4">
+                    <span class="bg-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full uppercase">Módulo 2</span>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-900 mb-2">Aula 02: Distribuições e Categorias</h2>
+                <p class="text-slate-600 mb-6 flex-grow">Geometrias para barras, histogramas, densidades e boxplots.</p>
+                <div class="flex gap-4">
+                    <a href="aula02.html" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">Conteúdo Teórico</a>
+                    <span class="text-slate-300">|</span>
+                    <a href="r02.html" class="text-sm font-semibold text-emerald-600 hover:text-emerald-800 transition-colors">Resolução (r02)</a>
+                </div>
+            </div>
+
+            <!-- Aula 03 -->
+            <div class="aula-card bg-white p-8 rounded-2xl border border-slate-200 flex flex-col">
+                <div class="flex justify-between items-start mb-4">
+                    <span class="bg-amber-100 text-amber-700 text-xs font-bold px-3 py-1 rounded-full uppercase">Módulo 3</span>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-900 mb-2">Aula 03: Facetas e Relações</h2>
+                <p class="text-slate-600 mb-6 flex-grow">Subgráficos, linhas de tendência e análise multivariada.</p>
+                <div class="flex gap-4">
+                    <a href="aula03.html" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">Conteúdo Teórico</a>
+                    <span class="text-slate-300">|</span>
+                    <a href="r03.html" class="text-sm font-semibold text-emerald-600 hover:text-emerald-800 transition-colors">Resolução (r03)</a>
+                </div>
+            </div>
+
+            <!-- Aula 04 -->
+            <div class="aula-card bg-white p-8 rounded-2xl border border-slate-200 flex flex-col">
+                <div class="flex justify-between items-start mb-4">
+                    <span class="bg-rose-100 text-rose-700 text-xs font-bold px-3 py-1 rounded-full uppercase">Módulo 4</span>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-900 mb-2">Aula 04: Design e Temas</h2>
+                <p class="text-slate-600 mb-6 flex-grow">Personalização avançada, paletas de cores e escalas profissionais.</p>
+                <div class="flex gap-4">
+                    <a href="aula04.html" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">Conteúdo Teórico</a>
+                    <span class="text-slate-300">|</span>
+                    <a href="r04.html" class="text-sm font-semibold text-emerald-600 hover:text-emerald-800 transition-colors">Resolução (r04)</a>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-auto py-10 border-t border-slate-200">
+        <div class="max-w-5xl mx-auto px-6 text-center text-slate-500 text-sm">
+            <p>&copy; 2024 Lab de Data Visualization - Desenvolvido para fins educativos.</p>
+        </div>
+    </footer>
+
+</body>
+</html>
