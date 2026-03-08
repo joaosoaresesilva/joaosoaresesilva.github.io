@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Tabela Periódica - Jogo</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            text-align: center; 
+            background: #1a1a2e; 
+            color: white; 
+            margin: 0; 
+            padding: 5px; 
+            overflow: hidden; /* Impede rolagem da página */
+        }
+
+        /* Timer mais discreto para poupar espaço */
+        #timer { 
+            font-size: 22px; 
+            font-weight: bold; 
+            color: #e74c3c; 
+            margin: 5px 0; 
+            height: 25px;
+        }
+
+        /* Ajuste de escala para caber no ecrã */
+        .table-wrapper { 
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            margin: 0;
+            transform: scale(0.68); /* Diminui o tamanho total da tabela */
+            transform-origin: top center;
+            height: 480px; /* Altura fixa para compensar a escala */
+        }
+
+        .periodic-table { 
+            display: grid; 
+            grid-template-columns: 30px repeat(18, 50px); 
+            grid-template-rows: repeat(11, 55px); 
+            gap: 3px; 
+            width: max-content;
+        }
+
+        .element { 
+            border: 1px solid rgba(255,255,255,0.2); 
+            border-radius: 3px; 
+            font-size: 11px; 
+            cursor: pointer; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+            transition: 0.2s;
+        }
+
+        .element:hover { transform: scale(1.1); z-index: 10; box-shadow: 0 0 8px #fff; }
+        .selected { transform: scale(1.3) !important; background: #f1c40f !important; color: #000 !important; z-index: 20; border: 2px solid #fff; }
+
+        /* Categorias */
+        .nonmetal { background: #27ae60; } .noble { background: #8e44ad; }
+        .alkali { background: #e67e22; } .alkaline { background: #d35400; }
+        .metalloid { background: #16a085; } .halogen { background: #c0392b; }
+        .transition { background: #2980b9; } .post-transition { background: #7f8c8d; }
+        .lanthanide { background: #be2edd; } .actinide { background: #eb4d4b; }
+        .header-num { color: #aaa; font-size: 12px; }
+
+        /* Painel dos Jogadores compacto na base */
+        .players { 
+            display: flex; 
+            justify-content: center; 
+            gap: 10px; 
+            margin-top: -60px; /* Puxa os jogadores para cima devido ao scale da tabela */
+        }
+
+        .player-card { 
+            background: #16213e; 
+            padding: 8px; 
+            border-radius: 8px; 
+            width: 170px; 
+            border: 1px solid #3498db; 
+        }
+
+        .player-card h3 { margin: 0 0 5px 0; font-size: 14px; color: #3498db; }
+
+        input { 
+            width: 85%; 
+            padding: 5px; 
+            margin: 2px 0; 
+            border-radius: 4px; 
+            border: none; 
+            font-size: 11px;
+        }
+
+        button { 
+            width: 100%; 
+            padding: 7px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            border-radius: 4px; 
+            border: none; 
+            font-size: 12px;
+        }
+
+        .btn-concluir { background: #3498db; color: white; }
+        .restart-btn { background: #27ae60; color: white; display: none; margin-top: 5px; }
+        input:disabled, button:disabled { opacity: 0.3; }
+    </style>
+</head>
+<body>
+
+    <div id="timer">Escolha um elemento!</div>
+
+    <div class="table-wrapper">
+        <div class="periodic-table" id="table"></div>
+    </div>
+
+    <div class="players">
+        <div class="player-card" id="p1">
+            <h3>JOGADOR 1</h3>
+            <input type="text" placeholder="Nome" id="name1">
+            <input type="text" placeholder="Nº Atómico" id="num1">
+            <button class="btn-concluir" onclick="submitAnswer(1)">Concluir</button>
+            <button class="restart-btn" onclick="restartGame()" id="res1">Novo Jogo</button>
+        </div>
+        <div class="player-card" id="p2">
+            <h3>JOGADOR 2</h3>
+            <input type="text" placeholder="Nome" id="name2">
+            <input type="text" placeholder="Nº Atómico" id="num2">
+            <button class="btn-concluir" onclick="submitAnswer(2)">Concluir</button>
+            <button class="restart-btn" onclick="restartGame()" id="res2">Novo Jogo</button>
+        </div>
+        <div class="player-card" id="p3">
+            <h3>JOGADOR 3</h3>
+            <input type="text" placeholder="Nome" id="name3">
+            <input type="text" placeholder="Nº Atómico" id="num3">
+            <button class="btn-concluir" onclick="submitAnswer(3)">Concluir</button>
+            <button class="restart-btn" onclick="restartGame()" id="res3">Novo Jogo</button>
+        </div>
+    </div>
+
+    <script>
+        const elementsData = [
+            { s: "H", n: "Hidrogénio", z: 1, r: 2, c: 2, cat: "nonmetal" },
+            { s: "He", n: "Hélio", z: 2, r: 2, c: 19, cat: "noble" },
+            { s: "Li", n: "Lítio", z: 3, r: 3, c: 2, cat: "alkali" },
+            { s: "Be", n: "Berílio", z: 4, r: 3, c: 3, cat: "alkaline" },
+            { s: "B", n: "Boro", z: 5, r: 3, c: 14, cat: "metalloid" },
+            { s: "C", n: "Carbono", z: 6, r: 3, c: 15, cat: "nonmetal" },
+            { s: "N", n: "Azoto", z: 7, r: 3, c: 16, cat: "nonmetal" },
+            { s: "O", n: "Oxigénio", z: 8, r: 3, c: 17, cat: "nonmetal" },
+            { s: "F", n: "Flúor", z: 9, r: 3, c: 18, cat: "halogen" },
+            { s: "Ne", n: "Néon", z: 10, r: 3, c: 19, cat: "noble" },
+            { s: "Na", n: "Sódio", z: 11, r: 4, c: 2, cat: "alkali" },
+            { s: "Mg", n: "Magnésio", z: 12, r: 4, c: 3, cat: "alkaline" },
+            { s: "Al", n: "Alumínio", z: 13, r: 4, c: 14, cat: "post-transition" },
+            { s: "Si", n: "Silício", z: 14, r: 4, c: 15, cat: "metalloid" },
+            { s: "P", n: "Fósforo", z: 15, r: 4, c: 16, cat: "nonmetal" },
+            { s: "S", n: "Enxofre", z: 16, r: 4, c: 17, cat: "nonmetal" },
+            { s: "Cl", n: "Cloro", z: 17, r: 4, c: 18, cat: "halogen" },
+            { s: "Ar", n: "Árgon", z: 18, r: 4, c: 19, cat: "noble" },
+            { s: "K", n: "Potássio", z: 19, r: 5, c: 2, cat: "alkali" },
+            { s: "Ca", n: "Cálcio", z: 20, r: 5, c: 3, cat: "alkaline" },
+            { s: "Sc", n: "Escândio", z: 21, r: 5, c: 4, cat: "transition" },
+            { s: "Ti", n: "Titânio", z: 22, r: 5, c: 5, cat: "transition" },
+            { s: "V", n: "Vanádio", z: 23, r: 5, c: 6, cat: "transition" },
+            { s: "Cr", n: "Crómio", z: 24, r: 5, c: 7, cat: "transition" },
+            { s: "Mn", n: "Manganésio", z: 25, r: 5, c: 8, cat: "transition" },
+            { s: "Fe", n: "Ferro", z: 26, r: 5, c: 9, cat: "transition" },
+            { s: "Co", n: "Cobalto", z: 27, r: 5, c: 10, cat: "transition" },
+            { s: "Ni", n: "Níquel", z: 28, r: 5, c: 11, cat: "transition" },
+            { s: "Cu", n: "Cobre", z: 29, r: 5, c: 12, cat: "transition" },
+            { s: "Zn", n: "Zinco", z: 30, r: 5, c: 13, cat: "transition" },
+            { s: "Ga", n: "Gálio", z: 31, r: 5, c: 14, cat: "post-transition" },
+            { s: "Ge", n: "Germânio", z: 32, r: 5, c: 15, cat: "metalloid" },
+            { s: "As", n: "Arsénio", z: 33, r: 5, c: 16, cat: "metalloid" },
+            { s: "Se", n: "Selénio", z: 34, r: 5, c: 17, cat: "nonmetal" },
+            { s: "Br", n: "Bromo", z: 35, r: 5, c: 18, cat: "halogen" },
+            { s: "Kr", n: "Criptón", z: 36, r: 5, c: 19, cat: "noble" },
+            { s: "Rb", n: "Rubídio", z: 37, r: 6, c: 2, cat: "alkali" },
+            { s: "Sr", n: "Estrôncio", z: 38, r: 6, c: 3, cat: "alkaline" },
+            { s: "Y", n: "Ítrio", z: 39, r: 6, c: 4, cat: "transition" },
+            { s: "Zr", n: "Zircónio", z: 40, r: 6, c: 5, cat: "transition" },
+            { s: "Nb", n: "Nióbio", z: 41, r: 6, c: 6, cat: "transition" },
+            { s: "Mo", n: "Molibdénio", z: 42, r: 6, c: 7, cat: "transition" },
+            { s: "Tc", n: "Tecnécio", z: 43, r: 6, c: 8, cat: "transition" },
+            { s: "Ru", n: "Ruténio", z: 44, r: 6, c: 9, cat: "transition" },
+            { s: "Rh", n: "Ródio", z: 45, r: 6, c: 10, cat: "transition" },
+            { s: "Pd", n: "Paládio", z: 46, r: 6, c: 11, cat: "transition" },
+            { s: "Ag", n: "Prata", z: 47, r: 6, c: 12, cat: "transition" },
+            { s: "Cd", n: "Cádmio", z: 48, r: 6, c: 13, cat: "transition" },
+            { s: "In", n: "Índio", z: 49, r: 6, c: 14, cat: "post-transition" },
+            { s: "Sn", n: "Estanho", z: 50, r: 6, c: 15, cat: "post-transition" },
+            { s: "Sb", n: "Antimónio", z: 51, r: 6, c: 16, cat: "metalloid" },
+            { s: "Te", n: "Telúrio", z: 52, r: 6, c: 17, cat: "metalloid" },
+            { s: "I", n: "Iodo", z: 53, r: 6, c: 18, cat: "halogen" },
+            { s: "Xe", n: "Xénon", z: 54, r: 6, c: 19, cat: "noble" },
+            { s: "Cs", n: "Césio", z: 55, r: 7, c: 2, cat: "alkali" },
+            { s: "Ba", n: "Bário", z: 56, r: 7, c: 3, cat: "alkaline" },
+            { s: "La", n: "Lantânio", z: 57, r: 10, c: 5, cat: "lanthanide" },
+            { s: "Ce", n: "Cério", z: 58, r: 10, c: 6, cat: "lanthanide" },
+            { s: "Pr", n: "Praseodímio", z: 59, r: 10, c: 7, cat: "lanthanide" },
+            { s: "Nd", n: "Neodímio", z: 60, r: 10, c: 8, cat: "lanthanide" },
+            { s: "Pm", n: "Promécio", z: 61, r: 10, c: 9, cat: "lanthanide" },
+            { s: "Sm", n: "Samário", z: 62, r: 10, c: 10, cat: "lanthanide" },
+            { s: "Eu", n: "Európio", z: 63, r: 10, c: 11, cat: "lanthanide" },
+            { s: "Gd", n: "Gadolínio", z: 64, r: 10, c: 12, cat: "lanthanide" },
+            { s: "Tb", n: "Térbio", z: 65, r: 10, c: 13, cat: "lanthanide" },
+            { s: "Dy", n: "Disprósio", z: 66, r: 10, c: 14, cat: "lanthanide" },
+            { s: "Ho", n: "Hólmio", z: 67, r: 10, c: 15, cat: "lanthanide" },
+            { s: "Er", n: "Érbio", z: 68, r: 10, c: 16, cat: "lanthanide" },
+            { s: "Tm", n: "Túlio", z: 69, r: 10, c: 17, cat: "lanthanide" },
+            { s: "Yb", n: "Itérbio", z: 70, r: 10, c: 18, cat: "lanthanide" },
+            { s: "Lu", n: "Lutécio", z: 71, r: 10, c: 19, cat: "lanthanide" },
+            { s: "Hf", n: "Háfnio", z: 72, r: 7, c: 5, cat: "transition" },
+            { s: "Ta", n: "Tântalo", z: 73, r: 7, c: 6, cat: "transition" },
+            { s: "W", n: "Tungsténio", z: 74, r: 7, c: 7, cat: "transition" },
+            { s: "Re", n: "Rénio", z: 75, r: 7, c: 8, cat: "transition" },
+            { s: "Os", n: "Ósmio", z: 76, r: 7, c: 9, cat: "transition" },
+            { s: "Ir", n: "Irídio", z: 77, r: 7, c: 10, cat: "transition" },
+            { s: "Pt", n: "Platina", z: 78, r: 7, c: 11, cat: "transition" },
+            { s: "Au", n: "Ouro", z: 79, r: 7, c: 12, cat: "transition" },
+            { s: "Hg", n: "Mercúrio", z: 80, r: 7, c: 13, cat: "transition" },
+            { s: "Tl", n: "Tálio", z: 81, r: 7, c: 14, cat: "post-transition" },
+            { s: "Pb", n: "Chumbo", z: 82, r: 7, c: 15, cat: "post-transition" },
+            { s: "Bi", n: "Bismuto", z: 83, r: 7, c: 16, cat: "post-transition" },
+            { s: "Po", n: "Polónio", z: 84, r: 7, c: 17, cat: "metalloid" },
+            { s: "At", n: "Ástato", z: 85, r: 7, c: 18, cat: "halogen" },
+            { s: "Rn", n: "Rádon", z: 86, r: 7, c: 19, cat: "noble" },
+            { s: "Fr", n: "Frâncio", z: 87, r: 8, c: 2, cat: "alkali" },
+            { s: "Ra", n: "Rádio", z: 88, r: 8, c: 3, cat: "alkaline" },
+            { s: "Ac", n: "Actínio", z: 89, r: 11, c: 5, cat: "actinide" },
+            { s: "Th", n: "Tório", z: 90, r: 11, c: 6, cat: "actinide" },
+            { s: "Pa", n: "Protactínio", z: 91, r: 11, c: 7, cat: "actinide" },
+            { s: "U", n: "Urânio", z: 92, r: 11, c: 8, cat: "actinide" },
+            { s: "Np", n: "Neptúnio", z: 93, r: 11, c: 9, cat: "actinide" },
+            { s: "Pu", n: "Plutónio", z: 94, r: 11, c: 10, cat: "actinide" },
+            { s: "Am", n: "Amerício", z: 95, r: 11, c: 11, cat: "actinide" },
+            { s: "Cm", n: "Cúrio", z: 96, r: 11, c: 12, cat: "actinide" },
+            { s: "Bk", n: "Berquélio", z: 97, r: 11, c: 13, cat: "actinide" },
+            { s: "Cf", n: "Califórnio", z: 98, r: 11, c: 14, cat: "actinide" },
+            { s: "Es", n: "Einsteinio", z: 99, r: 11, c: 15, cat: "actinide" },
+            { s: "Fm", n: "Férmio", z: 100, r: 11, c: 16, cat: "actinide" },
+            { s: "Md", n: "Mendelévio", z: 101, r: 11, c: 17, cat: "actinide" },
+            { s: "No", n: "Nobélio", z: 102, r: 11, c: 18, cat: "actinide" },
+            { s: "Lr", n: "Laurêncio", z: 103, r: 11, c: 19, cat: "actinide" },
+            { s: "Rf", n: "Rutherfórdio", z: 104, r: 8, c: 5, cat: "transition" },
+            { s: "Db", n: "Dúbnio", z: 105, r: 8, c: 6, cat: "transition" },
+            { s: "Sg", n: "Seabórgio", z: 106, r: 8, c: 7, cat: "transition" },
+            { s: "Bh", n: "Bóhrio", z: 107, r: 8, c: 8, cat: "transition" },
+            { s: "Hs", n: "Hássio", z: 108, r: 8, c: 9, cat: "transition" },
+            { s: "Mt", n: "Meitnério", z: 109, r: 8, c: 10, cat: "transition" },
+            { s: "Ds", n: "Darmstádio", z: 110, r: 8, c: 11, cat: "transition" },
+            { s: "Rg", n: "Roentgénio", z: 111, r: 8, c: 12, cat: "transition" },
+            { s: "Cn", n: "Copernício", z: 112, r: 8, c: 13, cat: "transition" },
+            { s: "Nh", n: "Nipónio", z: 113, r: 8, c: 14, cat: "post-transition" },
+            { s: "Fl", n: "Fleróvio", z: 114, r: 8, c: 15, cat: "post-transition" },
+            { s: "Mc", n: "Moscóvio", z: 115, r: 8, c: 16, cat: "post-transition" },
+            { s: "Lv", n: "Livermório", z: 116, r: 8, c: 17, cat: "post-transition" },
+            { s: "Ts", n: "Tennesso", z: 117, r: 8, c: 18, cat: "halogen" },
+            { s: "Og", n: "Oganésson", z: 118, r: 8, c: 19, cat: "noble" }
+        ];
+
+        let selected = null, timer = null, gameActive = false;
+
+        function createTable() {
+            const table = document.getElementById("table");
+            for (let c = 1; c <= 18; c++) {
+                let d = document.createElement("div"); d.className = "header-num"; 
+                d.textContent = c; d.style.gridColumn = c + 1; d.style.gridRow = 1; table.appendChild(d);
+            }
+            for (let r = 1; r <= 7; r++) {
+                let d = document.createElement("div"); d.className = "header-num"; 
+                d.textContent = r; d.style.gridColumn = 1; d.style.gridRow = r + 1; table.appendChild(d);
+            }
+            elementsData.forEach(el => {
+                let div = document.createElement("div");
+                div.className = `element ${el.cat}`;
+                div.innerHTML = `<strong>${el.s}</strong><small>${el.z}</small>`;
+                div.style.gridRow = el.r; div.style.gridColumn = el.c;
+                div.onclick = () => selectElement(div, el);
+                table.appendChild(div);
+            });
+            setControls(false);
+        }
+
+        function setControls(state) {
+            document.querySelectorAll('input, .btn-concluir').forEach(el => el.disabled = !state);
+        }
+
+        function selectElement(div, el) {
+            if (gameActive) return;
+            selected = el;
+            document.querySelectorAll('.element').forEach(e => e.classList.remove('selected'));
+            div.classList.add('selected');
+            startRound();
+        }
+
+        function startRound() {
+            gameActive = true; let time = 10; setControls(true);
+            document.getElementById("timer").textContent = `Tempo: ${time}s`;
+            timer = setInterval(() => {
+                time--; document.getElementById("timer").textContent = `Tempo: ${time}s`;
+                if (time <= 0) { 
+                    clearInterval(timer); 
+                    gameActive = false; 
+                    setControls(false); 
+                    document.getElementById("timer").textContent = "Tempo Esgotado!";
+                    document.getElementById("res1").style.display = "block"; // Jogador 1 pode reiniciar se ninguém acertar
+                }
+            }, 1000);
+        }
+
+        function submitAnswer(p) {
+            if (!gameActive) return;
+            let n = document.getElementById(`name${p}`).value.trim().toLowerCase();
+            let z = parseInt(document.getElementById(`num${p}`).value);
+            if (n === selected.n.toLowerCase() && z === selected.z) {
+                clearInterval(timer); gameActive = false; setControls(false);
+                document.getElementById("timer").textContent = `Vencedor: Jogador ${p}!`;
+                document.getElementById(`res${p}`).style.display = "block";
+            } else { alert("Errado!"); }
+        }
+
+        function restartGame() {
+            selected = null; gameActive = false;
+            document.querySelectorAll('.element').forEach(e => e.classList.remove('selected'));
+            document.querySelectorAll('input').forEach(i => i.value = "");
+            document.querySelectorAll('.restart-btn').forEach(b => b.style.display = "none");
+            document.getElementById("timer").textContent = "Escolha um elemento!";
+            setControls(false);
+        }
+
+        window.onload = createTable;
+    </script>
+</body>
+</html>

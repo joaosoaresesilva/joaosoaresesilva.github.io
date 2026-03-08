@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<title>Jogo da Tabela Periódica</title>
+<style>
+body{font-family:Arial,sans-serif;text-align:center;background:#f4f4f4}
+h1{margin-top:20px}
+#timer{font-size:24px;margin:15px;font-weight:bold}
+.table-wrapper{display:flex;flex-direction:column;align-items:center}
+.group-numbers{display:grid;grid-template-columns:40px repeat(18,60px);gap:4px;margin-bottom:4px}
+.group-numbers div{font-weight:bold}
+.periodic-table{display:grid;grid-template-columns:40px repeat(18,60px);gap:4px;overflow-x:auto}
+.period-number{font-weight:bold;display:flex;align-items:center;justify-content:center}
+.element{border:1px solid #333;padding:6px 3px;border-radius:6px;font-size:12px;cursor:pointer;transition:0.2s}
+.element:hover{transform:scale(1.05)}
+.selected{transform:scale(1.4);background:#ffeb3b!important;z-index:2}
+.alkali{background:#ff6666}
+.alkaline{background:#ffb366}
+.transition{background:#66b3ff}
+.metalloid{background:#66ffcc}
+.nonmetal{background:#ffff66}
+.halogen{background:#ff66cc}
+.noble{background:#66ff99}
+.lanthanoid{background:#cc99ff}
+.actinoid{background:#ff4d4d}
+.players{display:flex;flex-wrap:wrap;justify-content:center;gap:20px;margin-top:20px}
+#scoreboard{display:flex;justify-content:center;gap:20px;margin-bottom:10px;background:white;padding:10px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.1)}
+#scoreboard div{color:red;font-weight:bold;font-size:20px}
+</style>
+</head>
+<body>
+
+<h1>Jogo da Tabela Periódica</h1>
+<div id="timer">Tempo: 10</div>
+
+<div id="scoreboard">
+<div id="score1">Jogador 1: 0</div>
+<div id="score2">Jogador 2: 0</div>
+<div id="score3">Jogador 3: 0</div>
+</div>
+
+<div class="table-wrapper">
+<div class="group-numbers" id="groups"></div>
+<div class="periodic-table" id="table"></div>
+</div>
+
+<div class="players">
+<div class="player" id="player1">
+<h3>Jogador 1</h3>
+<input type="text" placeholder="Nome do elemento">
+<input type="text" placeholder="Número atómico">
+<button onclick="submitAnswer(1)">Concluir</button>
+</div>
+<div class="player" id="player2">
+<h3>Jogador 2</h3>
+<input type="text" placeholder="Nome do elemento">
+<input type="text" placeholder="Número atómico">
+<button onclick="submitAnswer(2)">Concluir</button>
+</div>
+<div class="player" id="player3">
+<h3>Jogador 3</h3>
+<input type="text" placeholder="Nome do elemento">
+<input type="text" placeholder="Número atómico">
+<button onclick="submitAnswer(3)">Concluir</button>
+</div>
+</div>
+
+<button id="restartBtn" onclick="restartGame()">Reiniciar Novo Jogo</button>
+
+<script>
+const elements = [
+// símbolos reais H até Ne, restante elementos gerados automaticamente
+{symbol:"H", name:"Hidrogénio", number:1, period:1, group:1, cat:"nonmetal"},
+{symbol:"He", name:"Hélio", number:2, period:1, group:18, cat:"noble"},
+{symbol:"Li", name:"Lítio", number:3, period:2, group:1, cat:"alkali"},
+{symbol:"Be", name:"Berílio", number:4, period:2, group:2, cat:"alkaline"},
+{symbol:"B", name:"Boro", number:5, period:2, group:13, cat:"metalloid"},
+{symbol:"C", name:"Carbono", number:6, period:2, group:14, cat:"nonmetal"},
+{symbol:"N", name:"Azoto", number:7, period:2, group:15, cat:"nonmetal"},
+{symbol:"O", name:"Oxigénio", number:8, period:2, group:16, cat:"nonmetal"},
+{symbol:"F", name:"Flúor", number:9, period:2, group:17, cat:"halogen"},
+{symbol:"Ne", name:"Néon", number:10, period:2, group:18, cat:"noble"}
+];
+
+const allSymbols = ["H","He","Li","Be","B","C","N","O","F","Ne","Na","Mg","Al","Si","P","S","Cl","Ar","K","Ca","Sc","Ti","V","Cr","Mn","Fe","Co","Ni","Cu","Zn","Ga","Ge","As","Se","Br","Kr","Rb","Sr","Y","Zr","Nb","Mo","Tc","Ru","Rh","Pd","Ag","Cd","In","Sn","Sb","Te","I","Xe","Cs","Ba","La","Ce","Pr","Nd","Pm","Sm","Eu","Gd","Tb","Dy","Ho","Er","Tm","Yb","Lu","Hf","Ta","W","Re","Os","Ir","Pt","Au","Hg","Tl","Pb","Bi","Po","At","Rn","Fr","Ra","Ac","Th","Pa","U","Np","Pu","Am","Cm","Bk","Cf","Es","Fm","Md","No","Lr","Rf","Db","Sg","Bh","Hs","Mt","Ds","Rg","Cn","Nh","Fl","Mc","Lv","Ts","Og"];
+for(let i=1;i<=118;i++){
+if(!elements.find(e=>e.number===i)){
+elements.push({symbol:allSymbols[i-1],name:"Elemento "+i,number:i,period:Math.min(7,Math.ceil(i/18)),group:((i-1)%18)+1,cat:"transition"});
+}
+}
+
+let selectedElement=null;
+let timer;
+let timeLeft=10;
+let gameActive=false;
+let winner=null;
+let scores={1:0,2:0,3:0};
+
+const table=document.getElementById("table");
+const groupsDiv=document.getElementById("groups");
+
+function createHeaders(){
+groupsDiv.innerHTML="<div></div>";
+for(let g=1;g<=18;g++){
+const div=document.createElement("div");
+div.textContent=g;
+groupsDiv.appendChild(div);
+}}
+
+function createTable(){
+for(let p=1;p<=7;p++){
+const periodDiv=document.createElement("div");
+periodDiv.className="period-number";
+periodDiv.textContent=p;
+table.appendChild(periodDiv);
+for(let g=1;g<=18;g++){
+const el=elements.find(e=>e.period===p && e.group===g);
+if(el){
+const div=document.createElement("div");
+div.className=`element ${el.cat}`;
+div.innerHTML=`<strong>${el.symbol}</strong><br>${el.number}`;
+div.onclick=()=>selectElement(div,el);
+table.appendChild(div);
+}else{
+const empty=document.createElement("div");
+table.appendChild(empty);
+}
+}}
+}
+
+function selectElement(div,el){
+if(gameActive)return;
+document.querySelectorAll('.element').forEach(e=>e.classList.remove('selected'));
+div.classList.add('selected');
+selectedElement=el;
+startTimer();
+}
+
+function playBeep(frequency,duration){
+const audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+const oscillator=audioCtx.createOscillator();
+const gainNode=audioCtx.createGain();
+oscillator.connect(gainNode);
+gainNode.connect(audioCtx.destination);
+oscillator.type="sine";
+oscillator.frequency.value=frequency;
+oscillator.start();
+gainNode.gain.setValueAtTime(0.2,audioCtx.currentTime);
+setTimeout(()=>{
+oscillator.stop();
+audioCtx.close();
+},duration);
+}
+
+function startTimer(){
+playBeep(800,300);
+gameActive=true;
+timeLeft=10;
+document.getElementById("timer").textContent="Tempo: "+timeLeft;
+timer=setInterval(()=>{
+timeLeft--;
+document.getElementById("timer").textContent="Tempo: "+timeLeft;
+if(timeLeft<=0){
+clearInterval(timer);
+gameActive=false;
+playBeep(300,600);
+alert("Tempo esgotado!");
+}
+},1000);
+}
+
+function submitAnswer(playerNumber){
+if(!gameActive||winner)return;
+const playerDiv=document.getElementById("player"+playerNumber);
+const inputs=playerDiv.getElementsByTagName("input");
+const name=inputs[0].value.trim();
+const number=parseInt(inputs[1].value);
+if(name.toLowerCase()===selectedElement.name.toLowerCase()&&number===selectedElement.number){
+winner=playerNumber;
+clearInterval(timer);
+gameActive=false;
+scores[playerNumber]++;
+document.getElementById("score"+playerNumber).textContent="Jogador "+playerNumber+": "+scores[playerNumber];
+playBeep(1000,500);
+setTimeout(()=>playBeep(1200,500),200);
+alert("Jogador "+playerNumber+" venceu!");
+}else{
+alert("Resposta incorreta!");
+}}
+
+function restartGame(){
+winner=null;
+selectedElement=null;
+gameActive=false;
+timeLeft=10;
+document.getElementById("timer").textContent="Tempo: 10";
+document.querySelectorAll('.element').forEach(e=>e.classList.remove('selected'));
+document.querySelectorAll('input').forEach(i=>i.value="");
+document.getElementById("restartBtn").style.display="none";
+}
+
+createHeaders();
+createTable();
+</script>
+
+</body>
+</html>
+

@@ -63,17 +63,17 @@
                 <div class="layer-card cursor-pointer bg-stone-100 hover:bg-teal-50 border border-stone-200 rounded-xl p-6 transition-colors" data-layer="1">
                     <div class="text-4xl mb-4 text-teal-600 font-bold">1</div>
                     <h3 class="text-xl font-semibold mb-2">Data (Dados)</h3>
-                    <p class="text-sm text-stone-600">Material bruto. Onde estão os dados armazenados e quais as variáveis que queremos explorar.</p>
+                    <p class="text-sm text-stone-600">O material bruto. Onde os dados estão armazenados e quais as variáveis que queremos explorar.</p>
                 </div>
                 <div class="layer-card cursor-pointer bg-stone-100 hover:bg-teal-50 border border-stone-200 rounded-xl p-6 transition-colors" data-layer="2">
                     <div class="text-4xl mb-4 text-teal-600 font-bold">2</div>
                     <h3 class="text-xl font-semibold mb-2">Aesthetics (aes)</h3>
-                    <p class="text-sm text-stone-600">Mapeamento estético. Como as variáveis se ligam aos eixos (X, Y), cores, tamanhos e formas.</p>
+                    <p class="text-sm text-stone-600">O mapeamento estético. Como as variáveis se ligam aos eixos (X, Y), cores, tamanhos e formas.</p>
                 </div>
                 <div class="layer-card cursor-pointer bg-stone-100 hover:bg-teal-50 border border-stone-200 rounded-xl p-6 transition-colors" data-layer="3">
                     <div class="text-4xl mb-4 text-teal-600 font-bold">3</div>
                     <h3 class="text-xl font-semibold mb-2">Geometries (geom)</h3>
-                    <p class="text-sm text-stone-600">Forma visual. O que é efetivamente desenhado no ecrã (pontos, barras, linhas, áreas).</p>
+                    <p class="text-sm text-stone-600">A forma visual. O que é efetivamente desenhado no ecrã (pontos, barras, linhas, áreas).</p>
                 </div>
             </div>
             
@@ -124,7 +124,7 @@
         <section id="exercicios" class="bg-white rounded-2xl shadow-sm border border-stone-200 p-6 md:p-10">
             <div class="mb-8">
                 <h2 class="text-2xl font-bold text-stone-900 border-b-2 border-indigo-500 inline-block pb-1 mb-4">Exercícios Práticos</h2>
-                <p class="text-stone-600">Agora é a sua vez. Depois de compreender a estrutura das camadas, teste os seus conhecimentos através destes 5 exercícios.Tente resolver no seu ambiente RStudio antes de consultar o formador.</p>
+                <p class="text-stone-600">Agora é a sua vez. Após compreender a estrutura das camadas, teste os seus conhecimentos nestes 5 exercícios. Expanda cada um para ler o enunciado e as questões propostas. Tente resolver no seu ambiente RStudio antes de consultar o formador.</p>
             </div>
 
             <div class="space-y-4" id="accordion-container">
@@ -141,11 +141,11 @@
         const layerDetails = {
             1: {
                 title: "1. A Camada de Dados (Data)",
-                desc: "No ggplot2, tudo começa com um dataframe. Utilizamos o argumento `data = dataset`. Nesta fase, o R apenas cria um fundo cinzento vazio, apenas sabe de onde vêm os dados e sabe o que fazer com eles."
+                desc: "No ggplot2, tudo começa com um dataframe. Utilizamos o argumento `data = dataset`. Se pararmos por aqui, o R apenas cria um fundo cinzento vazio, pois sabe de onde vêm os dados, mas não sabe o que fazer com eles."
             },
             2: {
                 title: "2. Mapeamento Estético (Aesthetics - aes)",
-                desc: "A função `aes()` cria as coordenadas.Aqui dizemos que a coluna 'Cilindrada' deve ir para o eixo X e o 'Consumo' para o eixo Y. Aqui também mapeamos as variáveis a cores ou tamanhos. O gráfico passa a ter eixos, mas continua sem dados visíveis."
+                desc: "A função `aes()` cria as coordenadas. É aqui que dizemos que a coluna 'Cilindrada' deve ir para o eixo X e o 'Consumo' para o eixo Y. Também é aqui que mapeamos variáveis a cores ou tamanhos. O gráfico passa a ter eixos, mas continua sem dados visíveis."
             },
             3: {
                 title: "3. Geometrias (Geom)",
