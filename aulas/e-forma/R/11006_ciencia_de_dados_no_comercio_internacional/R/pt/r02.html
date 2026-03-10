@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <title>Resolução Comentada: Aula 02</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-slate-50 p-8">
+    <main class="max-w-4xl mx-auto space-y-10">
+        <header>
+            <h1 class="text-3xl font-bold">Resolução: Aula 02 (Distribuições)</h1>
+            <p class="text-slate-600 mt-2">Análise de frequências e dispersão de dados categóricos e contínuos.</p>
+        </header>
+
+        <section class="bg-white p-6 rounded-xl shadow">
+            <h2 class="text-xl font-bold mb-4">Exercício: Ajuste de Bins e Histogramas</h2>
+            <p class="mb-4">Ao alterar o <code class="bg-slate-100 px-1">binwidth</code>, mudamos o nível de detalhe da distribuição.</p>
+            <div class="bg-slate-800 text-slate-100 p-4 rounded-lg font-mono text-sm mb-6">
+                <span class="text-slate-400"># Histograma com largura de intervalo definida</span><br>
+                ggplot(mpg, aes(x = hwy)) +<br>
+                &nbsp;&nbsp;geom_histogram(binwidth = <span class="text-orange-400">2</span>, fill = "steelblue", color = "white")
+            </div>
+            <div style="height: 300px;">
+                <canvas id="chartHist"></canvas>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const ctx = document.getElementById('chartHist').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['15-17', '17-19', '19-21', '21-23', '23-25', '25-27'],
+                datasets: [{ label: 'Frequência de Veículos', data: [12, 19, 3, 5, 2, 3], backgroundColor: '#4682b4' }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    </script>
+</body>
+</html>

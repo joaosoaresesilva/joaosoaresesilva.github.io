@@ -44,6 +44,13 @@
         .cm { color: #64748b; font-style: italic; }
         .op { color: #56b6c2; }
     </style>
+    <!-- Chosen Palette: Slate Backgrounds, Emerald Accents for Trends, Violet Accents for Facets (bg-slate-50, text-slate-800, emerald-600, violet-600) -->
+    <!-- Application Structure Plan: The SPA is designed as an interactive learning module split into two core analytical concepts from the report: 1. Trend Analysis (geom_smooth) and 2. Small Multiples (facet_wrap/grid). It uses a split-pane layout: theory and interactive controls on the left, and dynamic visualizations on the right. This allows users to immediately see the visual impact of changing R code parameters (like adding a linear model or splitting data into facets) without needing an R environment. An exercise accordion is at the bottom for self-assessment. -->
+    <!-- Visualization & Content Choices: 
+         - Trend Lines -> Goal: Change/Analyze -> Scatter Plot with dynamic overlay lines -> Toggles between Raw, LOESS (curve), and LM (straight line) -> Justification: Directly illustrates the mathematical smoothing concepts taught in the lesson -> Chart.js.
+         - Facets -> Goal: Compare/Organize -> Dynamic Grid of Scatter Plots -> Toggles between Single Chart, 1D Grid (Wrap), and 2D Grid -> Justification: The best way to understand 'small multiples' is to see a cluttered chart magically separate into clean, categorical sub-charts -> Chart.js (multiple instances in CSS Grid).
+         - Exercises -> Goal: Organize -> Accordion -> Justification: Keeps the UI clean and focused on one task at a time. NO SVG/Mermaid used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans antialiased">
 
@@ -58,7 +65,7 @@
 
         <header class="max-w-4xl mx-auto text-center space-y-6">
             <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight">Relações, Tendências e Facetas</h1>
-            <p class="text-lg text-slate-600 leading-relaxed">Bem-vindo à Aula 03. Hoje vamos aprender a visualizar como as variáveis se movem em conjunto (correlações) e como dividir um gráfico complexo e poluído em subgráficos fáceis de ler. Interaja com os painéis abaixo para simular a execução do código <code class="bg-slate-200 px-1 rounded text-slate-700">ggplot2</code>.</p>
+            <p class="text-lg text-slate-600 leading-relaxed">Bem-vindo à Aula 03. Hoje vamos aprender a visualizar como as variáveis se movem juntas (correlações) e como dividir um gráfico complexo e poluído em subgráficos fáceis de ler. Interaja com os painéis abaixo para simular a execução do código <code class="bg-slate-200 px-1 rounded text-slate-700">ggplot2</code>.</p>
         </header>
 
         <section class="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden">
@@ -71,7 +78,7 @@
                     <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Controlo Interativo</h3>
                     <div class="space-y-3 mb-8">
                         <button id="btn-raw" class="w-full text-left px-4 py-3 rounded-lg border-2 border-emerald-500 bg-emerald-50 text-emerald-800 font-semibold transition-all shadow-sm">1. Apenas Dispersão (Dados Crus)</button>
-                        <button id="btn-loess" class="w-full text-left px-4 py-3 rounded-lg border-2 border-slate-200 hover:border-emerald-300 text-slate-600 font-medium transition-all">2. Tendência LOESS (Predefinida)</button>
+                        <button id="btn-loess" class="w-full text-left px-4 py-3 rounded-lg border-2 border-slate-200 hover:border-emerald-300 text-slate-600 font-medium transition-all">2. Tendência LOESS (Padrão)</button>
                         <button id="btn-lm" class="w-full text-left px-4 py-3 rounded-lg border-2 border-slate-200 hover:border-emerald-300 text-slate-600 font-medium transition-all">3. Tendência Linear (Regressão 'lm')</button>
                     </div>
                     
@@ -89,13 +96,13 @@
         <section class="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden">
             <div class="p-6 md:p-8 border-b border-slate-100 bg-violet-50/50">
                 <h2 class="text-2xl font-bold text-violet-900">2. Facetas (Small Multiples)</h2>
-                <p class="text-violet-800 mt-2">Em vez de colocar demasiadas cores num só gráfico, criando confusão visual (<i>overplotting</i>), criamos um minigráfico para cada categoria usando <code class="font-mono font-semibold text-violet-700">facet_wrap</code> ou <code class="font-mono font-semibold text-violet-700">facet_grid</code>.</p>
+                <p class="text-violet-800 mt-2">Em vez de colocar demasiadas cores num só gráfico, criando confusão visual (<i>overplotting</i>), criamos um mini-gráfico para cada categoria usando <code class="font-mono font-semibold text-violet-700">facet_wrap</code> ou <code class="font-mono font-semibold text-violet-700">facet_grid</code>.</p>
             </div>
             <div class="grid grid-cols-1 xl:grid-cols-12 gap-0">
                 <div class="xl:col-span-4 p-6 md:p-8 bg-white border-r border-slate-100 flex flex-col">
                     <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Estrutura do Gráfico</h3>
                     <div class="space-y-3 mb-8">
-                        <button id="btn-nofacet" class="w-full text-left px-4 py-3 rounded-lg border-2 border-violet-500 bg-violet-50 text-violet-800 font-semibold transition-all shadow-sm">Gráfico Único (Sobrecarregado)</button>
+                        <button id="btn-nofacet" class="w-full text-left px-4 py-3 rounded-lg border-2 border-violet-500 bg-violet-50 text-violet-800 font-semibold transition-all shadow-sm">Gráfico Único (Sobrelotado)</button>
                         <button id="btn-wrap" class="w-full text-left px-4 py-3 rounded-lg border-2 border-slate-200 hover:border-violet-300 text-slate-600 font-medium transition-all">facet_wrap (~ class)</button>
                         <button id="btn-grid" class="w-full text-left px-4 py-3 rounded-lg border-2 border-slate-200 hover:border-violet-300 text-slate-600 font-medium transition-all">facet_grid (drv ~ cyl)</button>
                     </div>
@@ -127,10 +134,9 @@
     </footer>
 
     <script>
-        // Lógica de dados simulados (Mantida conforme original)
         const mockData = [];
-        const classes = ['Compacto', 'Intermédio', 'SUV'];
-        const drvs = ['Dianteira', 'Integral'];
+        const classes = ['Compact', 'Midsize', 'SUV'];
+        const drvs = ['Frente', '4x4'];
         const cyls = ['4 Cilindros', '6 Cilindros'];
 
         for(let i = 0; i < 150; i++) {
@@ -143,7 +149,7 @@
             let cyl = cyls[Math.floor(Math.random() * cyls.length)];
 
             if (displ > 4.5) { cls = 'SUV'; cyl = '6 Cilindros'; }
-            if (displ < 2.5) { cls = 'Compacto'; cyl = '4 Cilindros'; }
+            if (displ < 2.5) { cls = 'Compact'; cyl = '4 Cilindros'; }
 
             mockData.push({
                 x: parseFloat(displ),
@@ -165,9 +171,14 @@
             });
             const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
             const intercept = (sumY - slope * sumX) / n;
+            
             const minX = data[0].x;
             const maxX = data[n-1].x;
-            return [{x: minX, y: slope * minX + intercept}, {x: maxX, y: slope * maxX + intercept}];
+            
+            return [
+                {x: minX, y: slope * minX + intercept},
+                {x: maxX, y: slope * maxX + intercept}
+            ];
         }
 
         function calcLoessProxy(data) {
@@ -211,14 +222,18 @@
                 },
                 plugins: {
                     legend: { display: false },
-                    tooltip: { callbacks: { label: (ctx) => `Displ: ${ctx.raw.x} | Hwy: ${ctx.raw.y.toFixed(1)}` } }
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => `Displ: ${ctx.raw.x} | Hwy: ${ctx.raw.y.toFixed(1)}`
+                        }
+                    }
                 }
             }
         });
 
         const codeSnippets = {
             raw: `<span class="cm"># 1. Gráfico de dispersão base</span>\n<span class="fn">ggplot</span>(mpg, <span class="fn">aes</span>(x = displ, y = hwy)) <span class="op">+</span>\n  <span class="fn">geom_point</span>()`,
-            loess: `<span class="cm"># 1. Adicionando curva de tendência (LOESS)</span>\n<span class="fn">ggplot</span>(mpg, <span class="fn">aes</span>(x = displ, y = hwy)) <span class="op">+</span>\n  <span class="fn">geom_point</span>() <span class="op">+</span>\n  <span class="fn">geom_smooth</span>() <span class="cm"># Predefinido: curva suavizada</span>`,
+            loess: `<span class="cm"># 1. Adicionando curva de tendência (LOESS)</span>\n<span class="fn">ggplot</span>(mpg, <span class="fn">aes</span>(x = displ, y = hwy)) <span class="op">+</span>\n  <span class="fn">geom_point</span>() <span class="op">+</span>\n  <span class="fn">geom_smooth</span>() <span class="cm"># Padrão: curva suavizada</span>`,
             lm: `<span class="cm"># 2. Tendência Linear (Regressão)</span>\n<span class="fn">ggplot</span>(mpg, <span class="fn">aes</span>(x = displ, y = hwy)) <span class="op">+</span>\n  <span class="fn">geom_point</span>() <span class="op">+</span>\n  <span class="fn">geom_smooth</span>(method = <span class="st">"lm"</span>, se = <span class="kw">FALSE</span>)`
         };
 
@@ -235,20 +250,46 @@
         }
 
         btnRaw.addEventListener('click', () => {
-            updateTrendButtons(btnRaw); elCodeTrends.innerHTML = codeSnippets.raw;
-            trendChart.data.datasets = [scatterDataset]; trendChart.update();
+            updateTrendButtons(btnRaw);
+            elCodeTrends.innerHTML = codeSnippets.raw;
+            trendChart.data.datasets = [scatterDataset];
+            trendChart.update();
         });
 
         btnLoess.addEventListener('click', () => {
-            updateTrendButtons(btnLoess); elCodeTrends.innerHTML = codeSnippets.loess;
-            const loessLine = { label: 'LOESS', data: calcLoessProxy(mockData), type: 'line', borderColor: '#10b981', borderWidth: 4, pointRadius: 0, fill: false, tension: 0.4, order: 1 };
-            trendChart.data.datasets = [scatterDataset, loessLine]; trendChart.update();
+            updateTrendButtons(btnLoess);
+            elCodeTrends.innerHTML = codeSnippets.loess;
+            const loessLine = {
+                label: 'LOESS',
+                data: calcLoessProxy(mockData),
+                type: 'line',
+                borderColor: '#10b981',
+                borderWidth: 4,
+                pointRadius: 0,
+                fill: false,
+                tension: 0.4,
+                order: 1
+            };
+            trendChart.data.datasets = [scatterDataset, loessLine];
+            trendChart.update();
         });
 
         btnLm.addEventListener('click', () => {
-            updateTrendButtons(btnLm); elCodeTrends.innerHTML = codeSnippets.lm;
-            const lmLine = { label: 'Linear (lm)', data: calcLinearRegression(mockData), type: 'line', borderColor: '#3b82f6', borderWidth: 4, borderDash: [5, 5], pointRadius: 0, fill: false, order: 1 };
-            trendChart.data.datasets = [scatterDataset, lmLine]; trendChart.update();
+            updateTrendButtons(btnLm);
+            elCodeTrends.innerHTML = codeSnippets.lm;
+            const lmLine = {
+                label: 'Linear (lm)',
+                data: calcLinearRegression(mockData),
+                type: 'line',
+                borderColor: '#3b82f6',
+                borderWidth: 4,
+                borderDash: [5, 5],
+                pointRadius: 0,
+                fill: false,
+                order: 1
+            };
+            trendChart.data.datasets = [scatterDataset, lmLine];
+            trendChart.update();
         });
 
         elCodeTrends.innerHTML = codeSnippets.raw;
@@ -276,19 +317,35 @@
 
         function destroyFacetCharts() {
             facetCharts.forEach(chart => chart.destroy());
-            facetCharts = []; facetWrapper.innerHTML = '';
+            facetCharts = [];
+            facetWrapper.innerHTML = '';
         }
 
         function createMiniChart(container, data, title, colorStr) {
-            const canvas = document.createElement('canvas'); container.appendChild(canvas);
+            const canvas = document.createElement('canvas');
+            container.appendChild(canvas);
             const ctx = canvas.getContext('2d');
+            
             const chart = new Chart(ctx, {
                 type: 'scatter',
-                data: { datasets: [{ data: data, backgroundColor: colorStr, pointRadius: 4 }] },
+                data: {
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colorStr,
+                        pointRadius: 4
+                    }]
+                },
                 options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: false }, title: { display: true, text: title, font: {size: 11}, padding: 4 } },
-                    scales: { x: { min: 1, max: 7, display: true, ticks: {font: {size: 9}} }, y: { min: 10, max: 45, display: true, ticks: {font: {size: 9}} } },
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: true, text: title, font: {size: 11}, padding: 4 }
+                    },
+                    scales: {
+                        x: { min: 1, max: 7, display: true, ticks: {font: {size: 9}} },
+                        y: { min: 10, max: 45, display: true, ticks: {font: {size: 9}} }
+                    },
                     animation: false 
                 }
             });
@@ -296,36 +353,72 @@
         }
 
         function renderNoFacet() {
-            destroyFacetCharts(); elCodeFacets.innerHTML = codeFacetsSnippets.nofacet;
-            const container = document.createElement('div'); container.className = 'chart-container'; facetWrapper.appendChild(container);
-            const canvas = document.createElement('canvas'); container.appendChild(canvas);
-            const colors = {'Compacto': '#3b82f6', 'Intermédio': '#10b981', 'SUV': '#ef4444'};
-            const datasets = classes.map(cls => ({ label: cls, data: mockData.filter(d => d.class === cls), backgroundColor: colors[cls], pointRadius: 5 }));
+            destroyFacetCharts();
+            elCodeFacets.innerHTML = codeFacetsSnippets.nofacet;
+            
+            const container = document.createElement('div');
+            container.className = 'chart-container';
+            facetWrapper.appendChild(container);
+            
+            const canvas = document.createElement('canvas');
+            container.appendChild(canvas);
+            
+            const colors = {'Compact': '#3b82f6', 'Midsize': '#10b981', 'SUV': '#ef4444'};
+            const datasets = classes.map(cls => ({
+                label: cls,
+                data: mockData.filter(d => d.class === cls),
+                backgroundColor: colors[cls],
+                pointRadius: 5
+            }));
+
             const chart = new Chart(canvas.getContext('2d'), {
                 type: 'scatter',
                 data: { datasets: datasets },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { x: { title: { display: true, text: 'displ' } }, y: { title: { display: true, text: 'hwy' } } } }
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top' } },
+                    scales: {
+                        x: { title: { display: true, text: 'displ' } },
+                        y: { title: { display: true, text: 'hwy' } }
+                    }
+                }
             });
             facetCharts.push(chart);
         }
 
         function renderFacetWrap() {
-            destroyFacetCharts(); elCodeFacets.innerHTML = codeFacetsSnippets.wrap;
+            destroyFacetCharts();
+            elCodeFacets.innerHTML = codeFacetsSnippets.wrap;
+            
             facetWrapper.className = 'w-full grid grid-cols-1 sm:grid-cols-3 gap-4';
+            
             classes.forEach(cls => {
-                const container = document.createElement('div'); container.className = 'facet-container bg-white border border-slate-200 rounded p-2'; facetWrapper.appendChild(container);
-                const data = mockData.filter(d => d.class === cls); createMiniChart(container, data, `classe: ${cls}`, 'rgba(30, 58, 138, 0.7)');
+                const container = document.createElement('div');
+                container.className = 'facet-container bg-white border border-slate-200 rounded p-2';
+                facetWrapper.appendChild(container);
+                
+                const data = mockData.filter(d => d.class === cls);
+                createMiniChart(container, data, `class: ${cls}`, 'rgba(30, 58, 138, 0.7)');
             });
         }
 
         function renderFacetGrid() {
-            destroyFacetCharts(); elCodeFacets.innerHTML = codeFacetsSnippets.grid;
+            destroyFacetCharts();
+            elCodeFacets.innerHTML = codeFacetsSnippets.grid;
+            
             facetWrapper.className = 'w-full flex flex-col items-center justify-center gap-2';
-            const gridWrapper = document.createElement('div'); gridWrapper.className = 'grid grid-cols-2 gap-2 w-full max-w-2xl'; facetWrapper.appendChild(gridWrapper);
+            const gridWrapper = document.createElement('div');
+            gridWrapper.className = 'grid grid-cols-2 gap-2 w-full max-w-2xl';
+            facetWrapper.appendChild(gridWrapper);
+            
             drvs.forEach(drv => {
                 cyls.forEach(cyl => {
-                    const container = document.createElement('div'); container.className = 'facet-container bg-white border border-slate-200 rounded p-2 h-[160px]'; gridWrapper.appendChild(container);
-                    const data = mockData.filter(d => d.drv === drv && d.cyl === cyl); createMiniChart(container, data, `${drv} | ${cyl}`, 'rgba(153, 27, 27, 0.7)');
+                    const container = document.createElement('div');
+                    container.className = 'facet-container bg-white border border-slate-200 rounded p-2 h-[160px]';
+                    gridWrapper.appendChild(container);
+                    
+                    const data = mockData.filter(d => d.drv === drv && d.cyl === cyl);
+                    createMiniChart(container, data, `${drv} | ${cyl}`, 'rgba(153, 27, 27, 0.7)');
                 });
             });
         }
@@ -335,20 +428,20 @@
         btnGrid.addEventListener('click', () => { updateFacetButtons(btnGrid); renderFacetGrid(); });
 
         renderNoFacet();
+        elCodeFacets.innerHTML = codeFacetsSnippets.nofacet;
 
-        // Exercícios Corrigidos para PT-PT
         const exercises = [
             {
                 title: "Exercício 1: Tendências por Categoria",
-                content: "Crie um gráfico de dispersão entre <code class='bg-slate-800 px-1 rounded'>displ</code> e <code class='bg-slate-800 px-1 rounded'>hwy</code>. Adicione uma linha de tendência linear (<code class='bg-slate-800 px-1 rounded'>method = 'lm'</code>) para <strong>cada</strong> tipo de tração (<code class='bg-slate-800 px-1 rounded'>drv</code>), utilizando cores diferentes.<br><br><span class='text-emerald-400'>&#10140; Dica Teórica:</span> Mapeie a cor à variável <code>drv</code> dentro do <code>aes()</code> principal. O <code>geom_smooth</code> irá automaticamente desenhar uma linha para cada cor."
+                content: "Crie um gráfico de dispersão entre <code class='bg-slate-800 px-1 rounded'>displ</code> e <code class='bg-slate-800 px-1 rounded'>hwy</code>. Adicione uma linha de tendência linear (<code class='bg-slate-800 px-1 rounded'>method = 'lm'</code>) para <strong>cada</strong> tipo de tração (<code class='bg-slate-800 px-1 rounded'>drv</code>), usando cores diferentes.<br><br><span class='text-emerald-400'>&#10140; Dica Teórica:</span> Mapeie a cor à variável <code>drv</code> dentro do <code>aes()</code> principal. O <code>geom_smooth</code> irá automaticamente desenhar uma linha para cada cor."
             },
             {
                 title: "Exercício 2: O Poder das Facetas e Escalas Livres",
-                content: "A relação entre consumo e cilindrada muda conforme o tipo de carro. Crie um gráfico de dispersão e utilize <code class='bg-slate-800 px-1 rounded'>facet_wrap</code> para separar os gráficos por <code class='bg-slate-800 px-1 rounded'>class</code>.<br><br><strong>Desafio:</strong> Permita que as escalas dos eixos sejam livres em cada faceta usando <code class='bg-slate-800 px-1 rounded'>scales = 'free'</code>. O que acontece com a comparação visual?<br><br><span class='text-emerald-400'>&#10140; Análise:</span> Escalas livres focam no padrão individual da categoria, mas prejudicam a capacidade de comparar magnitudes absolutas entre as diferentes grelhas."
+                content: "A relação entre consumo e cilindrada muda conforme o tipo de carro. Crie um gráfico de dispersão e use <code class='bg-slate-800 px-1 rounded'>facet_wrap</code> para separar os gráficos por <code class='bg-slate-800 px-1 rounded'>class</code>.<br><br><strong>Desafio:</strong> Permita que as escalas dos eixos sejam livres em cada faceta usando <code class='bg-slate-800 px-1 rounded'>scales = 'free'</code>. O que acontece com a comparação visual?<br><br><span class='text-emerald-400'>&#10140; Análise:</span> Escalas livres focam no padrão individual da categoria, mas destroem a capacidade de comparar magnitudes absolutas entre as diferentes grelhas."
             },
             {
                 title: "Exercício 3: Cruzamento de Variáveis (Facet Grid)",
-                content: "Utilize <code class='bg-slate-800 px-1 rounded'>facet_grid</code> para analisar a relação entre <code class='bg-slate-800 px-1 rounded'>displ</code> e <code class='bg-slate-800 px-1 rounded'>cty</code> cruzando as variáveis <code class='bg-slate-800 px-1 rounded'>drv</code> (nas linhas) e <code class='bg-slate-800 px-1 rounded'>cyl</code> (nas colunas).<br><br><strong>Questão:</strong> Existem combinações (células) vazias? O que é que isso nos diz sobre os dados?<br><br><span class='text-emerald-400'>&#10140; Análise:</span> Células vazias num <code>facet_grid</code> indicam ausência de dados para aquele cruzamento específico (ex: não existem carros com Tração Traseira e 4 Cilindros no conjunto de dados)."
+                content: "Use <code class='bg-slate-800 px-1 rounded'>facet_grid</code> para analisar a relação entre <code class='bg-slate-800 px-1 rounded'>displ</code> e <code class='bg-slate-800 px-1 rounded'>cty</code> cruzando as variáveis <code class='bg-slate-800 px-1 rounded'>drv</code> (nas linhas) e <code class='bg-slate-800 px-1 rounded'>cyl</code> (nas colunas).<br><br><strong>Questão:</strong> Existem combinações (células) vazias? O que isso nos diz sobre os dados?<br><br><span class='text-emerald-400'>&#10140; Análise:</span> Células vazias num <code>facet_grid</code> indicam ausência de dados para aquele cruzamento específico (ex: não existem carros com Tração Traseira e 4 Cilindros no dataset)."
             },
             {
                 title: "Exercício 4: Combinando Tudo (Desafio Final)",
@@ -357,20 +450,44 @@
         ];
 
         const accContainer = document.getElementById('exercise-accordion');
+        
         exercises.forEach(ex => {
-            const item = document.createElement('div'); item.className = 'border border-slate-700 rounded-lg overflow-hidden bg-slate-800';
-            const header = document.createElement('button'); header.className = 'w-full text-left px-6 py-4 hover:bg-slate-700 font-semibold text-slate-200 flex justify-between items-center focus:outline-none transition-colors';
+            const item = document.createElement('div');
+            item.className = 'border border-slate-700 rounded-lg overflow-hidden bg-slate-800';
+            
+            const header = document.createElement('button');
+            header.className = 'w-full text-left px-6 py-4 hover:bg-slate-700 font-semibold text-slate-200 flex justify-between items-center focus:outline-none transition-colors';
             header.innerHTML = `<span>${ex.title}</span><span class="text-xl text-emerald-400 transform transition-transform duration-200">&#43;</span>`;
-            const content = document.createElement('div'); content.className = 'px-6 py-0 max-h-0 overflow-hidden text-slate-300 transition-all duration-300 ease-in-out bg-slate-900/50';
+            
+            const content = document.createElement('div');
+            content.className = 'px-6 py-0 max-h-0 overflow-hidden text-slate-300 transition-all duration-300 ease-in-out bg-slate-900/50';
             content.innerHTML = `<div class="py-5 border-t border-slate-700 leading-relaxed">${ex.content}</div>`;
+            
             header.addEventListener('click', () => {
                 const isOpen = content.style.maxHeight;
-                document.querySelectorAll('#exercise-accordion > div > div').forEach(c => c.style.maxHeight = null);
-                document.querySelectorAll('#exercise-accordion button span:last-child').forEach(icon => { icon.innerHTML = '&#43;'; icon.classList.remove('rotate-45', 'text-rose-400'); icon.classList.add('text-emerald-400'); });
-                if (!isOpen) { content.style.maxHeight = content.scrollHeight + "px"; header.querySelector('span:last-child').innerHTML = '&#10005;'; header.querySelector('span:last-child').classList.remove('text-emerald-400'); header.querySelector('span:last-child').classList.add('text-rose-400'); }
+                
+                document.querySelectorAll('#exercise-accordion > div > div').forEach(c => {
+                    c.style.maxHeight = null;
+                });
+                document.querySelectorAll('#exercise-accordion button span:last-child').forEach(icon => {
+                    icon.innerHTML = '&#43;';
+                    icon.classList.remove('rotate-45', 'text-rose-400');
+                    icon.classList.add('text-emerald-400');
+                });
+
+                if (!isOpen) {
+                    content.style.maxHeight = content.scrollHeight + "px";
+                    header.querySelector('span:last-child').innerHTML = '&#10005;'; 
+                    header.querySelector('span:last-child').classList.remove('text-emerald-400');
+                    header.querySelector('span:last-child').classList.add('text-rose-400');
+                }
             });
-            item.appendChild(header); item.appendChild(content); accContainer.appendChild(item);
+
+            item.appendChild(header);
+            item.appendChild(content);
+            accContainer.appendChild(item);
         });
+
     </script>
 </body>
 </html>

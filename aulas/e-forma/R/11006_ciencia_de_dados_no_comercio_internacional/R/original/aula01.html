@@ -29,6 +29,13 @@
             scrollbar-width: none;
         }
     </style>
+    <!-- Chosen Palette: Warm Neutrals with Teal and Indigo Accents (bg-stone-50, text-stone-800, teal-600, indigo-600) -->
+    <!-- Application Structure Plan: The SPA is structured as an interactive educational module. It begins with a conceptual introduction to the 'Grammar of Graphics' using interactive cards. It then transitions into a 'Code Simulator' side-by-side view, which is the core interactive element, allowing students to step through R code and see the simulated visual output build layer by layer. Finally, it presents the practical exercises in a clean, expandable accordion format. This step-by-step layout was chosen because it mirrors the cognitive process of learning code: Concept -> Demonstration -> Practice. -->
+    <!-- Visualization & Content Choices: 
+         1. Grammar of Graphics -> Goal: Organize/Inform -> Method: Interactive Cards -> Interaction: Click to reveal details -> Justification: Breaks down theory into digestible chunks. 
+         2. Code Steps -> Goal: Change/Compare -> Method: Interactive Code & Chart Simulator (Chart.js Scatter) -> Interaction: 'Next/Prev' buttons to build the chart -> Justification: Crucial for demonstrating the 'layer' concept of ggplot2 dynamically without needing a real R backend. NO SVG/Mermaid used. 
+         3. Exercises -> Goal: Organize -> Method: Accordion -> Interaction: Toggle open/close -> Justification: Keeps the UI clean and allows students to focus on one problem at a time. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 </head>
 <body class="bg-stone-50 text-stone-800 font-sans antialiased">
 
@@ -43,25 +50,25 @@
 
         <header class="text-center max-w-3xl mx-auto space-y-4">
             <h1 class="text-4xl md:text-5xl font-extrabold text-stone-900">A Gramática de Gráficos com <span class="text-indigo-600">ggplot2</span></h1>
-            <p class="text-lg text-stone-600">Bem-vindos à primeira aula de Visualização de Dados em R. Explore interativamente como o `ggplot2` "pensa" e transforme dados brutos em narrativas visuais, construindo gráficos camada a camada.</p>
+            <p class="text-lg text-stone-600">Bem-vindos à primeira aula de Visualização de Dados em R. Explore interativamente como o `ggplot2` "pensa" e transforme dados brutos em narrativas visuais construindo gráficos camada a camada.</p>
         </header>
 
         <section id="teoria" class="bg-white rounded-2xl shadow-sm border border-stone-200 p-6 md:p-10">
             <div class="mb-8">
                 <h2 class="text-2xl font-bold text-stone-900 border-b-2 border-teal-500 inline-block pb-1 mb-4">A Teoria das Camadas</h2>
-                <p class="text-stone-600">Nesta secção, exploramos a base teórica do ggplot2. A ideia central é que qualquer gráfico pode ser decomposto em camadas. Clique nos cartões abaixo e compreenda cada um destes três pilares antes de passarmos ao código.</p>
+                <p class="text-stone-600">Nesta secção, exploramos a base teórica do ggplot2. A ideia central é : qualquer gráfico pode ser decomposto em camadas. Clique nos links abaixo e entenda cada um destes três pilares antes de passarmos ao código.</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="layer-card cursor-pointer bg-stone-100 hover:bg-teal-50 border border-stone-200 rounded-xl p-6 transition-colors" data-layer="1">
                     <div class="text-4xl mb-4 text-teal-600 font-bold">1</div>
                     <h3 class="text-xl font-semibold mb-2">Data (Dados)</h3>
-                    <p class="text-sm text-stone-600">O material bruto. Onde os dados estão armazenados e quais as variáveis que pretendemos explorar.</p>
+                    <p class="text-sm text-stone-600">Material bruto. Onde estão os dados armazenados e quais as variáveis que queremos explorar.</p>
                 </div>
                 <div class="layer-card cursor-pointer bg-stone-100 hover:bg-teal-50 border border-stone-200 rounded-xl p-6 transition-colors" data-layer="2">
                     <div class="text-4xl mb-4 text-teal-600 font-bold">2</div>
                     <h3 class="text-xl font-semibold mb-2">Aesthetics (aes)</h3>
-                    <p class="text-sm text-stone-600">Mapeamento estético. Como as variáveis se associam aos eixos (X, Y), cores, tamanhos e formas.</p>
+                    <p class="text-sm text-stone-600">Mapeamento estético. Como as variáveis se ligam aos eixos (X, Y), cores, tamanhos e formas.</p>
                 </div>
                 <div class="layer-card cursor-pointer bg-stone-100 hover:bg-teal-50 border border-stone-200 rounded-xl p-6 transition-colors" data-layer="3">
                     <div class="text-4xl mb-4 text-teal-600 font-bold">3</div>
@@ -78,8 +85,8 @@
 
         <section id="simulador" class="bg-stone-900 rounded-2xl shadow-xl overflow-hidden">
             <div class="p-6 md:p-10 bg-stone-800 border-b border-stone-700">
-                <h2 class="text-2xl font-bold text-white mb-2">Simulador Passo a Passo</h2>
-                <p class="text-stone-300">Este simulador interativo replica a execução do código R. Utilize os botões para avançar em cada passo e observe como a adição de uma nova camada de código transforma o gráfico visualizado à direita. O conceito de "adicionar" camadas com o sinal de <code>+</code> torna-se aqui evidente.</p>
+                <h2 class="text-2xl font-bold text-white mb-2">Simulador Passo-a-Passo</h2>
+                <p class="text-stone-300">Este simulador interativo replica a execução do código R. Utilize os botões para avançar em cada passo e observe como a adição de uma nova camada de código transforma o gráfico visualizado à direita. O conceito de "colar" camadas com o sinal de <code>+</code> torna-se aqui evidente.</p>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2">
@@ -105,7 +112,7 @@
 
                 <div class="p-6 md:p-10 bg-white flex items-center justify-center">
                     <div class="w-full">
-                        <h3 class="text-lg font-semibold text-stone-800 mb-6 text-center">Resultado Visual (Simulado)</h3>
+                        <h3 class="text-lg font-semibold text-stone-800 mb-6 text-center">Output Visual (Simulado)</h3>
                         <div class="chart-container">
                             <canvas id="ggplotSimulator"></canvas>
                         </div>
@@ -117,7 +124,7 @@
         <section id="exercicios" class="bg-white rounded-2xl shadow-sm border border-stone-200 p-6 md:p-10">
             <div class="mb-8">
                 <h2 class="text-2xl font-bold text-stone-900 border-b-2 border-indigo-500 inline-block pb-1 mb-4">Exercícios Práticos</h2>
-                <p class="text-stone-600">Agora é a sua vez. Após compreender a estrutura das camadas, teste os seus conhecimentos através destes 5 exercícios. Tente resolvê-los no seu ambiente RStudio antes de consultar o formador.</p>
+                <p class="text-stone-600">Agora é a sua vez. Depois de compreender a estrutura das camadas, teste os seus conhecimentos através destes 5 exercícios.Tente resolver no seu ambiente RStudio antes de consultar o formador.</p>
             </div>
 
             <div class="space-y-4" id="accordion-container">
@@ -134,15 +141,15 @@
         const layerDetails = {
             1: {
                 title: "1. A Camada de Dados (Data)",
-                desc: "No ggplot2, tudo começa com um dataframe. Utilizamos o argumento `data = dataset`. Nesta fase, o R cria apenas um fundo cinzento vazio; apenas sabe de onde vêm os dados e o que deve fazer com eles."
+                desc: "No ggplot2, tudo começa com um dataframe. Utilizamos o argumento `data = dataset`. Nesta fase, o R apenas cria um fundo cinzento vazio, apenas sabe de onde vêm os dados e sabe o que fazer com eles."
             },
             2: {
                 title: "2. Mapeamento Estético (Aesthetics - aes)",
-                desc: "A função `aes()` cria as coordenadas. Aqui indicamos que a coluna 'Cilindrada' deve ser atribuída ao eixo X e o 'Consumo' ao eixo Y. Aqui também mapeamos as variáveis para cores ou tamanhos. O gráfico passa a ter eixos, mas continua sem dados visíveis."
+                desc: "A função `aes()` cria as coordenadas.Aqui dizemos que a coluna 'Cilindrada' deve ir para o eixo X e o 'Consumo' para o eixo Y. Aqui também mapeamos as variáveis a cores ou tamanhos. O gráfico passa a ter eixos, mas continua sem dados visíveis."
             },
             3: {
                 title: "3. Geometrias (Geom)",
-                desc: "As funções iniciadas por `geom_` desenham efetivamente os dados. `geom_point()` cria um gráfico de dispersão, `geom_bar()` cria barras. Utilizamos o sinal `+` para adicionar a geometria às estéticas e dados previamente definidos."
+                desc: "As funções começadas por `geom_` desenham efetivamente os dados. `geom_point()` faz um gráfico de dispersão, `geom_bar()` faz barras. Usamos o sinal `+` para colar a geometria às estéticas e dados previamente definidos."
             }
         };
 
@@ -188,23 +195,23 @@
                 chartState: { showAxes: false, showData: false, useColors: false, applyTheme: false }
             },
             {
-                code: `<span class="text-stone-500"># 4. Adicionar Estética (Eixos)</span>\n<span class="text-indigo-400">ggplot</span>(data = mpg, mapping = <span class="text-teal-400">aes</span>(x = displ, y = hwy))`,
-                explanation: "Com o aes(), indicamos o que vai para os eixos X e Y. O ggplot desenha as escalas, mas ainda não sabe como desenhar os dados.",
+                code: `<span class="text-stone-500"># 4. Adicionando Estética (Eixos)</span>\n<span class="text-indigo-400">ggplot</span>(data = mpg, mapping = <span class="text-teal-400">aes</span>(x = displ, y = hwy))`,
+                explanation: "Com o aes(), dizemos o que vai para os eixos X e Y. O ggplot desenha as escalas, mas ainda não sabe como desenhar os dados.",
                 chartState: { showAxes: true, showData: false, useColors: false, applyTheme: false }
             },
             {
-                code: `<span class="text-stone-500"># 5. Adicionar a Geometria (Pontos)</span>\n<span class="text-indigo-400">ggplot</span>(data = mpg, mapping = <span class="text-teal-400">aes</span>(x = displ, y = hwy)) <span class="text-amber-400">+</span>\n  <span class="text-indigo-400">geom_point</span>()`,
-                explanation: "O sinal de + adiciona a camada geométrica. Agora vemos os pontos de dispersão a preto por predefinição.",
+                code: `<span class="text-stone-500"># 5. Adicionando a Geometria (Pontos)</span>\n<span class="text-indigo-400">ggplot</span>(data = mpg, mapping = <span class="text-teal-400">aes</span>(x = displ, y = hwy)) <span class="text-amber-400">+</span>\n  <span class="text-indigo-400">geom_point</span>()`,
+                explanation: "O sinal de + cola a camada geométrica. Agora vemos os pontos de dispersão a preto por defeito.",
                 chartState: { showAxes: true, showData: true, useColors: false, applyTheme: false }
             },
             {
-                code: `<span class="text-stone-500"># 6. Adicionar Cores Dinâmicas</span>\n<span class="text-indigo-400">ggplot</span>(data = mpg, mapping = <span class="text-teal-400">aes</span>(x = displ, y = hwy, <span class="text-pink-400">color</span> = class)) <span class="text-amber-400">+</span>\n  <span class="text-indigo-400">geom_point</span>()`,
+                code: `<span class="text-stone-500"># 6. Adicionando Cores Dinâmicas</span>\n<span class="text-indigo-400">ggplot</span>(data = mpg, mapping = <span class="text-teal-400">aes</span>(x = displ, y = hwy, <span class="text-pink-400">color</span> = class)) <span class="text-amber-400">+</span>\n  <span class="text-indigo-400">geom_point</span>()`,
                 explanation: "Ao colocar color = class DENTRO do aes(), o R mapeia automaticamente uma cor diferente para cada tipo de carro.",
                 chartState: { showAxes: true, showData: true, useColors: true, applyTheme: false }
             },
             {
-                code: `<span class="text-stone-500"># 7. Rótulos e Temas (Gráfico Final)</span>\n<span class="text-indigo-400">ggplot</span>(data = mpg, mapping = <span class="text-teal-400">aes</span>(x = displ, y = hwy, color = class)) <span class="text-amber-400">+</span>\n  <span class="text-indigo-400">geom_point</span>(size = 3, alpha = 0.7) <span class="text-amber-400">+</span>\n  <span class="text-indigo-400">labs</span>(\n    title = <span class="text-green-300">"Eficiência vs Cilindrada"</span>,\n    x = <span class="text-green-300">"Cilindrada (L)"</span>,\n    y = <span class="text-green-300">"Consumo (MPG)"</span>\n  ) <span class="text-amber-400">+</span>\n  <span class="text-indigo-400">theme_minimal</span>()`,
-                explanation: "Finalizamos o gráfico ajustando propriedades fixas fora do aes() (tamanho/transparência), adicionando textos claros e aplicando um tema visual minimalista.",
+                code: `<span class="text-stone-500"># 7. Labels e Temas (Gráfico Final)</span>\n<span class="text-indigo-400">ggplot</span>(data = mpg, mapping = <span class="text-teal-400">aes</span>(x = displ, y = hwy, color = class)) <span class="text-amber-400">+</span>\n  <span class="text-indigo-400">geom_point</span>(size = 3, alpha = 0.7) <span class="text-amber-400">+</span>\n  <span class="text-indigo-400">labs</span>(\n    title = <span class="text-green-300">"Eficiência vs Cilindrada"</span>,\n    x = <span class="text-green-300">"Cilindrada (L)"</span>,\n    y = <span class="text-green-300">"Consumo (MPG)"</span>\n  ) <span class="text-amber-400">+</span>\n  <span class="text-indigo-400">theme_minimal</span>()`,
+                explanation: "Finalizamos o gráfico ajustando propriedades fixas fora do aes() (tamanho/transparência), adicionando textos limpos e aplicando um tema visual minimalista.",
                 chartState: { showAxes: true, showData: true, useColors: true, applyTheme: true }
             }
         ];
@@ -287,7 +294,7 @@
                     simChart.data.datasets = datasets;
                 } else {
                     simChart.data.datasets = [{
-                        label: 'Todos os Dados',
+                        label: 'All Data',
                         data: simData,
                         backgroundColor: '#374151',
                         pointRadius: 4
@@ -315,15 +322,15 @@
         const exercises = [
             {
                 title: "Exercício 1: Exploração Inicial",
-                content: "Utilize o dataset <code>mpg</code> incluído no R.<br><br><ul class='list-disc pl-5 space-y-1'><li>Crie um gráfico de dispersão entre <code>cty</code> (consumo na cidade) e <code>hwy</code> (consumo na autoestrada).</li><li>O que observa na relação entre estas duas variáveis?</li></ul>"
+                content: "Utilize o dataset <code>mpg</code> que vem no R.<br><br><ul class='list-disc pl-5 space-y-1'><li>Crie um gráfico de dispersão entre <code>cty</code> (consumo na cidade) e <code>hwy</code> (consumo na autoestrada).</li><li>O que observa na relação entre estas duas variáveis?</li></ul>"
             },
             {
                 title: "Exercício 2: Mapeamento de Cores e Formas",
-                content: "No gráfico anterior (exercício 1):<br><br><ul class='list-disc pl-5 space-y-1'><li>Mapeie a cor dos pontos para a variável <code>drv</code> (tipo de tração: frente, traseira ou 4x4).</li><li>Mapeie o formato (<code>shape</code>) dos pontos para a mesma variável <code>drv</code>.</li><li><strong>Questão:</strong> O que acontece ao mapear uma variável contínua (ex: <code>displ</code>) à estética <code>shape</code>? Porquê?</li></ul>"
+                content: "No gráfico anterior (exercício 1):<br><br><ul class='list-disc pl-5 space-y-1'><li>Mapeie a cor dos pontos à variável <code>drv</code> (tipo de tração: frente, trás ou 4x4).</li><li>Mapeie o formato (<code>shape</code>) dos pontos à mesma variável <code>drv</code>.</li><li><strong>Questão:</strong> O que acontece ao mapear uma variável contínua (ex: <code>displ</code>) à estética <code>shape</code>? Porquê?</li></ul>"
             },
             {
                 title: "Exercício 3: Mapeamento Estático vs Dinâmico",
-                content: "Tente criar dois gráficos diferentes:<br><br><ol class='list-decimal pl-5 space-y-1'><li>Um gráfico de dispersão onde <strong>todos</strong> os pontos são azuis (<code>blue</code>).</li><li>Um gráfico de dispersão onde a cor dos pontos depende da variável <code>class</code>.</li></ol><br><p class='text-sm text-teal-700 bg-teal-50 p-3 rounded'><strong>Dica:</strong> Lembre-se de que cores fixas ficam fora do <code>aes()</code>, enquanto cores baseadas em dados ficam dentro do <code>aes()</code>.</p>"
+                content: "Tente criar dois gráficos diferentes:<br><br><ol class='list-decimal pl-5 space-y-1'><li>Um gráfico de dispersão onde <strong>todos</strong> os pontos são azuis (<code>blue</code>).</li><li>Um gráfico de dispersão onde a cor dos pontos depende da variável <code>class</code>.</li></ol><br><p class='text-sm text-teal-700 bg-teal-50 p-3 rounded'><strong>Dica:</strong> Lembre-se que cores fixas ficam fora do <code>aes()</code>, cores baseadas em dados ficam dentro do <code>aes()</code>.</p>"
             },
             {
                 title: "Exercício 4: Introdução ao geom_smooth",
@@ -331,7 +338,7 @@
             },
             {
                 title: "Exercício 5: Desafio Final (Personalização)",
-                content: "Crie o gráfico mais informativo que conseguir utilizando as variáveis <code>displ</code>, <code>hwy</code> e <code>cyl</code>.<br><br><ul class='list-disc pl-5 space-y-1'><li>Utilize o <code>theme_light()</code>.</li><li>Adicione um título apelativo.</li><li>Altere o nome dos eixos para Português.</li></ul>"
+                content: "Crie o gráfico mais informativo que conseguir usando as variáveis <code>displ</code>, <code>hwy</code> e <code>cyl</code>.<br><br><ul class='list-disc pl-5 space-y-1'><li>Use <code>theme_light()</code>.</li><li>Adicione um título apelativo.</li><li>Altere o nome dos eixos para Português.</li></ul>"
             }
         ];
 
@@ -373,6 +380,7 @@
         });
 
         updateSimulator();
+
     </script>
 </body>
 </html>
