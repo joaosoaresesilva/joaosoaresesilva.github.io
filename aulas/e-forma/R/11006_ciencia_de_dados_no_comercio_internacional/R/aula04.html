@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aula 04: Estética Profissional e Design</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .code-display {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #171717;
+            color: #d4d4d8;
+            padding: 1.25rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            overflow-x: auto;
+            border: 1px solid #3f3f46;
+        }
+        .kw { color: #f472b6; } /* pink-400 */
+        .fn { color: #38bdf8; } /* sky-400 */
+        .st { color: #a3e635; } /* lime-400 */
+        .cm { color: #71717a; font-style: italic; } /* zinc-500 */
+        .op { color: #2dd4bf; } /* teal-400 */
+        
+        /* Custom scrollbar for accordion */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a1a1aa; }
+    </style>
+    <!-- Chosen Palette: Neutral and Rose (bg-neutral-50, text-neutral-800, rose-600 for primary accents, zinc-900 for code) -->
+    <!-- Application Structure Plan: The SPA is structured as an interactive design studio for data visualization. 
+         - Section 1: Introduction, establishing the goal of moving from "raw" to "professional".
+         - Section 2: "Escalas e Cores", a dual-mode interactive module where users can toggle between continuous (Viridis) and discrete (Manual) color mappings to see the visual and code differences.
+         - Section 3: "Temas e Anotações", a highly interactive playground where users toggle specific elements (labels, gridlines, legends) and apply preset themes (minimal, classic, void) to instantly see the visual "noise" reduction, matching the ggplot2 logic.
+         - Section 4: Exercise Accordion, listing the practical challenges. 
+         This structure directly maps to the source report's sections while transforming passive reading into active exploration of visual parameters. -->
+    <!-- Visualization & Content Choices: 
+         - Colors -> Goal: Compare continuous vs discrete mapping -> Viz: Scatter Plot & Bar Chart -> Interaction: Toggle buttons to switch dataset and color palettes -> Justification: Demonstrates the specific `scale_color_viridis_c` vs `scale_fill_manual` taught in the report -> Library: Chart.js.
+         - Themes -> Goal: Change/Analyze visual noise -> Viz: Scatter Plot -> Interaction: Theme preset buttons and individual element checkboxes -> Justification: Perfectly illustrates how ggplot2's `theme()` function builds and strips away layers of the chart -> Library: Chart.js (custom background plugin used to simulate ggplot2 default grey).
+         - Exercises -> Goal: Organize -> Viz: Accordion -> Interaction: Click to expand -> Justification: Standard, clean way to present text-heavy challenges. NO SVG/Mermaid used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-neutral-50 text-neutral-800 font-sans antialiased">
+
+    <!-- Navbar -->
+    <nav class="bg-neutral-900 text-white shadow-md sticky top-0 z-50 border-b-4 border-rose-600">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <div class="font-bold text-xl tracking-tight text-rose-400">R DataViz Lab</div>
+            <div class="text-sm font-medium text-neutral-400">Aula 04: Estética Profissional e Design</div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-16">
+
+        <!-- Header -->
+        <header class="max-w-4xl mx-auto text-center space-y-4">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-neutral-900 tracking-tight">Estética Profissional e Design</h1>
+            <p class="text-lg text-neutral-600 leading-relaxed">Nesta última aula teórica, vamos transformar gráficos "crus" em visualizações prontas para relatórios ou artigos. O design não é apenas cosmética; é clareza e comunicação intencional. Explore interativamente o impacto das cores e dos temas.</p>
+        </header>
+
+        <!-- Section 1: Escalas e Cores -->
+        <section class="bg-white rounded-2xl shadow-sm border border-neutral-200 overflow-hidden">
+            <div class="p-6 md:p-8 border-b border-neutral-100 bg-rose-50/30">
+                <h2 class="text-2xl font-bold text-neutral-900">1. Escalas e Cores</h2>
+                <p class="text-neutral-700 mt-2">O uso de cores deve ser intencional. Selecione as opções abaixo para simular as paletas contínuas (acessíveis) e as cores manuais aplicadas a diferentes geometrias.</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-0">
+                <div class="lg:col-span-5 p-6 md:p-8 bg-white border-r border-neutral-100 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-4">Mapeamento de Cor</h3>
+                        <div class="space-y-3 mb-8">
+                            <button id="btn-color-viridis" class="w-full text-left px-4 py-3 rounded-lg border-2 border-rose-600 bg-rose-50 text-rose-800 font-semibold transition-all shadow-sm flex items-center justify-between">
+                                <span>1. Paleta Viridis (Contínua)</span>
+                                <span class="text-xl leading-none" aria-hidden="true">&#9679;</span>
+                            </button>
+                            <button id="btn-color-manual" class="w-full text-left px-4 py-3 rounded-lg border-2 border-neutral-200 hover:border-rose-300 text-neutral-600 font-medium transition-all flex items-center justify-between">
+                                <span>2. Customização Manual (Discreta)</span>
+                                <span class="text-xl leading-none" aria-hidden="true">&#9632;</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Código R Simulado</h3>
+                        <div id="code-colors" class="code-display min-h-[160px]"></div>
+                    </div>
+                </div>
+                <div class="lg:col-span-7 p-6 md:p-8 bg-neutral-50 flex items-center justify-center">
+                    <div class="chart-container">
+                        <canvas id="colorChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Temas e Anotações -->
+        <section class="bg-white rounded-2xl shadow-sm border border-neutral-200 overflow-hidden">
+            <div class="p-6 md:p-8 border-b border-neutral-100 bg-rose-50/30">
+                <h2 class="text-2xl font-bold text-neutral-900">2. Temas e Anotações</h2>
+                <p class="text-neutral-700 mt-2">Limpando o ruído visual e adicionando contexto. Use os painéis para aplicar temas predefinidos e controlar elementos individuais do gráfico como títulos e legendas.</p>
+            </div>
+            <div class="grid grid-cols-1 xl:grid-cols-12 gap-0">
+                <div class="xl:col-span-4 p-6 md:p-8 bg-white border-r border-neutral-100 flex flex-col">
+                    <h3 class="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-4">Temas Predefinidos</h3>
+                    <div class="grid grid-cols-2 gap-2 mb-6">
+                        <button id="theme-default" class="theme-btn py-2 px-3 rounded text-sm font-semibold border-2 border-neutral-800 bg-neutral-800 text-white transition-colors">Padrão</button>
+                        <button id="theme-minimal" class="theme-btn py-2 px-3 rounded text-sm font-medium border-2 border-neutral-200 hover:border-neutral-400 text-neutral-700 transition-colors">Minimal</button>
+                        <button id="theme-classic" class="theme-btn py-2 px-3 rounded text-sm font-medium border-2 border-neutral-200 hover:border-neutral-400 text-neutral-700 transition-colors">Classic</button>
+                        <button id="theme-void" class="theme-btn py-2 px-3 rounded text-sm font-medium border-2 border-neutral-200 hover:border-neutral-400 text-neutral-700 transition-colors">Void</button>
+                    </div>
+
+                    <h3 class="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-4">Anotações & Detalhes (theme)</h3>
+                    <div class="space-y-3 mb-6 bg-neutral-50 p-4 rounded-lg border border-neutral-200">
+                        <label class="flex items-center space-x-3 cursor-pointer">
+                            <input type="checkbox" id="chk-labs" checked class="w-5 h-5 text-rose-600 rounded border-gray-300 focus:ring-rose-500">
+                            <span class="text-sm font-medium text-neutral-700">Adicionar Títulos e Eixos (<code class="text-xs bg-white px-1">labs</code>)</span>
+                        </label>
+                        <label class="flex items-center space-x-3 cursor-pointer">
+                            <input type="checkbox" id="chk-legend" checked class="w-5 h-5 text-rose-600 rounded border-gray-300 focus:ring-rose-500">
+                            <span class="text-sm font-medium text-neutral-700">Legenda no Topo (<code class="text-xs bg-white px-1">legend.position</code>)</span>
+                        </label>
+                        <label class="flex items-center space-x-3 cursor-pointer">
+                            <input type="checkbox" id="chk-grid" checked class="w-5 h-5 text-rose-600 rounded border-gray-300 focus:ring-rose-500">
+                            <span class="text-sm font-medium text-neutral-700">Mostrar Grelha (<code class="text-xs bg-white px-1">panel.grid</code>)</span>
+                        </label>
+                    </div>
+
+                    <h3 class="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Código R Simulado</h3>
+                    <div id="code-theme" class="code-display flex-grow min-h-[180px]"></div>
+                </div>
+                <div class="xl:col-span-8 p-6 md:p-8 bg-neutral-100 flex items-center justify-center shadow-inner">
+                    <div class="chart-container" style="background-color: white; border-radius: 8px; padding: 10px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                        <canvas id="themeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Exercícios -->
+        <section class="bg-neutral-900 rounded-2xl shadow-xl p-6 md:p-10 text-neutral-300">
+            <div class="mb-8 border-b border-neutral-700 pb-6">
+                <h2 class="text-3xl font-bold text-white mb-2">Exercícios Práticos</h2>
+                <p class="text-neutral-400">Aplique as técnicas de design abordadas. Clique em cada exercício para expandir os detalhes e desafios propostos.</p>
+            </div>
+
+            <div class="space-y-4" id="exercise-accordion">
+                <!-- Injetado via JS -->
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white py-8 border-t border-neutral-200 text-center mt-12">
+        <p class="text-neutral-500 text-sm font-medium">Formação R DataViz &bull; Desenvolvido para consolidação de conceitos visuais.</p>
+    </footer>
+
+    <script>
+        // --- 1. SETUP DE DADOS MOCK ---
+        // Simulação básica do dataset mpg
+        const mpgData = [];
+        const classes = ['compact', 'midsize', 'suv', 'pickup'];
+        const drvs = ['f', 'r', '4'];
+        
+        for(let i=0; i<80; i++) {
+            const displ = parseFloat((1.5 + Math.random() * 5).toFixed(1));
+            const hwy = Math.floor(45 - (displ * 4) + (Math.random() * 8 - 4));
+            const cls = displ > 4 ? (Math.random() > 0.5 ? 'suv' : 'pickup') : (Math.random() > 0.5 ? 'compact' : 'midsize');
+            const drv = cls === 'suv' || cls === 'pickup' ? (Math.random() > 0.3 ? '4' : 'r') : (Math.random() > 0.2 ? 'f' : '4');
+            mpgData.push({ displ, hwy, class: cls, drv });
+        }
+
+        // Helper para paleta Viridis (aproximação para hwy values 15 a 45)
+        function getViridisColor(val) {
+            const min = 15, max = 45;
+            let norm = (val - min) / (max - min);
+            if(norm < 0) norm = 0; if(norm > 1) norm = 1;
+            // Interpolação super simples entre Roxo escuro -> Verde azulado -> Amarelo
+            if (norm < 0.5) {
+                const r = Math.floor(68 - norm*2 * 37);
+                const g = Math.floor(1 + norm*2 * 140);
+                const b = Math.floor(84 + norm*2 * 60);
+                return `rgb(${r},${g},${b})`;
+            } else {
+                const n2 = (norm - 0.5) * 2;
+                const r = Math.floor(31 + n2 * 222);
+                const g = Math.floor(141 + n2 * 90);
+                const b = Math.floor(144 - n2 * 120);
+                return `rgb(${r},${g},${b})`;
+            }
+        }
+
+        // --- PLUGIN CHART.JS PARA SIMULAR FUNDO GGPLOT ---
+        const ggplotBackgroundPlugin = {
+            id: 'ggplotBg',
+            beforeDraw: (chart, args, options) => {
+                if (!options.enabled) return;
+                const {ctx, chartArea} = chart;
+                ctx.save();
+                ctx.fillStyle = options.color || '#ebebeb'; // ggplot2 grey
+                ctx.fillRect(chartArea.left, chartArea.top, chartArea.width, chartArea.height);
+                ctx.restore();
+            }
+        };
+        Chart.register(ggplotBackgroundPlugin);
+
+        // --- 2. LÓGICA: ESCALAS E CORES ---
+        const ctxColor = document.getElementById('colorChart').getContext('2d');
+        let colorChart = new Chart(ctxColor, { type: 'scatter', data: { datasets: [] }, options: { responsive: true, maintainAspectRatio: false } });
+
+        const btnViridis = document.getElementById('btn-color-viridis');
+        const btnManual = document.getElementById('btn-color-manual');
+        const codeColors = document.getElementById('code-colors');
+
+        const snippetsColors = {
+            viridis: `<span class="cm"># 1. Usando a paleta Viridis (acessível a daltónicos)</span>\n<span class="fn">ggplot</span>(mpg, <span class="fn">aes</span>(x = displ, y = hwy, color = hwy)) <span class="op">+</span>\n  <span class="fn">geom_point</span>(size = 3) <span class="op">+</span>\n  <span class="fn">scale_color_viridis_c</span>() <span class="cm"># _c para contínuo</span>`,
+            manual: `<span class="cm"># 2. Customizando escalas manuais</span>\n<span class="fn">ggplot</span>(mpg, <span class="fn">aes</span>(x = class, fill = drv)) <span class="op">+</span>\n  <span class="fn">geom_bar</span>() <span class="op">+</span>\n  <span class="fn">scale_fill_manual</span>(values = <span class="fn">c</span>(<span class="st">"4"</span> = <span class="st">"red"</span>, <span class="st">"f"</span> = <span class="st">"blue"</span>, <span class="st">"r"</span> = <span class="st">"orange"</span>))`
+        };
+
+        function renderColorViridis() {
+            colorChart.destroy();
+            const dataPts = mpgData.map(d => ({x: d.displ, y: d.hwy}));
+            const bgColors = mpgData.map(d => getViridisColor(d.hwy));
+            
+            colorChart = new Chart(ctxColor, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Pontos',
+                        data: dataPts,
+                        backgroundColor: bgColors,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, ggplotBg: { enabled: true } },
+                    scales: {
+                        x: { title: { display: true, text: 'displ' }, grid: {color: '#ffffff'} },
+                        y: { title: { display: true, text: 'hwy' }, grid: {color: '#ffffff'} }
+                    }
+                }
+            });
+            codeColors.innerHTML = snippetsColors.viridis;
+        }
+
+        function renderColorManual() {
+            colorChart.destroy();
+            
+            // Aggregating data for bar chart
+            const classCounts = {};
+            classes.forEach(c => classCounts[c] = { '4': 0, 'f': 0, 'r': 0 });
+            mpgData.forEach(d => { if(classCounts[d.class]) classCounts[d.class][d.drv]++; });
+
+            const drvLabels = ['4', 'f', 'r'];
+            const manualColors = ['#ef4444', '#3b82f6', '#f97316']; // red, blue, orange
+
+            const datasets = drvLabels.map((drv, i) => ({
+                label: `drv: ${drv}`,
+                data: classes.map(c => classCounts[c][drv]),
+                backgroundColor: manualColors[i]
+            }));
+
+            colorChart = new Chart(ctxColor, {
+                type: 'bar',
+                data: { labels: classes, datasets: datasets },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'right' }, ggplotBg: { enabled: true } },
+                    scales: {
+                        x: { stacked: true, title: { display: true, text: 'class' }, grid: {display: false} },
+                        y: { stacked: true, title: { display: true, text: 'count' }, grid: {color: '#ffffff'} }
+                    }
+                }
+            });
+            codeColors.innerHTML = snippetsColors.manual;
+        }
+
+        btnViridis.addEventListener('click', () => {
+            btnViridis.className = "w-full text-left px-4 py-3 rounded-lg border-2 border-rose-600 bg-rose-50 text-rose-800 font-semibold transition-all shadow-sm flex items-center justify-between";
+            btnManual.className = "w-full text-left px-4 py-3 rounded-lg border-2 border-neutral-200 hover:border-rose-300 text-neutral-600 font-medium transition-all flex items-center justify-between";
+            renderColorViridis();
+        });
+
+        btnManual.addEventListener('click', () => {
+            btnManual.className = "w-full text-left px-4 py-3 rounded-lg border-2 border-rose-600 bg-rose-50 text-rose-800 font-semibold transition-all shadow-sm flex items-center justify-between";
+            btnViridis.className = "w-full text-left px-4 py-3 rounded-lg border-2 border-neutral-200 hover:border-rose-300 text-neutral-600 font-medium transition-all flex items-center justify-between";
+            renderColorManual();
+        });
+
+        // Initialize Section 1
+        renderColorViridis();
+
+
+        // --- 3. LÓGICA: TEMAS E ANOTAÇÕES ---
+        const ctxTheme = document.getElementById('themeChart').getContext('2d');
+        
+        // Prepare datasets colored by class
+        const classColors = { 'compact': '#10b981', 'midsize': '#3b82f6', 'suv': '#ef4444', 'pickup': '#8b5cf6' };
+        const themeDatasets = classes.map(cls => ({
+            label: cls,
+            data: mpgData.filter(d => d.class === cls).map(d => ({x: d.displ, y: d.hwy})),
+            backgroundColor: classColors[cls],
+            pointRadius: 5
+        }));
+
+        let themeChart = new Chart(ctxTheme, {
+            type: 'scatter',
+            data: { datasets: themeDatasets },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        // Controls
+        const themeBtns = document.querySelectorAll('.theme-btn');
+        const chkLabs = document.getElementById('chk-labs');
+        const chkLegend = document.getElementById('chk-legend');
+        const chkGrid = document.getElementById('chk-grid');
+        const codeTheme = document.getElementById('code-theme');
+
+        let currentTheme = 'default';
+
+        function updateThemeChart() {
+            const hasLabs = chkLabs.checked;
+            const legendTop = chkLegend.checked;
+            const hasGrid = chkGrid.checked;
+
+            const opts = themeChart.options;
+            
+            // Reset base settings
+            opts.plugins.ggplotBg = { enabled: false };
+            opts.scales.x.display = true;
+            opts.scales.y.display = true;
+            opts.scales.x.grid.display = hasGrid;
+            opts.scales.y.grid.display = hasGrid;
+            opts.scales.x.border = { display: true };
+            opts.scales.y.border = { display: true };
+            opts.plugins.legend.display = true;
+
+            // Apply specific Theme logic
+            if (currentTheme === 'default') {
+                opts.plugins.ggplotBg = { enabled: true, color: '#ebebeb' };
+                opts.scales.x.grid.color = '#ffffff';
+                opts.scales.y.grid.color = '#ffffff';
+                opts.scales.x.border.display = false;
+                opts.scales.y.border.display = false;
+                Chart.defaults.font.family = 'sans-serif';
+            } else if (currentTheme === 'minimal') {
+                opts.scales.x.grid.color = '#f3f4f6';
+                opts.scales.y.grid.color = '#f3f4f6';
+                opts.scales.x.border.display = false;
+                opts.scales.y.border.display = false;
+            } else if (currentTheme === 'classic') {
+                opts.scales.x.grid.display = false;
+                opts.scales.y.grid.display = false;
+                opts.scales.x.border = { display: true, color: 'black', width: 1 };
+                opts.scales.y.border = { display: true, color: 'black', width: 1 };
+            } else if (currentTheme === 'void') {
+                opts.scales.x.display = false;
+                opts.scales.y.display = false;
+                opts.plugins.legend.display = false;
+            }
+
+            // Apply Labels
+            if (hasLabs && currentTheme !== 'void') {
+                opts.plugins.title = { display: true, text: 'Título em Negrito', font: {size: 16, weight: 'bold', color: 'darkblue'}, align: 'start', padding: {bottom: 20} };
+                opts.scales.x.title = { display: true, text: 'displ' };
+                opts.scales.y.title = { display: true, text: 'hwy' };
+            } else {
+                opts.plugins.title = { display: false };
+                if(currentTheme !== 'void') {
+                    opts.scales.x.title = { display: true, text: 'displ' };
+                    opts.scales.y.title = { display: true, text: 'hwy' };
+                }
+            }
+
+            // Apply Legend Position
+            if (currentTheme !== 'void') {
+                opts.plugins.legend.position = legendTop ? 'top' : 'right';
+            }
+
+            themeChart.update();
+            updateThemeCode();
+        }
+
+        function updateThemeCode() {
+            let code = `<span class="cm"># 3. Personalização Total</span>\n<span class="fn">ggplot</span>(mpg, <span class="fn">aes</span>(x = displ, y = hwy, color = class)) <span class="op">+</span>\n  <span class="fn">geom_point</span>()`;
+            
+            if (chkLabs.checked) {
+                code += ` <span class="op">+</span>\n  <span class="fn">labs</span>(title = <span class="st">"Título em Negrito"</span>, subtitle = <span class="st">"Texto de apoio"</span>)`;
+            }
+
+            if (currentTheme !== 'default') {
+                code += ` <span class="op">+</span>\n  <span class="fn">theme_${currentTheme}</span>()`;
+            }
+
+            let themeArgs = [];
+            if (chkLegend.checked) themeArgs.push(`legend.position = <span class="st">"top"</span>`);
+            if (!chkGrid.checked) themeArgs.push(`panel.grid = <span class="fn">element_blank</span>()`);
+            if (chkLabs.checked) themeArgs.push(`plot.title = <span class="fn">element_text</span>(face = <span class="st">"bold"</span>, color = <span class="st">"darkblue"</span>)`);
+
+            if (themeArgs.length > 0) {
+                code += ` <span class="op">+</span>\n  <span class="fn">theme</span>(\n    ${themeArgs.join(',\n    ')}\n  )`;
+            }
+
+            codeTheme.innerHTML = code;
+        }
+
+        themeBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                themeBtns.forEach(b => {
+                    b.className = "theme-btn py-2 px-3 rounded text-sm font-medium border-2 border-neutral-200 hover:border-neutral-400 text-neutral-700 transition-colors";
+                });
+                const target = e.target;
+                target.className = "theme-btn py-2 px-3 rounded text-sm font-semibold border-2 border-neutral-800 bg-neutral-800 text-white transition-colors";
+                currentTheme = target.id.replace('theme-', '');
+                updateThemeChart();
+            });
+        });
+
+        chkLabs.addEventListener('change', updateThemeChart);
+        chkLegend.addEventListener('change', updateThemeChart);
+        chkGrid.addEventListener('change', updateThemeChart);
+
+        // Init Section 2
+        updateThemeChart();
+
+
+        // --- 4. EXERCÍCIOS (ACCORDION) ---
+        const exercisesData = [
+            {
+                title: "Exercício 1: Paletas de Cores",
+                content: "Crie um gráfico de boxplot de <code class='bg-neutral-800 text-neutral-200 px-1 rounded'>hwy</code> por <code class='bg-neutral-800 text-neutral-200 px-1 rounded'>class</code>. Use <code class='bg-neutral-800 text-neutral-200 px-1 rounded'>fill = class</code> para colorir as caixas. Utilize a função <code class='bg-neutral-800 text-neutral-200 px-1 rounded'>scale_fill_brewer(palette = \"Set3\")</code> para mudar as cores. Experimente outras paletas (ex: \"Dark2\", \"Spectral\")."
+            },
+            {
+                title: "Exercício 2: Labels e Formatação",
+                content: "Crie um gráfico de barras com a contagem de carros por <code class='bg-neutral-800 text-neutral-200 px-1 rounded'>cyl</code>.<br><br><ul class='list-disc pl-5 space-y-2 text-neutral-300'><li>Adicione um título, subtítulo e uma nota de rodapé (<code class='bg-neutral-800 text-neutral-200 px-1 rounded'>caption</code>) com o seu nome.</li><li>Altere o nome da legenda para \"Nº de Cilindros\".</li></ul>"
+            },
+            {
+                title: "Exercício 3: Limpeza de Tema",
+                content: "Pegue no gráfico de dispersão mais complexo que fez na Aula 3.<br><br><ul class='list-disc pl-5 space-y-2 text-neutral-300'><li>Aplique o <code class='bg-neutral-800 text-neutral-200 px-1 rounded'>theme_void()</code>. O que acontece?</li><li>Agora aplique o <code class='bg-neutral-800 text-neutral-200 px-1 rounded'>theme_classic()</code> e remova as linhas de grade do eixo X usando a função <code class='bg-neutral-800 text-neutral-200 px-1 rounded'>theme(panel.grid.major.x = element_blank())</code>.</li></ul>"
+            },
+            {
+                title: "Exercício 4: Desafio Final de Design",
+                content: "Recrie um gráfico do dataset <code class='bg-neutral-800 text-neutral-200 px-1 rounded'>mpg</code> que siga estas regras:<br><br><ol class='list-decimal pl-5 space-y-2 text-neutral-300'><li>Cores da paleta Viridis.</li><li>Fundo totalmente branco.</li><li>Título alinhado ao centro.</li><li>Eixos com nomes em Português e unidades (ex: \"Consumo (MPG)\").</li><li>Remova a moldura do gráfico.</li></ol>"
+            }
+        ];
+
+        const accContainer = document.getElementById('exercise-accordion');
+        
+        exercisesData.forEach(ex => {
+            const item = document.createElement('div');
+            item.className = 'border border-neutral-700 rounded-lg overflow-hidden bg-neutral-800';
+            
+            const header = document.createElement('button');
+            header.className = 'w-full text-left px-6 py-4 hover:bg-neutral-700 font-semibold text-neutral-200 flex justify-between items-center focus:outline-none transition-colors';
+            header.innerHTML = `<span>${ex.title}</span><span class="text-xl text-rose-500 transform transition-transform duration-200 font-light">&#43;</span>`;
+            
+            const content = document.createElement('div');
+            content.className = 'px-6 py-0 max-h-0 overflow-hidden text-neutral-400 transition-all duration-300 ease-in-out bg-neutral-900/50';
+            content.innerHTML = `<div class="py-5 border-t border-neutral-700 leading-relaxed">${ex.content}</div>`;
+            
+            header.addEventListener('click', () => {
+                const isOpen = content.style.maxHeight;
+                
+                document.querySelectorAll('#exercise-accordion > div > div').forEach(c => c.style.maxHeight = null);
+                document.querySelectorAll('#exercise-accordion button span:last-child').forEach(icon => {
+                    icon.innerHTML = '&#43;';
+                    icon.classList.remove('rotate-45');
+                });
+
+                if (!isOpen) {
+                    content.style.maxHeight = content.scrollHeight + "px";
+                    header.querySelector('span:last-child').innerHTML = '&#10005;'; // X mark
+                    header.querySelector('span:last-child').classList.add('rotate-45');
+                }
+            });
+
+            item.appendChild(header);
+            item.appendChild(content);
+            accContainer.appendChild(item);
+        });
+
+    </script>
+</body>
+</html>

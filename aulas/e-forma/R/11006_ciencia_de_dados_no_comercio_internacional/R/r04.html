@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resolução Comentada: Aula 04 - Design</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js & Plotly.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        
+        .code-block {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            background-color: #0f172a;
+            color: #f8fafc;
+            padding: 1.25rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            line-height: 1.6;
+            overflow-x: auto;
+            border: 1px solid #1e293b;
+        }
+        .code-comment { color: #64748b; font-style: italic; }
+        .code-func { color: #38bdf8; }
+        .code-string { color: #a3e635; }
+        .code-arg { color: #f472b6; }
+        
+        .design-toggle {
+            transition: all 0.3s ease;
+        }
+        .design-toggle.active {
+            background-color: #db2777;
+            color: white;
+            border-color: #db2777;
+        }
+    </style>
+
+    <!-- Chosen Palette: Slate & Pink Magma -->
+    <!-- Application Structure Plan: SPA interativo focado na resolução da Aula 04 de R. 
+         Organizado em 4 módulos que demonstram visualmente o impacto de funções de design do ggplot2. -->
+    <!-- Visualization & Content Choices: 
+         Ex 1: Plotly Boxplot para paletas Brewer.
+         Ex 2: Chart.js Bar para anotações labs().
+         Ex 3: Chart.js Scatter para limpeza de temas.
+         Ex 4: Chart.js Scatter com escala de cores Magma dinâmica.
+         CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased">
+
+    <nav class="bg-slate-900 text-white shadow-lg sticky top-0 z-50 border-b-4 border-pink-500">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <div class="font-bold text-xl tracking-tight flex items-center gap-2">
+                <span class="text-pink-400 font-mono">R&gt;</span> DataViz Lab
+            </div>
+            <div class="text-sm font-medium text-slate-300">Resolução Comentada: Aula 04</div>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-4 py-10 space-y-16">
+
+        <header class="text-center space-y-4 max-w-3xl mx-auto">
+            <h1 class="text-3xl md:text-5xl font-extrabold text-slate-900 tracking-tight">Polimento Visual de Gráficos</h1>
+            <p class="text-lg text-slate-600">Interaja com os exercícios para ver como o design altera a clareza da comunicação.</p>
+        </header>
+
+        <!-- Exercício 1 -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 border-b border-slate-100 bg-pink-50/50">
+                <h2 class="text-2xl font-bold text-slate-800">Exercício 1: Paletas de Cores</h2>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-12">
+                <div class="lg:col-span-5 p-6 border-r border-slate-100">
+                    <div class="code-block mb-6" id="codeEx1">
+<span class="code-func">ggplot</span>(mpg, <span class="code-func">aes</span>(x = class, y = hwy, fill = class)) +
+  <span class="code-func">geom_boxplot</span>() +
+  <span class="code-func">scale_fill_brewer</span>(palette = <span class="code-string">"Set3"</span>)
+                    </div>
+                    <select id="paletteSelect" class="w-full bg-white border p-2 rounded">
+                        <option value="Set3">Set3 (Padrão)</option>
+                        <option value="Dark2">Dark2</option>
+                        <option value="Spectral">Spectral</option>
+                        <option value="Default">Padrão ggplot2</option>
+                    </select>
+                </div>
+                <div class="lg:col-span-7 p-6 bg-slate-50">
+                    <div id="chartEx1" class="w-full h-[350px]"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Exercício 2 -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 border-b border-slate-100 bg-pink-50/50">
+                <h2 class="text-2xl font-bold text-slate-800">Exercício 2: Labels e Formatação</h2>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-12">
+                <div class="lg:col-span-5 p-6 border-r border-slate-100">
+                    <button id="btnToggleLabels" class="design-toggle w-full p-3 border-2 rounded-lg font-bold mb-4">Aplicar labs()</button>
+                    <div class="code-block" id="codeEx2">
+<span class="code-func">ggplot</span>(mpg, <span class="code-func">aes</span>(x = cyl, fill = cyl)) + <span class="code-func">geom_bar</span>()
+                    </div>
+                </div>
+                <div class="lg:col-span-7 p-6 bg-slate-50">
+                    <div class="chart-container"><canvas id="chartEx2"></canvas></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Exercício 3 -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 border-b border-slate-100 bg-pink-50/50">
+                <h2 class="text-2xl font-bold text-slate-800">Exercício 3: Limpeza de Tema</h2>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-12">
+                <div class="lg:col-span-5 p-6 border-r border-slate-100 space-y-2">
+                    <button id="btnThemeClassic" class="w-full text-left p-3 border rounded">theme_classic()</button>
+                    <button id="btnThemeGrid" class="w-full text-left p-3 border rounded">Remover Grelha X</button>
+                    <button id="btnThemeVoid" class="w-full text-left p-3 border rounded">theme_void()</button>
+                    <div class="code-block mt-4" id="codeEx3">
+<span class="code-func">ggplot</span>(mpg, <span class="code-func">aes</span>(x = displ, y = hwy)) + <span class="code-func">geom_point</span>()
+                    </div>
+                </div>
+                <div class="lg:col-span-7 p-6 bg-slate-100">
+                    <div class="chart-container bg-white p-2 rounded shadow-inner"><canvas id="chartEx3"></canvas></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Exercício 4 -->
+        <section class="bg-slate-900 rounded-2xl shadow-xl border border-slate-800 overflow-hidden">
+            <div class="p-6 border-b border-slate-700">
+                <h2 class="text-2xl font-bold text-white">Desafio Final: Magma Scale</h2>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-12">
+                <div class="lg:col-span-5 p-6 border-r border-slate-700">
+                    <button id="btnFinalDesign" class="design-toggle w-full p-4 border-2 border-slate-600 text-white font-bold rounded-lg mb-4">Aplicar Design Final</button>
+                    <div class="code-block bg-black border-slate-700" id="codeEx4">
+<span class="code-func">ggplot</span>(mpg, <span class="code-func">aes</span>(x = displ, y = hwy, color = hwy)) + <span class="code-func">geom_point</span>()
+                    </div>
+                </div>
+                <div class="lg:col-span-7 p-6 bg-white">
+                    <div class="chart-container"><canvas id="chartEx4"></canvas></div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // Data Generation
+        const mpgData = [];
+        const classes = ['compact', 'midsize', 'suv', 'pickup', 'subcompact', 'minivan', '2seater'];
+        for (let i = 0; i < 100; i++) {
+            let displ = (Math.random() * 5 + 1.5);
+            let hwy = Math.floor(45 - (displ * 4) + (Math.random() * 8 - 4));
+            mpgData.push({ 
+                displ: parseFloat(displ.toFixed(1)), 
+                hwy, 
+                cyl: displ > 4.5 ? 8 : (displ > 2.5 ? 6 : 4), 
+                class: classes[Math.floor(Math.random() * classes.length)] 
+            });
+        }
+
+        // Background Plugin for ggplot simulation
+        Chart.register({
+            id: 'ggplotBg',
+            beforeDraw: (chart, args, options) => {
+                if (!options.enabled) return;
+                const {ctx, chartArea} = chart;
+                ctx.save();
+                ctx.fillStyle = options.color || '#ebebeb';
+                ctx.fillRect(chartArea.left, chartArea.top, chartArea.width, chartArea.height);
+                ctx.restore();
+            }
+        });
+
+        // Ex 1: Plotly
+        const palettes = {
+            'Set3': ['#8dd3c7','#ffffb3','#bebada','#fb8072','#80b1d3','#fdb462','#b3de69'],
+            'Dark2': ['#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02','#a6761d'],
+            'Spectral': ['#d53e4f','#fc8d59','#fee08b','#ffffbf','#e6f598','#99d594','#3288bd'],
+            'Default': ['#F8766D','#C49A00','#53B400','#00C094','#00B6EB','#A58AFF','#FB61D7']
+        };
+
+        function drawPlotly(palName) {
+            const data = classes.map((c, i) => ({
+                y: mpgData.filter(d => d.class === c).map(d => d.hwy),
+                type: 'box', name: c, fillcolor: palettes[palName][i % palettes[palName].length],
+                line: {color: '#333', width: 1}, marker: {size: 2}
+            }));
+            Plotly.newPlot('chartEx1', data, {
+                margin: {l:40, r:20, t:20, b:40}, paper_bgcolor: 'transparent', plot_bgcolor: '#ebebeb', showlegend: false
+            }, {responsive: true, displayModeBar: false});
+        }
+        drawPlotly('Set3');
+        document.getElementById('paletteSelect').onchange = (e) => drawPlotly(e.target.value);
+
+        // Ex 2: Labels
+        const ctx2 = document.getElementById('chartEx2').getContext('2d');
+        const counts = {4: 0, 6: 0, 8: 0};
+        mpgData.forEach(d => counts[d.cyl]++);
+        let chartEx2 = new Chart(ctx2, {
+            type: 'bar',
+            data: { labels: ['4','6','8'], datasets: [{ data: [counts[4], counts[6], counts[8]], backgroundColor: ['#F8766D', '#00BA38', '#619CFF'] }] },
+            options: { maintainAspectRatio: false, plugins: { legend: {display: false}, ggplotBg: {enabled: true} }, scales: { x: {title: {display:true, text:'cyl'}}, y: {title: {display:true, text:'count'}} } }
+        });
+        document.getElementById('btnToggleLabels').onclick = function() {
+            this.classList.toggle('active');
+            const active = this.classList.contains('active');
+            chartEx2.options.plugins.title = { display: active, text: 'Veículos por Cilindrada', font: {size: 16} };
+            chartEx2.options.scales.x.title.text = active ? 'Cilindros' : 'cyl';
+            chartEx2.options.scales.y.title.text = active ? 'Total' : 'count';
+            chartEx2.update();
+        };
+
+        // Ex 3: Themes
+        const ctx3 = document.getElementById('chartEx3').getContext('2d');
+        let chartEx3 = new Chart(ctx3, {
+            type: 'scatter',
+            data: { datasets: [{ data: mpgData.map(d=>({x:d.displ, y:d.hwy})), backgroundColor: '#000', pointRadius: 3 }] },
+            options: { maintainAspectRatio: false, plugins: { legend: {display: false}, ggplotBg: {enabled: true} }, scales: { x: {grid: {color:'#fff'}}, y: {grid: {color:'#fff'}} } }
+        });
+        document.getElementById('btnThemeClassic').onclick = () => {
+            chartEx3.options.plugins.ggplotBg.enabled = false;
+            chartEx3.options.scales.x.grid.display = false;
+            chartEx3.options.scales.y.grid.display = false;
+            chartEx3.options.scales.x.border = {display: true, color: '#000'};
+            chartEx3.options.scales.y.border = {display: true, color: '#000'};
+            chartEx3.update();
+        };
+        document.getElementById('btnThemeGrid').onclick = () => {
+            chartEx3.options.scales.x.grid.display = false;
+            chartEx3.update();
+        };
+        document.getElementById('btnThemeVoid').onclick = () => {
+            chartEx3.options.plugins.ggplotBg.enabled = false;
+            chartEx3.options.scales.x.display = false;
+            chartEx3.options.scales.y.display = false;
+            chartEx3.update();
+        };
+
+        // Ex 4: Magma
+        const ctx4 = document.getElementById('chartEx4').getContext('2d');
+        function magma(v) {
+            const n = (v - 15) / 30;
+            return `rgb(${Math.floor(20 + n * 230)}, ${Math.floor(10 + n * 150)}, ${Math.floor(80 - n * 40)})`;
+        }
+        let chartEx4 = new Chart(ctx4, {
+            type: 'scatter',
+            data: { datasets: [{ data: mpgData.map(d=>({x:d.displ, y:d.hwy})), backgroundColor: '#1e293b', pointRadius: 3 }] },
+            options: { maintainAspectRatio: false, plugins: { legend: {display: false}, ggplotBg: {enabled: true} } }
+        });
+        document.getElementById('btnFinalDesign').onclick = function() {
+            this.classList.toggle('active');
+            const active = this.classList.contains('active');
+            chartEx4.data.datasets[0].backgroundColor = active ? mpgData.map(d => magma(d.hwy)) : '#1e293b';
+            chartEx4.options.plugins.ggplotBg.enabled = !active;
+            chartEx4.update();
+        };
+    </script>
+</body>
+</html>
