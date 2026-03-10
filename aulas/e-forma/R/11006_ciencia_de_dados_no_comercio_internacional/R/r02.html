@@ -3,99 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Curso R DataViz - Portal de Aulas</title>
+    <title>Resolução Aula 02: Distribuições e Categorias</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .aula-card {
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        .code-container {
+            background-color: #0f172a;
+            color: #f8fafc;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            position: relative;
+            overflow-x: auto;
         }
-        .aula-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            background: #334155;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            cursor: pointer;
         }
+        .copy-btn:hover { background: #475569; }
+        .r-keyword { color: #c678dd; }
+        .r-func { color: #61afef; }
+        .r-str { color: #98c379; }
+        .r-comment { color: #676f7d; font-style: italic; }
+        .r-num { color: #d19a66; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
+<body class="bg-slate-50 text-slate-900 font-sans">
 
-    <!-- Header -->
-    <header class="bg-indigo-700 text-white py-12 shadow-md">
-        <div class="max-w-5xl mx-auto px-6 text-center">
-            <h1 class="text-4xl font-extrabold mb-4 text-white">Formação R & Data Visualization</h1>
-            <p class="text-indigo-100 text-lg max-w-2xl mx-auto">
-                Explora os conteúdos teóricos e as resoluções interativas de cada sessão. Seleciona um recurso abaixo.
-            </p>
+    <nav class="bg-emerald-700 text-white p-4 shadow-lg sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <h1 class="font-bold">Guia de Resolução: Aula 02</h1>
+            <span class="text-emerald-100 text-sm">ggplot2 & Distribuições</span>
         </div>
-    </header>
+    </nav>
 
-    <!-- Main Content -->
-    <main class="max-w-5xl mx-auto px-6 py-12">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            
-            <!-- Aula 01 -->
-            <div class="aula-card bg-white p-8 rounded-2xl border border-slate-200 flex flex-col">
-                <div class="flex justify-between items-start mb-4">
-                    <span class="bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full uppercase">Módulo 1</span>
+    <main class="max-w-5xl mx-auto p-6 md:p-10 space-y-12">
+        
+        <header class="border-b border-slate-200 pb-6">
+            <h2 class="text-3xl font-extrabold text-slate-800">Respostas aos Exercícios Propostos</h2>
+            <p class="text-slate-600 mt-2">Este guia contém o código R necessário para resolver os desafios da <span class="font-semibold italic">aula02.html</span>, com foco em manipulação de variáveis categóricas e ajuste de visualizações de distribuição.</p>
+        </header>
+
+        <!-- Exercício 1 -->
+        <section class="space-y-4">
+            <div class="flex items-center gap-3">
+                <span class="bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">1</span>
+                <h3 class="text-xl font-bold">Frequência de Fabricantes</h3>
+            </div>
+            <p class="text-slate-700">O objetivo é mostrar a contagem de modelos por fabricante, ordenados por frequência. Usamos <code>fct_infreq</code> para que as barras fiquem organizadas visualmente.</p>
+            <div class="code-container">
+                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                <span class="r-comment"># Carregar bibliotecas necessárias</span><br>
+                <span class="r-keyword">library</span>(tidyverse)<br><br>
+                <span class="r-comment"># Criar o gráfico com ordenação automática</span><br>
+                <span class="r-func">ggplot</span>(data = mpg) +<br>
+                &nbsp;&nbsp;<span class="r-func">geom_bar</span>(mapping = <span class="r-func">aes</span>(x = <span class="r-func">fct_infreq</span>(manufacturer), fill = manufacturer)) +<br>
+                &nbsp;&nbsp;<span class="r-func">coord_flip</span>() + <span class="r-comment"># Inverter para facilitar leitura de nomes longos</span><br>
+                &nbsp;&nbsp;<span class="r-func">theme_minimal</span>() +<br>
+                &nbsp;&nbsp;<span class="r-func">labs</span>(x = <span class="r-str">"Fabricante"</span>, y = <span class="r-str">"Nº de Modelos"</span>, title = <span class="r-str">"Modelos por Fabricante"</span>)
+            </div>
+        </section>
+
+        <!-- Exercício 2 -->
+        <section class="space-y-4">
+            <div class="flex items-center gap-3">
+                <span class="bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">2</span>
+                <h3 class="text-xl font-bold">O Impacto dos Bins</h3>
+            </div>
+            <p class="text-slate-700">Ajustar o número de compartimentos (bins) altera o detalhe da distribuição. Com 10 bins vemos a forma geral; com 50 vemos as lacunas nos dados.</p>
+            <div class="grid md:grid-cols-2 gap-4">
+                <div class="code-container">
+                    <span class="r-comment"># 10 Bins (Mais Generalista)</span><br>
+                    <span class="r-func">ggplot</span>(mpg, <span class="r-func">aes</span>(x = displ)) +<br>
+                    &nbsp;&nbsp;<span class="r-func">geom_histogram</span>(bins = <span class="r-num">10</span>, fill = <span class="r-str">"blue"</span>)
                 </div>
-                <h2 class="text-2xl font-bold text-slate-900 mb-2">Aula 01: Gramática de Gráficos</h2>
-                <p class="text-slate-600 mb-6 flex-grow">Fundamentos do ggplot2, mapeamento estético e camadas básicas.</p>
-                <div class="flex gap-4">
-                    <a href="aula01.html" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">Conteúdo Teórico</a>
-                    <span class="text-slate-300">|</span>
-                    <a href="r01.html" class="text-sm font-semibold text-emerald-600 hover:text-emerald-800 transition-colors">Resolução (r01)</a>
+                <div class="code-container">
+                    <span class="r-comment"># 50 Bins (Mais Detalhado)</span><br>
+                    <span class="r-func">ggplot</span>(mpg, <span class="r-func">aes</span>(x = displ)) +<br>
+                    &nbsp;&nbsp;<span class="r-func">geom_histogram</span>(bins = <span class="r-num">50</span>, fill = <span class="r-str">"red"</span>)
                 </div>
             </div>
-
-            <!-- Aula 02 -->
-            <div class="aula-card bg-white p-8 rounded-2xl border border-slate-200 flex flex-col">
-                <div class="flex justify-between items-start mb-4">
-                    <span class="bg-emerald-100 text-emerald-700 text-xs font-bold px-3 py-1 rounded-full uppercase">Módulo 2</span>
-                </div>
-                <h2 class="text-2xl font-bold text-slate-900 mb-2">Aula 02: Distribuições e Categorias</h2>
-                <p class="text-slate-600 mb-6 flex-grow">Geometrias para barras, histogramas, densidades e boxplots.</p>
-                <div class="flex gap-4">
-                    <a href="aula02.html" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">Conteúdo Teórico</a>
-                    <span class="text-slate-300">|</span>
-                    <a href="r02.html" class="text-sm font-semibold text-emerald-600 hover:text-emerald-800 transition-colors">Resolução (r02)</a>
-                </div>
+            <div class="bg-amber-50 border-l-4 border-amber-400 p-4">
+                <p class="text-sm text-amber-800"><strong>Resposta:</strong> Geralmente, um valor intermédio (como 30) é melhor. O de 50 bins revela que a cilindrada não é perfeitamente contínua, mas sim agrupada em valores padrão de motorização.</p>
             </div>
+        </section>
 
-            <!-- Aula 03 -->
-            <div class="aula-card bg-white p-8 rounded-2xl border border-slate-200 flex flex-col">
-                <div class="flex justify-between items-start mb-4">
-                    <span class="bg-amber-100 text-amber-700 text-xs font-bold px-3 py-1 rounded-full uppercase">Módulo 3</span>
-                </div>
-                <h2 class="text-2xl font-bold text-slate-900 mb-2">Aula 03: Facetas e Relações</h2>
-                <p class="text-slate-600 mb-6 flex-grow">Subgráficos, linhas de tendência e análise multivariada.</p>
-                <div class="flex gap-4">
-                    <a href="aula03.html" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">Conteúdo Teórico</a>
-                    <span class="text-slate-300">|</span>
-                    <a href="r03.html" class="text-sm font-semibold text-emerald-600 hover:text-emerald-800 transition-colors">Resolução (r03)</a>
-                </div>
+        <!-- Exercício 3 -->
+        <section class="space-y-4">
+            <div class="flex items-center gap-3">
+                <span class="bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">3</span>
+                <h3 class="text-xl font-bold">Consumo por Cilindrada (Densidade)</h3>
             </div>
-
-            <!-- Aula 04 -->
-            <div class="aula-card bg-white p-8 rounded-2xl border border-slate-200 flex flex-col">
-                <div class="flex justify-between items-start mb-4">
-                    <span class="bg-rose-100 text-rose-700 text-xs font-bold px-3 py-1 rounded-full uppercase">Módulo 4</span>
-                </div>
-                <h2 class="text-2xl font-bold text-slate-900 mb-2">Aula 04: Design e Temas</h2>
-                <p class="text-slate-600 mb-6 flex-grow">Personalização avançada, paletas de cores e escalas profissionais.</p>
-                <div class="flex gap-4">
-                    <a href="aula04.html" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">Conteúdo Teórico</a>
-                    <span class="text-slate-300">|</span>
-                    <a href="r04.html" class="text-sm font-semibold text-emerald-600 hover:text-emerald-800 transition-colors">Resolução (r04)</a>
-                </div>
+            <p class="text-slate-700">Como <code>cyl</code> é lida como número, temos de transformá-la em <strong>fator</strong> para que o ggplot atribua cores diferentes a cada categoria discreta.</p>
+            <div class="code-container">
+                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                <span class="r-func">ggplot</span>(data = mpg, mapping = <span class="r-func">aes</span>(x = cty, color = <span class="r-func">factor</span>(cyl))) +<br>
+                &nbsp;&nbsp;<span class="r-func">geom_density</span>(size = <span class="r-num">1</span>) +<br>
+                &nbsp;&nbsp;<span class="r-func">labs</span>(color = <span class="r-str">"Cilindros"</span>, x = <span class="r-str">"Consumo Cidade (MPG)"</span>)
             </div>
+        </section>
 
-        </div>
+        <!-- Exercício 4 -->
+        <section class="space-y-4">
+            <div class="flex items-center gap-3">
+                <span class="bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">4</span>
+                <h3 class="text-xl font-bold">Identificar Outliers com Boxplots</h3>
+            </div>
+            <p class="text-slate-700">O boxplot é a ferramenta ideal para ver a dispersão e identificar pontos que fogem à norma (outliers).</p>
+            <div class="code-container">
+                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                <span class="r-func">ggplot</span>(data = mpg, <span class="r-func">aes</span>(x = drv, y = hwy, fill = drv)) +<br>
+                &nbsp;&nbsp;<span class="r-func">geom_boxplot</span>() +<br>
+                &nbsp;&nbsp;<span class="r-func">theme_light</span>() +<br>
+                &nbsp;&nbsp;<span class="r-func">scale_fill_brewer</span>(palette = <span class="r-str">"Set2"</span>)
+            </div>
+            <p class="text-sm text-slate-500 italic">Dica: Os pontos pretos acima ou abaixo das "antenas" do gráfico representam os outliers.</p>
+        </section>
+
+        <!-- Exercício 5 -->
+        <section class="space-y-4">
+            <div class="flex items-center gap-3">
+                <span class="bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">5</span>
+                <h3 class="text-xl font-bold">Design: Transparência e Sobreposição</h3>
+            </div>
+            <p class="text-slate-700">Usar <code>alpha</code> é fundamental quando temos várias distribuições no mesmo eixo. Removemos a legenda conforme solicitado no exercício.</p>
+            <div class="code-container">
+                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+                <span class="r-func">ggplot</span>(mpg, <span class="r-func">aes</span>(x = hwy, fill = drv)) +<br>
+                &nbsp;&nbsp;<span class="r-func">geom_density</span>(alpha = <span class="r-num">0.4</span>) +<br>
+                &nbsp;&nbsp;<span class="r-func">theme</span>(legend.position = <span class="r-str">"none"</span>) +<br>
+                &nbsp;&nbsp;<span class="r-func">labs</span>(title = <span class="r-str">"Distribuição de Consumo por Tração (Sem Legenda)"</span>)
+            </div>
+        </section>
+
     </main>
 
-    <!-- Footer -->
-    <footer class="mt-auto py-10 border-t border-slate-200">
-        <div class="max-w-5xl mx-auto px-6 text-center text-slate-500 text-sm">
-            <p>&copy; 2024 Lab de Data Visualization - Desenvolvido para fins educativos.</p>
-        </div>
+    <footer class="bg-slate-200 py-10 text-center">
+        <p class="text-slate-600 text-sm">Laboratório de Visualização de Dados | Material de Apoio</p>
     </footer>
 
+    <script>
+        function copyCode(btn) {
+            const code = btn.parentElement.innerText.replace('Copiar', '');
+            const textArea = document.createElement("textarea");
+            textArea.value = code;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            
+            const originalText = btn.innerText;
+            btn.innerText = "Copiado!";
+            btn.style.backgroundColor = "#059669";
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.style.backgroundColor = "#334155";
+            }, 2000);
+        }
+    </script>
 </body>
 </html>
