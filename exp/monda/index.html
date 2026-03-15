@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>PROTÓTIPO - BAZOFIA_MONITOR</title>
+    <title>PROTÓTIPO - BAZOFIA</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { margin: 0; font-family: 'Courier New', monospace; background: #050505; color: #d0d0d0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -85,7 +85,7 @@
 
 const localidades = [
     // --- DISTÂNCIA 0.0 a 0.1 km (NÚCLEO CENTRAL) ---
-    {id: "DOCAS DO MONDEGO", pos: [40.202750, -8.426389], cota: 17.5, muro: 17.5, reg: "A", dist: 0.05},
+    {id: "DOCAS DO MONDEGO", pos: [40.202750, -8.426389], cota: 17.5, muro: 17.8, reg: "A", dist: 0.05},
     {id: "MOSTEIRO STA CLARA-VELHA", pos: [40.202652, -8.433220], cota: 17.0, muro: 18.5, reg: "A", dist: 0.08},
     {id: "RUA DA SOTA", pos: [40.2081, -8.4306], cota: 18.2, muro: 19.8, reg: "A", dist: 0.1},
     {id: "BAIXA (RIO / MARGEM)", pos: [40.2091, -8.4320], cota: 19.5, muro: 19.8, reg: "A", dist: 0.1},
@@ -104,8 +104,9 @@ const localidades = [
 
     // --- DISTÂNCIA 0.3 a 1.5 km (EXPANSÃO E VALES URBANOS) ---
     {id: "AAC - DESPORTOS NÁUTICOS", pos: [40.2000, -8.4287], cota: 18.3, muro: 18.3, reg: "A", dist: 0.3},
-    {id: "SC-02: RUA DE BAIXO (STA CLARA)", pos: [40.203155, -8.434007], cota: 16.2, muro: 18.0, reg: "A", dist: 0.12},
-    {id: "SC-01: JARDIM STA CLARA VELHA", pos: [40.201477, -8.432601], cota: 15.2, muro: 16.5, reg: "A", dist: 1.1},
+    {id: "RUA DE BAIXO (STA CLARA)", pos: [40.203155, -8.434007], cota: 16.2, muro: 18.0, reg: "A", dist: 0.12},
+    //{id: "SC-01: JARDIM STA CLARA VELHA", pos: [40.201477, -8.432601], cota: 15.2, muro: 16.5, reg: "A", dist: 1.1},
+    {id: "JARDIM STA CLARA VELHA", pos: [40.201477, -8.432601], cota: 15.2, muro: 19.1, reg: "A", dist: 1.1},
     {id: "VALE DAS FLORES (ZONA BAIXA)", pos: [40.1972, -8.4115], cota: 25.0, muro: 26.0, reg: "A", dist: 1.4},
     {id: "COSELHAS (VALE)", pos: [40.2205, -8.4350], cota: 18.5, muro: 19.5, reg: "A", dist: 1.5},
 
@@ -217,7 +218,7 @@ const localidades = [
         const data = await res.json();
         const html = data.contents;
 
-        // RegEx melhorado para procurar os valores numéricos perto das unidades m3/s e m
+        // RegEx para rocurar os valores numéricos perto das unidades m3/s e m
         // Procura por números com vírgula ou ponto antes de "m3/s"
         const flowMatch = html.match(/([\d.,]+)\s*m3\/s/);
         // Procura especificamente pela Cota (valor decimal seguido de "m")
@@ -244,7 +245,7 @@ const localidades = [
         document.getElementById('syncStatus').style.color = "#00ff77";
     } catch (e) { 
         console.error("Erro sincronização APA:", e);
-        document.getElementById('syncStatus').innerText = "ERRO APA (AGURADE 5 MIN...)"; 
+        document.getElementById('syncStatus').innerText = "ERRO SINC APA"; 
         document.getElementById('syncStatus').style.color = "#ff3333";
     }
 }
@@ -295,9 +296,9 @@ const localidades = [
     }
 
     syncAPA(); syncMare();
-    setInterval(syncAPA, 30000); 
-    setInterval(syncMare, 60000); 
-    setInterval(updateUI, 1000);
+    setInterval(syncAPA, 300000); 
+    setInterval(syncMare, 600000); 
+    setInterval(updateUI, 3000);
 </script>
 </body>
 </html>
