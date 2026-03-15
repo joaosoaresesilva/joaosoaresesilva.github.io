@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Gestão Pingo Doce</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background-color: #f4f4f9; color: #333; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
+        h2 { color: #007d32; text-align: center; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        .result { margin-top: 20px; padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; }
+        .high-eff { background-color: #d4edda; color: #155724; }
+        .low-eff { background-color: #f8d7da; color: #721c24; }
+        .stats { font-size: 0.9em; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Calculadora de Poupança</h2>
+    
+    <div class="input-group">
+        <label>Tipo de Campanha</label>
+        <select id="tipo" onchange="calcular()">
+            <option value="Direto">Desconto Direto (Imediato)</option>
+            <option value="Vale">Desconto em Vale (Próxima Compra)</option>
+        </select>
+    </div>
+
+    <div class="input-group">
+        <label>Gasto na 1ª Compra (€)</label>
+        <input type="number" id="gasto1" value="100" oninput="calcular()">
+    </div>
+
+    <div id="grupo-gasto2" class="input-group" style="display:none;">
+        <label>Gasto na 2ª Compra (€) - Para usar o vale</label>
+        <input type="number" id="gasto2" value="50" oninput="calcular()">
+    </div>
+
+    <div id="resultado-container" class="result">
+        Poupança Real: <span id="perc-poupanca">0</span>%
+        <div class="stats">
+            Retorno Total: <span id="retorno-euros">0</span>€<br>
+            Custo Final Real: <span id="custo-final">0</span>€
+        </div>
+    </div>
+</div>
+
+<script>
+function calcular() {
+    const tipo = document.getElementById('tipo').value;
+    const g1 = parseFloat(document.getElementById('gasto1').value) || 0;
+    const g2_input = document.getElementById('gasto2');
+    const divGasto2 = document.getElementById('grupo-gasto2');
+    
+    // Mostrar/Esconder campo da 2ª compra
+    if (tipo === 'Vale') {
+        divGasto2.style.display = 'block';
+    } else {
+        divGasto2.style.display = 'none';
+        g2_input.value = 0;
+    }
+
+    const g2 = parseFloat(g2_input.value) || 0;
+    
+    // 1. Desconto Pingo Doce (20% até teto de 20€)
+    const descPD = Math.min(g1 * 0.20, 20);
+    
+    // 2. Cálculo do que sai do cartão (para ACP + Cashback 8%)
+    let pagoNoCartao = 0;
+    if (tipo === 'Direto') {
+        pagoNoCartao = (g1 - descPD) + g2;
+    } else {
+        // No Vale, paga tudo na 1ª, e na 2ª desconta o vale
+        pagoNoCartao = g1 + Math.max(g2 - descPD, 0);
+    }
+    
+    const retornoParceiros = pagoNoCartao * 0.08;
+    const poupancaTotal = descPD + retornoParceiros;
+    const gastoBrutoTotal = g1 + g2;
+    const percFinal = (poupancaTotal / gastoBrutoTotal) * 100;
+    const custoFinal = gastoBrutoTotal - poupancaTotal;
+
+    // Atualizar UI
+    document.getElementById('perc-poupanca').innerText = percFinal.toFixed(1);
+    document.getElementById('retorno-euros').innerText = poupancaTotal.toFixed(2);
+    document.getElementById('custo-final').innerText = custoFinal.toFixed(2);
+
+    // Mudar cores conforme eficiência
+    const resContainer = document.getElementById('resultado-container');
+    resContainer.className = 'result ' + (percFinal >= 25 ? 'high-eff' : (percFinal < 18 ? 'low-eff' : ''));
+}
+
+// Iniciar cálculo
+calcular();
+</script>
+
+</body>
+</html>
