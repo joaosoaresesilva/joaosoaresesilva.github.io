@@ -204,7 +204,7 @@ const localidades = [
         }
     } catch (e) { 
         console.error("Erro IPMA:", e);
-        document.getElementById("mareStatus").innerText = "ERRO LIGAÇÃO IPMA";
+        document.getElementById("mareStatus").innerText = "ERRO: LIGAÇÃO IPMA";
     }
 }
 
@@ -245,7 +245,7 @@ const localidades = [
         document.getElementById('syncStatus').style.color = "#00ff77";
     } catch (e) { 
         console.error("Erro sincronização APA:", e);
-        document.getElementById('syncStatus').innerText = "ERRO SINC APA"; 
+        document.getElementById('syncStatus').innerText = "ERRO TEMPORÁRIO SINC APA"; 
         document.getElementById('syncStatus').style.color = "#ff3333";
     }
 }
