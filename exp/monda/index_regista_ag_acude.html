@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>SISTEMA DE MONITORIZAÇÃO MONDEGO - AGUIEIRA & AÇUDE</title>
+    <title>SISTEMA - AGUIEIRA & AÇUDE</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { margin: 0; font-family: 'Courier New', monospace; background: #050505; color: #d0d0d0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -41,7 +41,7 @@
 <body>
 
 <div class="sar-header">
-    <div>SISTEMA UNITÁRIO: <b>AGUIEIRA (3374) + AÇUDE (3384)</b></div>
+    <div>SISTEMA UNITÁRIO: <b>AGUIEIRA (3384) + AÇUDE (3374)</b></div>
     <div class="controls">
         <span id="recordCount" style="color: #888; margin-right: 10px;">REGISTOS: 0</span>
         <button class="btn btn-export" onclick="downloadCSV()">Exportar Datalogger</button>
@@ -65,7 +65,7 @@
 
         <div class="data-card agui-theme">
             <h3 class="agui-text">AGUIEIRA: CAUDAL</h3>
-            <div id="valFlowAgui" class="value-display agui-text">---</div><small>m³/s (Efluente)</small>
+            <div id="valFlowAgui" class="value-display agui-text">---</div><small>m³/s (Afluente)</small>
         </div>
         <div class="data-card agui-theme">
             <h3 class="agui-text">AGUIEIRA: COTA</h3>
@@ -149,32 +149,65 @@
         } catch (e) {}
     }
 
-    function collectData() {
-        const timestamp = new Date().toLocaleString();
-        localidades.forEach(l => {
-            let hPrev = (l.reg === "M") ? aguiH : (acudeH + (acudeQ / 15000));
-            dataHistory.push({
-                TS: timestamp, Local: l.id,
-                AQ: acudeQ, AH: acudeH,
-                GQ: aguiQ, GH: aguiH,
-                Mare: hMareReal, Prev: hPrev.toFixed(3)
-            });
-        });
-        if (dataHistory.length > 10000) dataHistory = dataHistory.slice(-10000);
-        localStorage.setItem('mondego_master_db', JSON.stringify(dataHistory));
-        document.getElementById('recordCount').innerText = `REGISTOS: ${dataHistory.length}`;
-    }
+   function collectData() {
+    const agora = new Date();
+    const timestamp = agora.getFullYear() + "-" + 
+                      (agora.getMonth()+1).toString().padStart(2, '0') + "-" + 
+                      agora.getDate().toString().padStart(2, '0') + " " + 
+                      agora.getHours().toString().padStart(2, '0') + ":" + 
+                      agora.getMinutes().toString().padStart(2, '0');
 
-    function downloadCSV() {
-        if (dataHistory.length === 0) return alert("Sem dados.");
-        const cols = ["TS", "Local", "AQ", "AH", "GQ", "GH", "Mare", "Prev"];
-        const csv = "\uFEFF" + cols.join(",") + "\n" + dataHistory.map(r => cols.map(c => r[c]).join(",")).join("\n");
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = `DATALOGGER_MONDEGO_${Date.now()}.csv`;
-        a.click();
-    }
+    localidades.forEach(l => {
+        let hPrev = (l.reg === "M") ? aguiH : (acudeH + (acudeQ / 15000));
+        
+        // Criamos o objeto garantindo que o nome do local não tem vírgulas
+        const registo = {
+            Data_Hora: timestamp,
+            Localidade: l.id.replace(/,/g, ""), // Remove vírgulas para não quebrar o CSV
+            Acude_Q: acudeQ,
+            Acude_H: acudeH.toFixed(2),
+            Agui_Q: aguiQ,
+            Agui_H: aguiH.toFixed(2),
+            Mare: hMareReal.toFixed(2),
+            Nivel_Previsto: hPrev.toFixed(3),
+            Diferencial: (hPrev - l.cota).toFixed(3)
+        };
+        
+        dataHistory.push(registo);
+    });
+
+    if (dataHistory.length > 15000) dataHistory = dataHistory.slice(-15000);
+    localStorage.setItem('mondego_master_db', JSON.stringify(dataHistory));
+    document.getElementById('recordCount').innerText = `REGISTOS: ${dataHistory.length}`;
+}
+
+// --- FUNÇÃO DE DOWNLOAD CORRIGIDA (Mapeamento Estrito) ---
+function downloadCSV() {
+    if (dataHistory.length === 0) return alert("Sem dados para exportar.");
+
+    // Definimos a ordem exata das colunas aqui
+    const colunas = ["Data_Hora", "Localidade", "Acude_Q", "Acude_H", "Agui_Q", "Agui_H", "Mare", "Nivel_Previsto", "Diferencial"];
+    
+    // Criamos o cabeçalho
+    const cabecalho = colunas.join(",");
+
+    // Criamos as linhas garantindo que cada valor entra na coluna certa
+    const linhas = dataHistory.map(registo => {
+        return colunas.map(coluna => {
+            return registo[coluna]; // Extrai o valor baseado no nome da coluna fixa
+        }).join(",");
+    });
+
+    // Unimos tudo com o caractere BOM para o Excel ler corretamente em Português
+    const csvFinal = "\uFEFF" + cabecalho + "\n" + linhas.join("\n");
+
+    const blob = new Blob([csvFinal], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `LOG_MONDEGO_FINAL_${Date.now()}.csv`;
+    link.click();
+}
 
     function limparHistorico() {
         if(confirm("Limpar registos?")) {
