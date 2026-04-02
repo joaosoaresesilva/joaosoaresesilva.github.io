@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>MONDEGO MONITOR - AFLUENTE & EFLUENTE (DATALOGGER)</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; font-family: 'Courier New', monospace; background: #050505; color: #d0d0d0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        #map { height: 30vh; width: 100%; background: #000; filter: grayscale(1) contrast(1.2) brightness(0.7); border-bottom: 2px solid #0044ff; }
+        
+        .sar-header { background: #111; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; border-bottom: 1px solid #333; color: #00d2ff; }
+        .controls { display: flex; gap: 10px; }
+        .btn { padding: 4px 12px; cursor: pointer; border: none; font-family: monospace; font-weight: bold; font-size: 10px; text-transform: uppercase; }
+        .btn-export { background: #0044ff; color: white; }
+        .btn-clear { background: #ff3333; color: white; }
+        
+        .main-container { display: flex; flex: 1; overflow: hidden; }
+        .panel { flex: 0.8; padding: 15px; display: flex; flex-direction: column; gap: 10px; border-right: 1px solid #222; background: #0a0a0a; overflow-y: auto; }
+        .sidebar { flex: 2.2; padding: 10px; background: #050505; overflow-y: auto; }
+        .data-card { background: #111; padding: 8px; border: 1px solid #333; border-left: 4px solid #00d2ff; }
+        .value-display { font-size: 1.6em; font-weight: bold; color: #fff; letter-spacing: -1px; }
+        .efl-color { color: #ff00ff !important; } /* Cor magenta para Efluente */
+        
+        table { width: 100%; font-size: 10px; border-collapse: collapse; }
+        th { border-bottom: 2px solid #444; padding: 10px; text-align: left; color: #00d2ff; position: sticky; top: 0; background: #050505; z-index: 10; }
+        td { padding: 8px; border-bottom: 1px solid #1a1a1a; color: #ffffff; }
+        .status-alagado { color: #ff3333 !important; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="sar-header">
+    <div>ESTAÇÃO: <b>MONDEGO (ID: 1627743384)</b></div>
+    <div class="controls">
+        <span id="recordCount" style="color: #888; margin-right: 10px;">REGISTOS: 0</span>
+        <button class="btn btn-export" onclick="downloadCSV()">Exportar CSV Full</button>
+        <button class="btn btn-clear" onclick="limparHistorico()">Limpar BD</button>
+    </div>
+    <div>SINC: <b id="syncStatus">---</b></div>
+</div>
+
+<div id="map"></div>
+
+<div class="main-container">
+    <div class="panel">
+        <div class="data-card">
+            <h3>CAUDAL AFLUENTE</h3>
+            <div id="valFlowAfl" class="value-display">---</div><small>m³/s (Entrada)</small>
+        </div>
+        <div class="data-card" style="border-left-color: #ff00ff;">
+            <h3>CAUDAL EFLUENTE</h3>
+            <div id="valFlowEfl" class="value-display efl-color">---</div><small>m³/s (Saída)</small>
+        </div>
+        <div class="data-card">
+            <h3>COTA</h3>
+            <div id="valCota" class="value-display">---</div><small>m (Cota Real)</small>
+        </div>
+    </div>
+    <div class="sidebar">
+        <table id="mainTable">
+            <thead>
+                <tr>
+                    <th>LOCALIDADE</th>
+                    <th>COTA SOLO</th>
+                    <th>NÍVEL PREV.</th>
+                    <th>CAUDAL (Q)</th>
+                    <th>ESTADO</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const map = L.map('map', {zoomControl: false}).setView([40.2085, -8.4310], 12);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+    const localidades = [
+        { id: "BARRAGEM DA AGUIEIRA", pos: [40.3375, -8.1969], cota: 125.0, reg: "M", dist: 35.5 }
+        
+    ];
+
+    let apaQAfl = 0; // Afluente
+    let apaQEfl = 0; // Efluente
+    let apaH = 17.45;
+    let markers = {};
+    let dataHistory = JSON.parse(localStorage.getItem('mondego_history_full')) || [];
+
+    async function syncAPA() {
+        try {
+            const proxy = 'https://api.allorigins.win/get?url=';
+            const target = 'https://infoagua.apambiente.pt/pt/cheias/cheia-detalhe/1627743384';
+            const res = await fetch(proxy + encodeURIComponent(target) + '&cache=' + new Date().getTime());
+            const data = await res.json();
+            
+            // Regex para capturar valores numéricos. 
+            // Nota: Adaptamos para capturar múltiplos valores se existirem na página
+            const matches = data.contents.match(/([\d.,]+)\s*m3\/s/g);
+            const levelMatch = data.contents.match(/([\d.,]+)\s*m(?!\d|\w)/);
+
+            if (matches) {
+                // Atribuímos o primeiro valor como Afluente e o segundo como Efluente (se disponível)
+                // Caso a página só mostre um, assumimos que o Efluente é o principal do Açude
+                apaQAfl = parseFloat(matches[0].replace(',', '.'));
+                apaQEfl = matches[1] ? parseFloat(matches[1].replace(',', '.')) : apaQAfl;
+            }
+
+            if (levelMatch) {
+                const val = parseFloat(levelMatch[1].replace(',', '.'));
+                if (val > 10) apaH = val;
+            }
+
+            document.getElementById('syncStatus').innerText = "OK (" + new Date().toLocaleTimeString() + ")";
+            logData(); 
+        } catch (e) {
+            document.getElementById('syncStatus').innerText = "ERRO SINC";
+        }
+    }
+
+    // --- SUBSTITUIR A FUNÇÃO logData POR ESTA ---
+function logData() {
+    const agora = new Date();
+    // Formato ISO simplificado para evitar que as vírgulas da data quebrem o CSV
+    const timestamp = agora.getFullYear() + "-" + 
+                      (agora.getMonth()+1).toString().padStart(2, '0') + "-" + 
+                      agora.getDate().toString().padStart(2, '0') + " " + 
+                      agora.getHours().toString().padStart(2, '0') + ":" + 
+                      agora.getMinutes().toString().padStart(2, '0');
+
+    localidades.forEach(l => {
+        let hCalc = (l.reg === "M") ? l.cota : apaH + (apaQEfl / 9800);
+        
+        // Estrutura rígida de objeto para garantir a ordem das colunas
+        dataHistory.push({
+            Data_Hora: timestamp,
+            Localidade: l.id,
+            Q_Afluente: apaQAfl,
+            Q_Efluente: apaQEfl,
+            Nivel_HA: apaH.toFixed(2),
+            Previsao_H: hCalc.toFixed(3),
+            Estado: (hCalc - l.cota) >= 0 ? "ALAGADO" : "OK"
+        });
+    });
+
+    if (dataHistory.length > 10000) dataHistory = dataHistory.slice(-10000);
+    localStorage.setItem('mondego_history_full', JSON.stringify(dataHistory));
+    document.getElementById('recordCount').innerText = `REGISTOS: ${dataHistory.length}`;
+}
+
+
+function downloadCSV() {
+    if (dataHistory.length === 0) return alert("Sem dados.");
+    
+    // 1. Definir os cabeçalhos explicitamente
+    const cabecalhos = ["Data_Hora", "Localidade", "Q_Afluente", "Q_Efluente", "Nivel_HA", "Previsao_H", "Estado"];
+    
+    // 2. Mapear cada registo garantindo que o valor segue a ordem do cabeçalho
+    const linhas = dataHistory.map(reg => {
+        return cabecalhos.map(campo => reg[campo]).join(",");
+    });
+
+    // 3. Gerar o ficheiro com BOM (para o Excel reconhecer caracteres especiais)
+    const csvContent = "\uFEFF" + cabecalhos.join(",") + "\n" + linhas.join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `LOG_BAZOFIA_${new Date().getTime()}.csv`;
+    a.click();
+}
+
+    function limparHistorico() {
+        if(confirm("Limpar BD?")) {
+            dataHistory = [];
+            localStorage.removeItem('mondego_history_full');
+            document.getElementById('recordCount').innerText = "REGISTOS: 0";
+        }
+    }
+
+    function updateUI() {
+        document.getElementById('valFlowAfl').innerText = apaQAfl.toLocaleString();
+        document.getElementById('valFlowEfl').innerText = apaQEfl.toLocaleString();
+        document.getElementById('valCota').innerText = apaH.toFixed(2);
+
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+
+        localidades.forEach(l => {
+            let hFinal = (l.reg === "M") ? l.cota : apaH + (apaQEfl / 9800);
+            let diff = hFinal - l.cota;
+            
+            let row = tbody.insertRow();
+            row.insertCell(0).innerText = l.id;
+            row.insertCell(1).innerText = l.cota.toFixed(1) + "m";
+            row.insertCell(2).innerText = hFinal.toFixed(2) + "m";
+            row.insertCell(3).innerHTML = `<span style="color:#fff">${apaQAfl}</span> / <span class="efl-color">${apaQEfl}</span>`;
+            
+            let cStat = row.insertCell(4);
+            cStat.innerText = diff >= 0 ? "ALAGADO" : "SECO";
+            cStat.className = diff >= 0 ? "status-alagado" : "";
+        });
+    }
+
+    localidades.forEach(l => {
+        markers[l.id] = L.circleMarker(l.pos, {radius: 5, color: '#fff', fillColor: '#0f7', fillOpacity: 0.9}).addTo(map);
+    });
+
+    syncAPA();
+    setInterval(syncAPA, 300000); // 5 min
+    setInterval(updateUI, 2000);
+</script>
+</body>
+</html>
