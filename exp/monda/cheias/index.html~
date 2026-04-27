@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Resumo e Imagens</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #003366;
+            border-bottom: 2px solid #003366;
+            padding-bottom: 5px;
+        }
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        li {
+            margin: 6px 0;
+        }
+        a {
+            text-decoration: none;
+            color: #0055aa;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Resumo PDF</h1>
+    <ul>
+        <li><a href="cheias_jan_fev_2026.pdf">Esboço das cheias (PDF)</a></li>
+        <li><a href="respostas_cheias_jan_fev_2026.pdf">Resposta pergunta 3:Como minimizar a inundação do Parque Verde e do Choupalinho- (PDF)</a></li>
+    </ul>
+
+    <h1>Imagens</h1>
+    <ul>
+        <li><a href="diagnostivco_cheia_aguieira_2026.pdf">Pesos Voronoi</a></li>
+        <li><a href="caudal_colorido_pma.png">Resumo - slides PDF</a></li>
+        <li><a href="caudal_colorido_pma.png">Caudal em função da PMA</a></li>
+        <li><a href="pma_aguieira.png">Aguieira – PMA</a></li>
+        <li><a href="pma_acumulada_24.png">PMA acumulada – 24 horas</a></li>
+        <li><a href="pma_acumulada_48.png">PMA acumulada – 48 horas</a></li>
+        <li><a href="pma_acumulada_72.png">PMA acumulada – 72 horas</a></li>
+        <li><a href="p_eventos.png">Eventos de chuva e resposta – Aguieira</a></li>
+                <li><a href="p_eventos_cotas_facet.png">Eventos cota montante, jusante e caudal </a></li>
+        
+        
+    </ul>
+
+</body>
+</html>
+
