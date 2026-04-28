@@ -20,41 +20,42 @@
             margin-top: 40px;
         }
 
-        ul {
-            list-style: none;
-            padding-left: 0;
+        .item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 18px 0;
+            padding: 12px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
 
-        li {
-            margin: 10px 0;
-        }
-
-        a {
-            text-decoration: none;
-            color: #0055aa;
-            font-weight: bold;
-        }
-
-        a:hover {
-            text-decoration: underline;
-        }
-
-        .thumbnail {
-            margin: 10px 0;
-            display: block;
-            max-width: 320px;
+        .item img {
+            width: 140px;
+            height: auto;
             border-radius: 6px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.15);
         }
 
-        /* Melhor responsividade */
+        .item a {
+            text-decoration: none;
+            color: #0055aa;
+            font-weight: bold;
+            font-size: 1.05em;
+        }
+
+        .item a:hover {
+            text-decoration: underline;
+        }
+
         @media (max-width: 600px) {
-            body {
-                margin: 20px;
+            .item {
+                flex-direction: column;
+                text-align: center;
             }
-            .thumbnail {
+            .item img {
                 width: 100%;
-                height: auto;
             }
         }
     </style>
@@ -62,33 +63,90 @@
 
 <body>
 
-    <h1>Apontamentos em PDF</h1>
-    <ul>
-        <li>
-            <a href="cheias_jan_fev_2026.pdf">
-                <img src="pma_aguieira_thumbnail.jpeg" alt="Miniatura Aguieira" class="thumbnail">
-            </a>
-        </li>
+    <div class="item">
+        <a href="../monda">
+            <img src="regista_caudais.jpg" alt="Regista Cotas e caudal">
+        </a>
+        <a href="../monda"> Regista cotas e caudais do Mondego</a>
+    </div>
 
-        <li>
-            <a href="respostas_cheias_jan_fev_2026.pdf">
-                Resposta à pergunta 3: Como minimizar a inundação do Parque Verde e do Choupalinho (PDF)
-            </a>
-        </li>
-    </ul>
+    <h1>Apontamentos em PDF</h1>
+
+    <div class="item">
+        <a href="cheias_jan_fev_2026.pdf">
+            <img src="pma_aguieira_thumbnail.jpeg" alt="Miniatura Aguieira">
+        </a>
+        <a href="cheias_jan_fev_2026.pdf">
+            Apontamentos: Cheias de Janeiro e Fevereiro 2026 (PDF)
+        </a>
+    </div>
+
+    <div class="item">
+        <a href="respostas_cheias_jan_fev_2026.pdf">
+            <img src="pma_aguieira.png" alt="Imagem ilustrativa">
+        </a>
+        <a href="respostas_cheias_jan_fev_2026.pdf">
+            Resposta à pergunta 3: Minimizar a inundação do Parque Verde e Choupalinho (PDF)
+        </a>
+    </div>
 
     <h1>Imagens</h1>
-    <ul>
-        <li><a href="diagnostivco_cheia_aguieira_2026.pdf">Pesos Voronoi</a></li>
-        <li><a href="caudal_colorido_pma.png">Resumo – slides PDF</a></li>
-        <li><a href="caudal_colorido_pma.png">Caudal em função da PMA</a></li>
-        <li><a href="pma_aguieira.png">Aguieira – PMA</a></li>
-        <li><a href="pma_acumulada_24.png">PMA acumulada – 24 horas</a></li>
-        <li><a href="pma_acumulada_48.png">PMA acumulada – 48 horas</a></li>
-        <li><a href="pma_acumulada_72.png">PMA acumulada – 72 horas</a></li>
-        <li><a href="p_eventos.png">Eventos de chuva e resposta – Aguieira</a></li>
-        <li><a href="p_eventos_cotas_facet.png">Eventos: cota montante, jusante e caudal</a></li>
-    </ul>
+
+    <div class="item">
+        <a href="diagnostivco_cheia_aguieira_2026.pdf">
+            <img src="fig_thiessen_voronoi.png" alt="Pesos Voronoi">
+        </a>
+        <a href="diagnostivco_cheia_aguieira_2026.pdf">Pesos Voronoi</a>
+    </div>
+
+    <div class="item">
+        <a href="caudal_colorido_pma.png">
+            <img src="caudal_colorido_pma.png" alt="Caudal PMA">
+        </a>
+        <a href="caudal_colorido_pma.png">Caudal em função da PMA</a>
+    </div>
+
+    <div class="item">
+        <a href="pma_aguieira.png">
+            <img src="pma_aguieira.png" alt="PMA Aguieira">
+        </a>
+        <a href="pma_aguieira.png">Aguieira – PMA</a>
+    </div>
+
+    <div class="item">
+        <a href="pma_acumulada_24.png">
+            <img src="pma_acumulada_24.png" alt="PMA 24h">
+        </a>
+        <a href="pma_acumulada_24.png">PMA acumulada – 24 horas</a>
+    </div>
+
+    <div class="item">
+        <a href="pma_acumulada_48.png">
+            <img src="pma_acumulada_48.png" alt="PMA 48h">
+        </a>
+        <a href="pma_acumulada_48.png">PMA acumulada – 48 horas</a>
+    </div>
+
+    <div class="item">
+        <a href="pma_acumulada_72.png">
+            <img src="pma_acumulada_72.png" alt="PMA 72h">
+        </a>
+        <a href="pma_acumulada_72.png">PMA acumulada – 72 horas</a>
+    </div>
+
+    <div class="item">
+        <a href="p_eventos.png">
+            <img src="p_eventos.png" alt="Eventos chuva-resposta">
+        </a>
+        <a href="p_eventos.png">Eventos de chuva e resposta – Aguieira</a>
+    </div>
+
+    <div class="item">
+        <a href="p_eventos_cotas_facet.png">
+            <img src="p_eventos_cotas_facet.png" alt="Cotas e caudal">
+        </a>
+        <a href="p_eventos_cotas_facet.png">Eventos: cota montante, jusante e caudal</a>
+    </div>
 
 </body>
 </html>
