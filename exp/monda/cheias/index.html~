@@ -3,57 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <title>Resumo e Imagens</title>
+
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 40px;
             line-height: 1.6;
+            background-color: #f7f9fc;
+            color: #222;
         }
+
         h1 {
             color: #003366;
-            border-bottom: 2px solid #003366;
-            padding-bottom: 5px;
+            border-left: 6px solid #003366;
+            padding-left: 12px;
+            margin-top: 40px;
         }
+
         ul {
-            list-style-type: none;
+            list-style: none;
             padding-left: 0;
         }
+
         li {
-            margin: 6px 0;
+            margin: 10px 0;
         }
+
         a {
             text-decoration: none;
             color: #0055aa;
+            font-weight: bold;
         }
+
         a:hover {
             text-decoration: underline;
+        }
+
+        .thumbnail {
+            margin: 10px 0;
+            display: block;
+            max-width: 320px;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+
+        /* Melhor responsividade */
+        @media (max-width: 600px) {
+            body {
+                margin: 20px;
+            }
+            .thumbnail {
+                width: 100%;
+                height: auto;
+            }
         }
     </style>
 </head>
 
 <body>
 
-    <h1>Resumo PDF</h1>
+    <h1>Apontamentos em PDF</h1>
     <ul>
-        <li><a href="cheias_jan_fev_2026.pdf">Esboço das cheias (PDF)</a></li>
-        <li><a href="respostas_cheias_jan_fev_2026.pdf">Resposta pergunta 3:Como minimizar a inundação do Parque Verde e do Choupalinho- (PDF)</a></li>
+        <li>
+            <a href="cheias_jan_fev_2026.pdf">
+                <img src="pma_aguieira_thumbnail.jpeg" alt="Miniatura Aguieira" class="thumbnail">
+            </a>
+        </li>
+
+        <li>
+            <a href="respostas_cheias_jan_fev_2026.pdf">
+                Resposta à pergunta 3: Como minimizar a inundação do Parque Verde e do Choupalinho (PDF)
+            </a>
+        </li>
     </ul>
 
     <h1>Imagens</h1>
     <ul>
         <li><a href="diagnostivco_cheia_aguieira_2026.pdf">Pesos Voronoi</a></li>
-        <li><a href="caudal_colorido_pma.png">Resumo - slides PDF</a></li>
+        <li><a href="caudal_colorido_pma.png">Resumo – slides PDF</a></li>
         <li><a href="caudal_colorido_pma.png">Caudal em função da PMA</a></li>
         <li><a href="pma_aguieira.png">Aguieira – PMA</a></li>
         <li><a href="pma_acumulada_24.png">PMA acumulada – 24 horas</a></li>
         <li><a href="pma_acumulada_48.png">PMA acumulada – 48 horas</a></li>
         <li><a href="pma_acumulada_72.png">PMA acumulada – 72 horas</a></li>
         <li><a href="p_eventos.png">Eventos de chuva e resposta – Aguieira</a></li>
-                <li><a href="p_eventos_cotas_facet.png">Eventos cota montante, jusante e caudal </a></li>
-        
-        
+        <li><a href="p_eventos_cotas_facet.png">Eventos: cota montante, jusante e caudal</a></li>
     </ul>
 
 </body>
 </html>
-
