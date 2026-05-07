@@ -4,44 +4,74 @@
     <meta charset="UTF-8">
     <title>Resumo e Imagens</title>
 
+    <!-- Tipografia moderna -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
+        /* ------------------------------
+           ESTILO BASE (MODO CLARO)
+        ------------------------------ */
         body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
+            font-family: 'Inter', Arial, sans-serif;
+            margin: 30px;
             line-height: 1.6;
-            background-color: #f7f9fc;
+            background-color: #f5f7fa;
             color: #222;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
         }
 
         h1 {
             color: #003366;
             border-left: 6px solid #003366;
-            padding-left: 12px;
-            margin-top: 40px;
+            padding-left: 14px;
+            margin-top: 50px;
+            font-size: 1.9em;
+            letter-spacing: 0.5px;
         }
 
+        /* ------------------------------
+           GRID RESPONSIVO (DASHBOARD)
+        ------------------------------ */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 26px;
+            margin-top: 25px;
+        }
+
+        /* ------------------------------
+           CARDS MODERNOS
+        ------------------------------ */
         .item {
             display: flex;
             align-items: center;
-            gap: 16px;
-            margin: 18px 0;
-            padding: 12px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            gap: 20px;
+            padding: 20px;
+            background: #ffffff;
+            border-radius: 14px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+            transition: transform .18s ease, box-shadow .18s ease;
+        }
+
+        .item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 22px rgba(0,0,0,0.12);
         }
 
         .item img {
-            width: 140px;
-            height: auto;
-            border-radius: 6px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            width: 160px;
+            height: 110px;
+            object-fit: cover;
+            border-radius: 10px;
         }
 
         .item a {
             text-decoration: none;
             color: #0055aa;
-            font-weight: bold;
+            font-weight: 600;
             font-size: 1.05em;
         }
 
@@ -49,136 +79,204 @@
             text-decoration: underline;
         }
 
+        .pdf-tag {
+            color: #c62828;
+            font-weight: bold;
+        }
+
+        /* ------------------------------
+           MOBILE-FIRST
+        ------------------------------ */
         @media (max-width: 600px) {
+            body {
+                margin: 18px;
+                font-size: 1.05em;
+            }
+
             .item {
                 flex-direction: column;
                 text-align: center;
+                padding: 16px;
             }
+
             .item img {
                 width: 100%;
+                height: auto;
+            }
+        }
+
+        /* ------------------------------
+           TEMA ESCURO AUTOMÁTICO
+        ------------------------------ */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #1c1f24;
+                color: #e5e5e5;
+            }
+
+            h1 {
+                color: #8ab4f8;
+                border-left-color: #8ab4f8;
+            }
+
+            .item {
+                background: #2a2e35;
+                box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+            }
+
+            .item a {
+                color: #82b1ff;
+            }
+
+            .pdf-tag {
+                color: #ff8a80;
             }
         }
     </style>
 </head>
 
 <body>
- <h1>Cheias Mondego janeiro / Fevereiro 2026</h1>
+<div class="container">
 
+    <h1>Cheias Mondego janeiro / Fevereiro 2026</h1>
 
-    
+    <div class="grid">
+
         <div class="item">
-        <a href="https://rpubs.com/garridos/eventos_det_auto">
-            <img src="evento_marca.png" alt="Eventos detecção automática">
-        </a>
-        <a href="https://rpubs.com/garridos/eventos_det_auto"> Eventos : Lag Frente, Lag Massa e detecção automática</a>
-    </div>
-    
+            <a href="https://rpubs.com/garridos/eventos_det_auto">
+                <img src="evento_marca.png" alt="Eventos detecção automática">
+            </a>
+            <a href="https://rpubs.com/garridos/eventos_det_auto">
+                Eventos: Lag Frente, Lag Massa e detecção automática
+            </a>
+        </div>
+
         <div class="item">
-        <a href="perfis_tranversais.html">
-            <img src="analise_espacial_longitudinal.png" alt="Perfis transversais">
-        </a>
-        <a href="perfis_tranversais.html"> Dashboard Interativo: Perfis transversais</a>
-    </div>
-    
-            <div class="item">
-        <a href="https://joaosoaresesilva.shinyapps.io/interativo/">
-            <img src="interactivo.png" alt="Caudais e cotas - shinyapps.io">
-        </a>
-        <a href="https://joaosoaresesilva.shinyapps.io/interativo/"> Dashboard Interativo : Caudais e cotas</a>
-    </div>
-    
-    
-           <div class="item">
-        <a href="acude_ponte_eventos.html">
-            <img src="acude_ponte.png" alt="Acude_2001-2019">
-        </a>
-        <a href="acude_ponte_eventos.html"> Dashboard : Hidrogramas de 2001 a 2019</a>
-    </div>
+            <a href="perfis_tranversais.html">
+                <img src="analise_espacial_longitudinal.png" alt="Perfis transversais">
+            </a>
+            <a href="perfis_tranversais.html">
+                Dashboard Interativo: Perfis transversais
+            </a>
+        </div>
 
-    <h1>Apontamentos </h1>
-
-    <div class="item">
-        <a href="cheias_jan_fev_2026.pdf">
-            <img src="pma_aguieira_thumbnail.jpeg" alt="Miniatura Aguieira">
-        </a>
-        <a href="cheias_jan_fev_2026.pdf">
-            Resumo: Cheias 2026 <font color="red">(PDF)</font>
-        </a>
-    </div>
-
-    <div class="item">
-        <a href="respostas_cheias_jan_fev_2026.pdf">
-            <img src="pma_aguieira.png" alt="Imagem ilustrativa">
-        </a>
-        <a href="respostas_cheias_jan_fev_2026.pdf">
-            Resposta Q3: Minimizar a inundação do Parque Verde e Choupalinho <font color="red">(PDF)</font>
-        </a>
-    </div>
-
-    <h1>Figuras:</h1>
-
-    <div class="item">
-        <a href="voronoi_pesos.png">
-            <img src="voronoi_pesos.png" alt="Pesos Voronoi">
-        </a>
-       <a href="voronoi_pesos.png">Pesos Voronoi</a>
-    </div>
-
-    <div class="item">
-        <a href="caudal_colorido_pma.png">
-            <img src="caudal_colorido_pma.png" alt="Caudal PMA">
-        </a>
-        <a href="caudal_colorido_pma.png">Caudal em função da PMA</a>
-    </div>
-
-    <div class="item">
-        <a href="pma_aguieira.png">
-            <img src="pma_aguieira.png" alt="PMA Aguieira">
-        </a>
-        <a href="pma_aguieira.png">Aguieira – PMA</a>
-    </div>
-
-    <div class="item">
-        <a href="pma_acumulada_24.png">
-            <img src="pma_acumulada_24.png" alt="PMA 24h">
-        </a>
-        <a href="pma_acumulada_24.png">PMA acumulada – 24 horas</a>
-    </div>
-
-    <div class="item">
-        <a href="pma_acumulada_48.png">
-            <img src="pma_acumulada_48.png" alt="PMA 48h">
-        </a>
-        <a href="pma_acumulada_48.png">PMA acumulada – 48 horas</a>
-    </div>
-
-    <div class="item">
-        <a href="pma_acumulada_72.png">
-            <img src="pma_acumulada_72.png" alt="PMA 72h">
-        </a>
-        <a href="pma_acumulada_72.png">PMA acumulada – 72 horas</a>
-    </div>
-
-    <div class="item">
-        <a href="p_eventos.png">
-            <img src="p_eventos.png" alt="Eventos chuva-resposta">
-        </a>
-        <a href="p_eventos.png">Eventos de chuva e resposta – Aguieira</a>
-    </div>
-
-    <div class="item">
-        <a href="p_eventos_cotas_facet.png">
-            <img src="p_eventos_cotas_facet.png" alt="Cotas e caudal">
-        </a>
-        <a href="p_eventos_cotas_facet.png">Eventos: cota montante, jusante e caudal</a>
-    </div>
-    
         <div class="item">
-        <a href="https://joaosoaresesilva.github.io/exp/monda/">
-            <img src="regista_caudais.jpg" alt="Regista Cotas e caudal">
-        </a>
-        <a href="../../monda/ag-ac-reg.html"> <font color="orange">Regista</font>  cotas e caudais do Mondego</a>
+            <a href="https://joaosoaresesilva.shinyapps.io/interativo/">
+                <img src="interactivo.png" alt="Caudais e cotas - shinyapps.io">
+            </a>
+            <a href="https://joaosoaresesilva.shinyapps.io/interativo/">
+                Dashboard Interativo: Caudais e cotas
+            </a>
+        </div>
+
+        <div class="item">
+            <a href="acude_ponte_eventos.html">
+                <img src="acude_ponte.png" alt="Acude_2001-2019">
+            </a>
+            <a href="acude_ponte_eventos.html">
+                Dashboard: Hidrogramas de 2001 a 2019
+            </a>
+        </div>
+
     </div>
 
+    <h1>Apontamentos</h1>
+
+    <div class="grid">
+
+        <div class="item">
+            <a href="cheias_jan_fev_2026.pdf">
+                <img src="pma_aguieira_thumbnail.jpeg" alt="Miniatura Aguieira">
+            </a>
+            <a href="cheias_jan_fev_2026.pdf">
+                Resumo: Cheias 2026 <span class="pdf-tag">(PDF)</span>
+            </a>
+        </div>
+
+        <div class="item">
+            <a href="respostas_cheias_jan_fev_2026.pdf">
+                <img src="pma_aguieira.png" alt="Imagem ilustrativa">
+            </a>
+            <a href="respostas_cheias_jan_fev_2026.pdf">
+                Resposta Q3: Minimizar a inundação do Parque Verde e Choupalinho
+                <span class="pdf-tag">(PDF)</span>
+            </a>
+        </div>
+
+    </div>
+
+    <h1>Figuras</h1>
+
+    <div class="grid">
+
+        <div class="item">
+            <a href="voronoi_pesos.png">
+                <img src="voronoi_pesos.png" alt="Pesos Voronoi">
+            </a>
+            <a href="voronoi_pesos.png">Pesos Voronoi</a>
+        </div>
+
+        <div class="item">
+            <a href="caudal_colorido_pma.png">
+                <img src="caudal_colorido_pma.png" alt="Caudal PMA">
+            </a>
+            <a href="caudal_colorido_pma.png">Caudal em função da PMA</a>
+        </div>
+
+        <div class="item">
+            <a href="pma_aguieira.png">
+                <img src="pma_aguieira.png" alt="PMA Aguieira">
+            </a>
+            <a href="pma_aguieira.png">Aguieira – PMA</a>
+        </div>
+
+        <div class="item">
+            <a href="pma_acumulada_24.png">
+                <img src="pma_acumulada_24.png" alt="PMA 24h">
+            </a>
+            <a href="pma_acumulada_24.png">PMA acumulada – 24 horas</a>
+        </div>
+
+        <div class="item">
+            <a href="pma_acumulada_48.png">
+                <img src="pma_acumulada_48.png" alt="PMA 48h">
+            </a>
+            <a href="pma_acumulada_48.png">PMA acumulada – 48 horas</a>
+        </div>
+
+        <div class="item">
+            <a href="pma_acumulada_72.png">
+                <img src="pma_acumulada_72.png" alt="PMA 72h">
+            </a>
+            <a href="pma_acumulada_72.png">PMA acumulada – 72 horas</a>
+        </div>
+
+        <div class="item">
+            <a href="p_eventos.png">
+                <img src="p_eventos.png" alt="Eventos chuva-resposta">
+            </a>
+            <a href="p_eventos.png">Eventos de chuva e resposta – Aguieira</a>
+        </div>
+
+        <div class="item">
+            <a href="p_eventos_cotas_facet.png">
+                <img src="p_eventos_cotas_facet.png" alt="Cotas e caudal">
+            </a>
+            <a href="p_eventos_cotas_facet.png">Eventos: cota montante, jusante e caudal</a>
+        </div>
+
+        <div class="item">
+            <a href="https://joaosoaresesilva.github.io/exp/monda/">
+                <img src="regista_caudais.jpg" alt="Regista Cotas e caudal">
+            </a>
+            <a href="../../monda/ag-ac-reg.html">
+                <span style="color: orange;">Regista</span> cotas e caudais do Mondego
+            </a>
+        </div>
+
+    </div>
+
+</div>
 </body>
 </html>
+
