@@ -2,38 +2,77 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>Resumo e Imagens</title>
+    <title>Cheias Mondego 2026 – Portal</title>
 
-    <!-- Tipografia moderna -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
     <style>
         /* ------------------------------
-           ESTILO BASE (MODO CLARO)
+           BASE
         ------------------------------ */
         body {
             font-family: 'Inter', Arial, sans-serif;
-            margin: 30px;
-            line-height: 1.6;
-            background-color: #f5f7fa;
+            margin: 0;
+            background: #f5f7fa;
             color: #222;
+            line-height: 1.6;
         }
 
         .container {
             max-width: 1100px;
             margin: auto;
+            padding: 30px;
         }
 
         h1 {
             color: #003366;
             border-left: 6px solid #003366;
             padding-left: 14px;
-            margin-top: 50px;
-            font-size: 1.9em;
-            letter-spacing: 0.5px;
+            margin-top: 60px;
+            font-size: 2em;
         }
 
         /* ------------------------------
-           GRID RESPONSIVO (DASHBOARD)
+           MENU FIXO
+        ------------------------------ */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: #003366;
+            color: white;
+            padding: 12px 0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+
+        nav ul {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.05em;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        /* Compensar menu fixo */
+        .spacer {
+            height: 70px;
+        }
+
+        /* ------------------------------
+           GRID (DASHBOARD)
         ------------------------------ */
         .grid {
             display: grid;
@@ -43,7 +82,7 @@
         }
 
         /* ------------------------------
-           CARDS MODERNOS
+           CARDS
         ------------------------------ */
         .item {
             display: flex;
@@ -85,18 +124,28 @@
         }
 
         /* ------------------------------
+           FOOTER
+        ------------------------------ */
+        footer {
+            text-align: center;
+            padding: 40px 0;
+            margin-top: 60px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        /* ------------------------------
            MOBILE-FIRST
         ------------------------------ */
         @media (max-width: 600px) {
-            body {
-                margin: 18px;
-                font-size: 1.05em;
+            nav ul {
+                flex-direction: column;
+                gap: 12px;
             }
 
             .item {
                 flex-direction: column;
                 text-align: center;
-                padding: 16px;
             }
 
             .item img {
@@ -110,13 +159,12 @@
         ------------------------------ */
         @media (prefers-color-scheme: dark) {
             body {
-                background-color: #1c1f24;
+                background: #1c1f24;
                 color: #e5e5e5;
             }
 
-            h1 {
-                color: #8ab4f8;
-                border-left-color: #8ab4f8;
+            nav {
+                background: #0d47a1;
             }
 
             .item {
@@ -128,17 +176,35 @@
                 color: #82b1ff;
             }
 
-            .pdf-tag {
-                color: #ff8a80;
+            h1 {
+                color: #8ab4f8;
+                border-left-color: #8ab4f8;
+            }
+
+            footer {
+                color: #aaa;
             }
         }
     </style>
 </head>
 
 <body>
+
+<!-- MENU -->
+<nav>
+    <ul>
+        <li><a href="#dashboards">Dashboards</a></li>
+        <li><a href="#apontamentos">Apontamentos</a></li>
+        <li><a href="#figuras">Figuras</a></li>
+    </ul>
+</nav>
+
+<div class="spacer"></div>
+
 <div class="container">
 
-    <h1>Cheias Mondego janeiro / Fevereiro 2026</h1>
+    <!-- DASHBOARDS -->
+    <h1 id="dashboards">Dashboards</h1>
 
     <div class="grid">
 
@@ -180,7 +246,8 @@
 
     </div>
 
-    <h1>Apontamentos</h1>
+    <!-- APONTAMENTOS -->
+    <h1 id="apontamentos">Apontamentos</h1>
 
     <div class="grid">
 
@@ -205,7 +272,8 @@
 
     </div>
 
-    <h1>Figuras</h1>
+    <!-- FIGURAS -->
+    <h1 id="figuras">Figuras</h1>
 
     <div class="grid">
 
@@ -277,6 +345,11 @@
     </div>
 
 </div>
+
+<footer>
+    © 2026 – Portal Cheias Mondego • Desenvolvido por João Silva
+</footer>
+
 </body>
 </html>
 
