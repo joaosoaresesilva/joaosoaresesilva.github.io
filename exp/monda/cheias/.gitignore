@@ -6,7 +6,7 @@
 cache/
 *.html
 *.pdf
-*.png
+#*.png
 *.xlsx
 *.csv
 *.zip
