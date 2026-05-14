@@ -17,6 +17,7 @@ cache/
 # Ignorar dados pesados
 data/raw/
 *.rds
+*.Rmd
 
 # Ignorar ficheiros do sistema e RStudio
 .Ruserdir/
