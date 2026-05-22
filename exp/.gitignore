@@ -4,7 +4,7 @@
 .Ruserdata
 .Rcache/
 cache/
-*.html
+#*.html
 *.pdf
 #*.png
 *.xlsx
@@ -15,7 +15,6 @@ cache/
 *.out
 *.toc
 # Ignorar dados pesados
-data/raw/
 *.rds
 *.Rmd
 
@@ -27,3 +26,5 @@ data/raw/
 data/*.shp
 data/*.dbf
 data/*.prj
+data/raw/*.xlsx
+data/raw/*.xls
