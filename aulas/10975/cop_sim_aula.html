@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bancada Didática & Ficha de Trabalho COP | UFCD 10975</title>
+    <style>
+        :root {
+            --bg-app: #f1f5f9;
+            --bg-card: #ffffff;
+            --bg-header: #0f172a;
+            --bg-instrument: #0f172a;
+            --border-color: #cbd5e1;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --accent-solar: #f59e0b;
+            --accent-thermal: #0284c7;
+            --accent-eff: #10b981;
+            --accent-danger: #e11d48;
+            --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-app);
+            color: var(--text-main);
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Cabeçalho Estilo SCADA / Bancada */
+        header {
+            background-color: var(--bg-header);
+            color: #f8fafc;
+            padding: 0.85rem 1.5rem;
+            border-bottom: 3px solid var(--accent-thermal);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .badge-ufcd {
+            background: rgba(2, 132, 199, 0.25);
+            color: #38bdf8;
+            border: 1px solid #0284c7;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+
+        .header-title h1 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+
+        .header-subtitle {
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+
+        /* Botões Gerais */
+        button {
+            font-family: var(--font-sans);
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            padding: 0.55rem 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            transition: all 0.15s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-thermal);
+            color: #ffffff;
+        }
+        .btn-primary:hover { background-color: #0369a1; }
+
+        .btn-success {
+            background-color: var(--accent-eff);
+            color: #ffffff;
+        }
+        .btn-success:hover { background-color: #059669; }
+
+        .btn-outline {
+            background-color: #ffffff;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+        }
+        .btn-outline:hover { background-color: #f8fafc; border-color: #94a3b8; }
+
+        .btn-dark-outline {
+            background-color: rgba(255, 255, 255, 0.08);
+            color: #e2e8f0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .btn-dark-outline:hover { background-color: rgba(255, 255, 255, 0.15); }
+
+        .btn-sm {
+            padding: 0.35rem 0.7rem;
+            font-size: 0.78rem;
+            border-radius: 6px;
+        }
+
+        /* Layout Principal Lado a Lado */
+        .workspace {
+            display: grid;
+            grid-template-columns: 1.08fr 0.92fr;
+            gap: 1.25rem;
+            padding: 1.25rem;
+            max-width: 1680px;
+            width: 100%;
+            margin: 0 auto;
+            flex: 1;
+        }
+
+        @media (max-width: 1120px) {
+            .workspace {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .column-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 1.15rem;
+        }
+
+        /* Cartões */
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.15rem;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 0.65rem;
+            margin-bottom: 0.95rem;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .card-title {
+            font-size: 0.92rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+
+        /* Instrumentos Digitais (Visores SCADA) */
+        .instruments-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.7rem;
+        }
+
+        @media (max-width: 640px) {
+            .instruments-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .meter {
+            background-color: var(--bg-instrument);
+            border: 1px solid #334155;
+            border-radius: 9px;
+            padding: 0.65rem 0.8rem;
+            color: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .meter-label {
+            font-size: 0.72rem;
+            color: #94a3b8;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .meter-value {
+            font-family: var(--font-mono);
+            font-size: 1.45rem;
+            font-weight: 700;
+            margin: 0.15rem 0;
+            line-height: 1.2;
+        }
+
+        .meter-sub {
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            color: #cbd5e1;
+        }
+
+        .val-solar { color: #fbbf24; }
+        .val-thermal { color: #38bdf8; }
+        .val-eff { color: #34d399; }
+        .val-elec { color: #fb7185; }
+        .val-purple { color: #c084fc; }
+
+        /* Controlos / Sliders */
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 640px) {
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .control-group {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 9px;
+            padding: 0.75rem;
+        }
+
+        .control-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.4rem;
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+
+        .control-readout {
+            font-family: var(--font-mono);
+            background: #0f172a;
+            color: #38bdf8;
+            padding: 0.15rem 0.5rem;
+            border-radius: 5px;
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--accent-thermal);
+            cursor: pointer;
+            height: 6px;
+        }
+
+        select, input[type="text"], input[type="date"], input[type="number"], textarea {
+            width: 100%;
+            padding: 0.45rem 0.65rem;
+            border: 1px solid var(--border-color);
+            border-radius: 7px;
+            font-family: var(--font-sans);
+            font-size: 0.85rem;
+            color: var(--text-main);
+            background-color: #ffffff;
+        }
+
+        input[type="number"] {
+            font-family: var(--font-mono);
+            font-weight: 600;
+        }
+
+        select:focus, input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-thermal);
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+        }
+
+        /* Diagrama SVG e Animações */
+        .svg-container {
+            background: #0f172a;
+            border-radius: 10px;
+            padding: 0.5rem;
+            border: 1px solid #334155;
+            overflow: hidden;
+        }
+
+        @keyframes dashFlow {
+            to { stroke-dashoffset: -24; }
+        }
+
+        .flow-anim {
+            stroke-dasharray: 8 4;
+            animation: dashFlow 1.1s linear infinite;
+        }
+
+        .flow-paused {
+            stroke-dasharray: 4 4;
+            animation: none;
+            opacity: 0.35;
+        }
+
+        /* Caderno de Leituras Congeladas */
+        .log-table-wrapper {
+            overflow-x: auto;
+            margin-top: 0.65rem;
+        }
+
+        table.log-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.78rem;
+            font-family: var(--font-mono);
+        }
+
+        table.log-table th, table.log-table td {
+            border: 1px solid #cbd5e1;
+            padding: 0.4rem 0.5rem;
+            text-align: center;
+        }
+
+        table.log-table th {
+            background-color: #f1f5f9;
+            font-family: var(--font-sans);
+            font-weight: 700;
+            color: #334155;
+        }
+
+        /* Ficha de Trabalho Interativa */
+        .worksheet-card {
+            border-top: 4px solid var(--accent-thermal);
+        }
+
+        .student-meta {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 0.65rem;
+            background: #f8fafc;
+            padding: 0.8rem;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 640px) {
+            .student-meta {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .student-meta label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 0.2rem;
+        }
+
+        .task-box {
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 0.95rem;
+            margin-bottom: 1rem;
+            background-color: #ffffff;
+            transition: border-color 0.2s ease;
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .task-title {
+            font-weight: 700;
+            font-size: 0.92rem;
+            color: #0f172a;
+        }
+
+        .task-points {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 0.15rem 0.5rem;
+            border-radius: 999px;
+            white-space: nowrap;
+        }
+
+        .task-instruction {
+            font-size: 0.83rem;
+            color: #334155;
+            background: #f8fafc;
+            border-left: 3px solid var(--accent-thermal);
+            padding: 0.5rem 0.7rem;
+            border-radius: 0 6px 6px 0;
+            margin-bottom: 0.75rem;
+        }
+
+        .task-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-bottom: 0.65rem;
+        }
+
+        @media (max-width: 560px) {
+            .task-inputs {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .field-label {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        /* Feedback de Validação */
+        .feedback-msg {
+            display: none;
+            margin-top: 0.65rem;
+            padding: 0.6rem 0.75rem;
+            border-radius: 7px;
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+
+        .feedback-ok {
+            display: block;
+            background-color: #ecfdf5;
+            border: 1px solid #6ee7b7;
+            color: #065f46;
+        }
+
+        .feedback-err {
+            display: block;
+            background-color: #fff1f2;
+            border: 1px solid #fda4af;
+            color: #9f1239;
+        }
+
+        .score-banner {
+            display: none;
+            background: #0f172a;
+            color: #ffffff;
+            border-radius: 10px;
+            padding: 1rem 1.2rem;
+            margin-bottom: 1rem;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .score-banner.visible {
+            display: flex;
+        }
+
+        .score-number {
+            font-family: var(--font-mono);
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #34d399;
+        }
+
+        /* Toast de Notificação (Substituto não-bloqueante de alert) */
+        #toast-notice {
+            position: fixed;
+            bottom: 1.25rem;
+            right: 1.25rem;
+            background: #0f172a;
+            color: #f8fafc;
+            border-left: 4px solid var(--accent-eff);
+            padding: 0.75rem 1.1rem;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+            font-size: 0.85rem;
+            z-index: 9999;
+            opacity: 0;
+            transform: translateY(15px);
+            pointer-events: none;
+            transition: all 0.25s ease;
+        }
+
+        #toast-notice.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Estilos Otimizados para Impressão A4 / PDF */
+        @media print {
+            body {
+                background: #ffffff;
+                color: #000000;
+            }
+            header, .no-print, .controls-card, .chart-card {
+                display: none !important;
+            }
+            .workspace {
+                display: block;
+                padding: 0;
+                max-width: 100%;
+            }
+            .card {
+                border: 1px solid #94a3b8;
+                box-shadow: none;
+                break-inside: avoid;
+                margin-bottom: 0.8rem;
+                padding: 0.75rem;
+            }
+            .print-header-only {
+                display: block !important;
+                border-bottom: 2px solid #0f172a;
+                padding-bottom: 0.5rem;
+                margin-bottom: 1rem;
+            }
+            .task-box {
+                break-inside: avoid;
+                border: 1px solid #94a3b8;
+                padding: 0.65rem;
+                margin-bottom: 0.65rem;
+            }
+            .score-banner {
+                background: #f1f5f9 !important;
+                color: #0f172a !important;
+                border: 2px solid #0f172a;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .score-number {
+                color: #0f172a !important;
+            }
+            input, select, textarea {
+                border: 1px solid #64748b;
+                background: #ffffff;
+            }
+        }
+
+        .print-header-only {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Cabeçalho Técnico SCADA -->
+    <header>
+        <div class="header-title">
+            <span class="badge-ufcd">UFCD 10975</span>
+            <div>
+                <h1>Bancada Didática: Sistema Solar Térmico + Bomba de Calor (COP vs. &eta;)</h1>
+                <div class="header-subtitle">Manutenção e Regulação de Sistemas Solares Térmicos — Simulador &amp; Ficha de Trabalho</div>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button type="button" class="btn-dark-outline" onclick="freezeReading()">
+                📸 Congelar / Registar Leitura
+            </button>
+            <button type="button" class="btn-primary" onclick="window.print()">
+                🖨️ Imprimir / Guardar PDF
+            </button>
+        </div>
+    </header>
+
+    <!-- Cabeçalho visível apenas na impressão A4 -->
+    <div class="print-header-only">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <strong style="font-size:14pt;">UFCD 10975 — Ficha de Trabalho Prática (Ensaio de COP e Rendimento Solar)</strong><br>
+                <span style="font-size:9pt; color:#475569;">Manutenção e Regulação de Sistemas Solares Térmicos com Apoio por Bomba de Calor</span>
+            </div>
+            <div style="font-size:9pt; text-align:right;">Documento de Avaliação Formativa</div>
+        </div>
+    </div>
+
+    <!-- Área de Trabalho Lado a Lado -->
+    <main class="workspace">
+
+        <!-- COLUNA ESQUERDA: SIMULADOR INTERATIVO SCADA -->
+        <div class="column-stack">
+
+            <!-- 1. Instrumentação Digital (Medidores) -->
+            <section class="card">
+                <div class="card-header">
+                    <div class="card-title">📊 Instrumentação Digital (Leitura Instantânea)</div>
+                    <span style="font-size:0.75rem; color:var(--text-muted); font-family:var(--font-mono);" id="regime-indicator">Regime: Híbrido Ativo</span>
+                </div>
+
+                <div class="instruments-grid">
+                    <!-- Medidor 1: Rendimento Solar -->
+                    <div class="meter">
+                        <div class="meter-label">Rendimento Solar (&eta;)</div>
+                        <div class="meter-value val-solar" id="disp-eta">66.0 %</div>
+                        <div class="meter-sub" id="disp-eta-dec">&eta; = 0.660 (&lt; 1.0)</div>
+                    </div>
+
+                    <!-- Medidor 2: Potência Térmica Solar -->
+                    <div class="meter">
+                        <div class="meter-label">Potência Solar (Q<sub>solar</sub>)</div>
+                        <div class="meter-value val-solar" id="disp-qsolar">2.11 kW</div>
+                        <div class="meter-sub" id="disp-grad">Radiação: 3.20 kW</div>
+                    </div>
+
+                    <!-- Medidor 3: COP Real -->
+                    <div class="meter">
+                        <div class="meter-label">COP Real (Bomba Calor)</div>
+                        <div class="meter-value val-eff" id="disp-cop">3.94</div>
+                        <div class="meter-sub" id="disp-cop-carnot">Carnot máx: 8.45</div>
+                    </div>
+
+                    <!-- Medidor 4: Calor Útil BC -->
+                    <div class="meter">
+                        <div class="meter-label">Calor Útil BC (Q<sub>útil</sub>)</div>
+                        <div class="meter-value val-thermal" id="disp-qutil">6.00 kW</div>
+                        <div class="meter-sub" id="disp-deltat">&Delta;T = 38.0 K</div>
+                    </div>
+
+                    <!-- Medidor 5: Consumo Elétrico Compressor -->
+                    <div class="meter">
+                        <div class="meter-label">Pot. Elétrica (W<sub>el</sub>)</div>
+                        <div class="meter-value val-elec" id="disp-wel">1.52 kW</div>
+                        <div class="meter-sub" id="disp-qamb">Ar (Q<sub>amb</sub>): 4.48 kW</div>
+                    </div>
+
+                    <!-- Medidor 6: Poupança vs Resistência -->
+                    <div class="meter">
+                        <div class="meter-label">Poupança vs. Resistência</div>
+                        <div class="meter-value val-purple" id="disp-saving">74.6 %</div>
+                        <div class="meter-sub" id="disp-res-equiv">Resist. COP=1: 6.00 kW</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. Esquema Sinótico Dinâmico em SVG -->
+            <section class="card no-print">
+                <div class="card-header">
+                    <div class="card-title">⚙️ Esquema Sinótico &amp; Fluxos de Energia</div>
+                    <span style="font-size:0.75rem; color:var(--text-muted);">Setas proporcionais às potências (kW)</span>
+                </div>
+
+                <div class="svg-container">
+                    <svg viewBox="0 0 780 265" width="100%" height="auto" style="display:block;">
+                        <defs>
+                            <marker id="arr-sun" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                                <path d="M0 1 L10 5 L0 9 z" fill="#fbbf24"/>
+                            </marker>
+                            <marker id="arr-sol-th" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                                <path d="M0 1 L10 5 L0 9 z" fill="#f97316"/>
+                            </marker>
+                            <marker id="arr-air" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                                <path d="M0 1 L10 5 L0 9 z" fill="#22d3ee"/>
+                            </marker>
+                            <marker id="arr-elec" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                                <path d="M0 1 L10 5 L0 9 z" fill="#fb7185"/>
+                            </marker>
+                            <marker id="arr-bc" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                                <path d="M0 1 L10 5 L0 9 z" fill="#34d399"/>
+                            </marker>
+                        </defs>
+
+                        <!-- SOL / RADIAÇÃO INCIDENTE -->
+                        <circle cx="55" cy="42" r="18" fill="#f59e0b" fill-opacity="0.25" stroke="#fbbf24" stroke-width="2"/>
+                        <text x="55" y="46" text-anchor="middle" fill="#fde68a" font-size="10" font-weight="bold">SOL</text>
+                        <path id="svg-line-rad" d="M 80 42 L 138 42" stroke="#fbbf24" stroke-width="5" fill="none" marker-end="url(#arr-sun)" class="flow-anim"/>
+                        <text id="svg-txt-rad" x="108" y="29" text-anchor="middle" fill="#fbbf24" font-family="monospace" font-size="10" font-weight="bold">3.20 kW</text>
+
+                        <!-- COLETOR SOLAR TÉRMICO -->
+                        <g transform="translate(145, 16)">
+                            <rect x="0" y="0" width="145" height="78" rx="8" fill="#1e293b" stroke="#f59e0b" stroke-width="2"/>
+                            <text x="72" y="19" text-anchor="middle" fill="#fbbf24" font-size="10" font-weight="bold">COLETOR SOLAR</text>
+                            <text id="svg-txt-ac" x="72" y="34" text-anchor="middle" fill="#cbd5e1" font-family="monospace" font-size="9">Ac = 4.0 m² | G = 800</text>
+                            <rect x="22" y="43" width="100" height="22" rx="4" fill="#451a03" stroke="#d97706"/>
+                            <text id="svg-txt-eta" x="72" y="58" text-anchor="middle" fill="#fde68a" font-family="monospace" font-size="11" font-weight="bold">η = 66.0%</text>
+                        </g>
+
+                        <!-- FLUXO Q_SOLAR PARA O DEPÓSITO -->
+                        <path id="svg-line-qsol" d="M 295 55 L 365 55" stroke="#f97316" stroke-width="5" fill="none" marker-end="url(#arr-sol-th)" class="flow-anim"/>
+                        <text id="svg-txt-qsol" x="330" y="43" text-anchor="middle" fill="#fdba74" font-family="monospace" font-size="10" font-weight="bold">2.11 kW</text>
+                        <text x="330" y="71" text-anchor="middle" fill="#94a3b8" font-size="9">Q_solar</text>
+
+                        <!-- DEPÓSITO DE ACUMULAÇÃO AQS (CENTRO) -->
+                        <g transform="translate(372, 22)">
+                            <rect x="0" y="0" width="140" height="215" rx="18" fill="#1e293b" stroke="#38bdf8" stroke-width="2.5"/>
+                            <!-- Estratificação térmica -->
+                            <rect x="4" y="4" width="132" height="95" rx="14" fill="#ef4444" fill-opacity="0.22"/>
+                            <rect x="4" y="105" width="132" height="106" rx="14" fill="#0284c7" fill-opacity="0.22"/>
+                            <text x="70" y="25" text-anchor="middle" fill="#f8fafc" font-size="11" font-weight="bold">DEPÓSITO AQS</text>
+                            <text x="70" y="42" text-anchor="middle" fill="#94a3b8" font-size="9">Setpoint Regulado</text>
+                            <rect x="24" y="52" width="92" height="28" rx="6" fill="#0f172a" stroke="#38bdf8"/>
+                            <text id="svg-txt-tset" x="70" y="71" text-anchor="middle" fill="#38bdf8" font-family="monospace" font-size="14" font-weight="bold">48 °C</text>
+
+                            <!-- Serpentinas internas -->
+                            <path d="M 10 95 Q 50 85 50 105 T 10 115" stroke="#f97316" stroke-width="2.5" fill="none"/>
+                            <path d="M 130 145 Q 90 135 90 155 T 130 165" stroke="#34d399" stroke-width="2.5" fill="none"/>
+
+                            <text x="70" y="195" text-anchor="middle" fill="#cbd5e1" font-size="9">Estratificação Térmica</text>
+                        </g>
+
+                        <!-- FONTE FRIA (AR EXTERIOR) -->
+                        <g transform="translate(650, 22)">
+                            <rect x="0" y="0" width="115" height="72" rx="8" fill="#1e293b" stroke="#22d3ee" stroke-width="2"/>
+                            <text x="57" y="20" text-anchor="middle" fill="#22d3ee" font-size="10" font-weight="bold">AR EXTERIOR</text>
+                            <text x="57" y="34" text-anchor="middle" fill="#94a3b8" font-size="9">Fonte Fria</text>
+                            <text id="svg-txt-text" x="57" y="57" text-anchor="middle" fill="#ffffff" font-family="monospace" font-size="13" font-weight="bold">10 °C</text>
+                        </g>
+
+                        <!-- FLUXO Q_AMBIENTE (AR -> BOMBA DE CALOR) -->
+                        <path id="svg-line-qamb" d="M 707 98 L 707 148" stroke="#22d3ee" stroke-width="5" fill="none" marker-end="url(#arr-air)" class="flow-anim"/>
+                        <text id="svg-txt-qamb" x="662" y="126" text-anchor="end" fill="#67e8f9" font-family="monospace" font-size="10" font-weight="bold">Q_amb: 4.48 kW</text>
+
+                        <!-- BOMBA DE CALOR (APOIO) -->
+                        <g transform="translate(595, 155)">
+                            <rect x="0" y="0" width="170" height="82" rx="10" fill="#1e293b" stroke="#34d399" stroke-width="2"/>
+                            <text x="85" y="19" text-anchor="middle" fill="#34d399" font-size="10" font-weight="bold">BOMBA DE CALOR</text>
+                            <text id="svg-txt-maint" x="85" y="33" text-anchor="middle" fill="#94a3b8" font-size="8.5">Estado: Ótimo (100%)</text>
+                            <rect x="25" y="42" width="120" height="26" rx="5" fill="#064e3b" stroke="#10b981"/>
+                            <text id="svg-txt-cop" x="85" y="59" text-anchor="middle" fill="#6ee7b7" font-family="monospace" font-size="12" font-weight="bold">COP = 3.94</text>
+                        </g>
+
+                        <!-- FLUXO W_ELETRICO (REDE -> BOMBA DE CALOR) -->
+                        <path id="svg-line-wel" d="M 535 215 L 588 215" stroke="#fb7185" stroke-width="3.5" fill="none" marker-end="url(#arr-elec)" class="flow-anim"/>
+                        <text id="svg-txt-wel" x="556" y="236" text-anchor="middle" fill="#fda4af" font-family="monospace" font-size="9.5" font-weight="bold">W_el: 1.52 kW</text>
+
+                        <!-- FLUXO Q_UTIL_BC (BOMBA DE CALOR -> DEPÓSITO) -->
+                        <path id="svg-line-qbc" d="M 590 175 L 520 175" stroke="#34d399" stroke-width="6" fill="none" marker-end="url(#arr-bc)" class="flow-anim"/>
+                        <text id="svg-txt-qbc" x="555" y="163" text-anchor="middle" fill="#6ee7b7" font-family="monospace" font-size="10" font-weight="bold">6.00 kW</text>
+
+                        <!-- LEGENDA BALANÇO NA BASE ESQUERDA -->
+                        <g transform="translate(20, 125)">
+                            <rect x="0" y="0" width="330" height="112" rx="8" fill="#1e293b" stroke="#334155"/>
+                            <text x="12" y="20" fill="#f8fafc" font-size="10" font-weight="bold">BALANÇO TERMODINÂMICO DA BOMBA DE CALOR:</text>
+                            <text x="12" y="40" fill="#cbd5e1" font-family="monospace" font-size="10">Q_útil = Q_ambiente + W_elétrico</text>
+                            <text id="svg-balance-eq" x="12" y="58" fill="#34d399" font-family="monospace" font-size="10" font-weight="bold">6.00 kW = 4.48 kW + 1.52 kW</text>
+                            <text x="12" y="80" fill="#94a3b8" font-size="9.5">• Coletor Solar: converte radiação (&eta; sempre &lt; 100%)</text>
+                            <text x="12" y="96" fill="#94a3b8" font-size="9.5">• Bomba de Calor: transporta calor do ar (COP &gt; 1)</text>
+                        </g>
+                    </svg>
+                </div>
+            </section>
+
+            <!-- 3. Painel de Controlos da Bancada -->
+            <section class="card controls-card no-print">
+                <div class="card-header">
+                    <div class="card-title">🎛️ Controlos de Bancada &amp; Regulação</div>
+                    <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+                        <button type="button" class="btn-outline btn-sm" onclick="setScenario(800, 4, 10, 48, 1.0)">Cenário Tarefa 1-2</button>
+                        <button type="button" class="btn-outline btn-sm" onclick="setScenario(800, 4, 10, 62, 1.0)">Cenário Tarefa 3 (62°C)</button>
+                        <button type="button" class="btn-outline btn-sm" onclick="setScenario(200, 4, 10, 48, 0.65)">Cenário Tarefa 4 (Avaria)</button>
+                    </div>
+                </div>
+
+                <div class="controls-grid">
+                    <!-- Irradiância Solar -->
+                    <div class="control-group">
+                        <div class="control-top">
+                            <label for="ctrl-g">Irradiância Solar (G)</label>
+                            <span class="control-readout" id="val-g">800 W/m²</span>
+                        </div>
+                        <input type="range" id="ctrl-g" min="0" max="1000" step="50" value="800">
+                    </div>
+
+                    <!-- Área de Coletores -->
+                    <div class="control-group">
+                        <div class="control-top">
+                            <label for="ctrl-ac">Área de Coletores (A<sub>c</sub>)</label>
+                            <span class="control-readout" id="val-ac">4.0 m²</span>
+                        </div>
+                        <input type="range" id="ctrl-ac" min="2" max="10" step="0.5" value="4">
+                    </div>
+
+                    <!-- Temperatura Exterior -->
+                    <div class="control-group">
+                        <div class="control-top">
+                            <label for="ctrl-text">Temp. Ambiente Exterior (T<sub>ext</sub>)</label>
+                            <span class="control-readout" id="val-text">10 °C</span>
+                        </div>
+                        <input type="range" id="ctrl-text" min="-5" max="35" step="1" value="10">
+                    </div>
+
+                    <!-- Setpoint AQS -->
+                    <div class="control-group">
+                        <div class="control-top">
+                            <label for="ctrl-tset">Setpoint Depósito AQS (T<sub>setpoint</sub>)</label>
+                            <span class="control-readout" id="val-tset">48 °C</span>
+                        </div>
+                        <input type="range" id="ctrl-tset" min="40" max="65" step="1" value="48">
+                    </div>
+
+                    <!-- Estado de Manutenção -->
+                    <div class="control-group" style="grid-column: 1 / -1;">
+                        <div class="control-top">
+                            <label for="ctrl-maint">Estado de Manutenção &amp; Permutadores (Bomba de Calor)</label>
+                            <span class="control-readout" id="val-maint-badge">Ótimo (100%)</span>
+                        </div>
+                        <select id="ctrl-maint">
+                            <option value="1.0">Ótimo (100% — Permutadores limpos e carga nominal de fluido)</option>
+                            <option value="0.82">Sujidade Ligeira (82% — Filtros/alhetas do evaporador com poeiras)</option>
+                            <option value="0.65">Incrustação / Falta de Fluido (65% — Baixa troca térmica / subcarga)</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4. Gráfico em Tempo Real (COP vs Delta T) + Caderno de Leituras -->
+            <section class="card chart-card">
+                <div class="card-header">
+                    <div class="card-title">📈 Curva Característica COP vs. Diferencial Térmico (&Delta;T)</div>
+                    <span style="font-size:0.75rem; color:var(--text-muted);">&Delta;T = T<sub>quente</sub> - T<sub>fria</sub></span>
+                </div>
+                <div style="width:100%; height:190px; background:#0f172a; border-radius:8px; padding:0.4rem;">
+                    <canvas id="cop-curve-canvas" style="width:100%; height:100%; display:block;"></canvas>
+                </div>
+
+                <!-- Tabela de Leituras Congeladas -->
+                <div class="log-table-wrapper">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.6rem; margin-bottom:0.35rem;">
+                        <strong style="font-size:0.78rem; color:#334155;">Registo de Leituras Capturadas (Caderno de Ensaios):</strong>
+                        <button type="button" class="btn-outline btn-sm no-print" onclick="clearReadings()">Limpar Registos</button>
+                    </div>
+                    <table class="log-table" id="readings-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>G (W/m²)</th>
+                                <th>&eta; Solar</th>
+                                <th>T<sub>ext</sub></th>
+                                <th>T<sub>set</sub></th>
+                                <th>&Delta;T</th>
+                                <th>Q<sub>útil</sub> (kW)</th>
+                                <th>W<sub>el</sub> (kW)</th>
+                                <th>COP</th>
+                            </tr>
+                        </thead>
+                        <tbody id="readings-body">
+                            <tr>
+                                <td colspan="9" style="color:#64748b; font-family:var(--font-sans);">Clique em "Congelar / Registar Leitura" para guardar pontos de ensaio aqui.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- COLUNA DIREITA: FICHA DE TRABALHO PRÁTICA INTERATIVA -->
+        <div class="column-stack">
+            <section class="card worksheet-card">
+                <div class="card-header">
+                    <div class="card-title">📝 Ficha de Trabalho Prática Interativa</div>
+                    <span style="font-size:0.75rem; font-weight:600; color:var(--accent-thermal);">Cotação Total: 20 Valores</span>
+                </div>
+
+                <!-- Identificação do Formando -->
+                <div class="student-meta">
+                    <div>
+                        <label for="st-name">Nome Completo do Formando</label>
+                        <input type="text" id="st-name" placeholder="Ex.: João Manuel Silva">
+                    </div>
+                    <div>
+                        <label for="st-class">Turma / Ação</label>
+                        <input type="text" id="st-class" placeholder="Ex.: EFA-TEI-04">
+                    </div>
+                    <div>
+                        <label for="st-date">Data</label>
+                        <input type="date" id="st-date">
+                    </div>
+                </div>
+
+                <!-- Banner de Resultado / Nota Final -->
+                <div id="score-banner" class="score-banner">
+                    <div>
+                        <div style="font-size:0.75rem; text-transform:uppercase; color:#94a3b8; font-weight:700;">Classificação Obtida na Ficha</div>
+                        <div id="score-summary" style="font-size:0.85rem; color:#e2e8f0; margin-top:0.2rem;">Verifique os detalhes por tarefa abaixo.</div>
+                    </div>
+                    <div class="score-number" id="score-display">0.0 / 20 val.</div>
+                </div>
+
+                <!-- TAREFA 1 -->
+                <div class="task-box" id="box-t1">
+                    <div class="task-header">
+                        <div class="task-title">Tarefa 1 — Distinção Física: Rendimento Solar (&eta;) vs. COP</div>
+                        <span class="task-points">5.0 Valores</span>
+                    </div>
+                    <div class="task-instruction">
+                        <strong>Procedimento:</strong> Configure o simulador para sol pleno com <strong>G = 800 W/m²</strong> e <strong>A<sub>c</sub> = 4.0 m²</strong> (com T<sub>ext</sub> = 10 °C, T<sub>setpoint</sub> = 48 °C e Manutenção Ótima). Observe o visor do coletor solar e o visor da bomba de calor.
+                    </div>
+                    <div class="task-inputs">
+                        <div>
+                            <label class="field-label" for="t1-eta">1.1. Rendimento do Coletor Solar &eta; (%):</label>
+                            <input type="number" step="0.1" id="t1-eta" placeholder="Ex.: 66.0">
+                        </div>
+                        <div>
+                            <label class="field-label" for="t1-cop">1.2. COP Real da Bomba de Calor:</label>
+                            <input type="number" step="0.01" id="t1-cop" placeholder="Ex.: 3.94">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="field-label" for="t1-concept">1.3. Porque é que o COP da bomba de calor é superior a 1 (ex.: &gt; 3), enquanto o rendimento do painel solar é sempre inferior a 100%?</label>
+                        <select id="t1-concept">
+                            <option value="">-- Selecione a justificação termodinâmica correta --</option>
+                            <option value="A">Porque a bomba de calor cria energia térmica adicional através de resistências internas.</option>
+                            <option value="B">Porque o painel solar converte radiação incidente (limitado pela 1.ª Lei), enquanto a bomba de calor apenas usa eletricidade para transportar calor gratuito já existente no ar exterior.</option>
+                            <option value="C">Porque o painel solar funciona apenas em corrente contínua e perde calor por efeito de Joule.</option>
+                        </select>
+                    </div>
+                    <div id="fb-t1" class="feedback-msg"></div>
+                </div>
+
+                <!-- TAREFA 2 -->
+                <div class="task-box" id="box-t2">
+                    <div class="task-header">
+                        <div class="task-title">Tarefa 2 — Cálculo Direto do COP e Balanço Energético</div>
+                        <span class="task-points">5.0 Valores</span>
+                    </div>
+                    <div class="task-instruction">
+                        <strong>Procedimento:</strong> Mantendo <strong>T<sub>ext</sub> = 10 °C</strong>, <strong>T<sub>setpoint</sub> = 48 °C</strong> e <strong>Manutenção Ótima (100%)</strong>, leia a potência térmica útil entregue pela bomba de calor (<strong>Q<sub>útil</sub></strong>) e a potência elétrica consumida (<strong>W<sub>el</sub></strong>). Comprove o cálculo do COP e determine a energia captada gratuitamente do ar exterior (<strong>Q<sub>amb</sub> = Q<sub>útil</sub> &minus; W<sub>el</sub></strong>).
+                    </div>
+                    <div class="task-inputs">
+                        <div>
+                            <label class="field-label" for="t2-cop">2.1. Calcule COP = Q<sub>útil</sub> / W<sub>el</sub>:</label>
+                            <input type="number" step="0.01" id="t2-cop" placeholder="Ex.: 3.94">
+                        </div>
+                        <div>
+                            <label class="field-label" for="t2-qamb">2.2. Energia gratuita do ar Q<sub>amb</sub> (kW):</label>
+                            <input type="number" step="0.01" id="t2-qamb" placeholder="Ex.: 4.48">
+                        </div>
+                    </div>
+                    <div id="fb-t2" class="feedback-msg"></div>
+                </div>
+
+                <!-- TAREFA 3 -->
+                <div class="task-box" id="box-t3">
+                    <div class="task-header">
+                        <div class="task-title">Tarefa 3 — Impacto da Regulação do Setpoint (&Delta;T)</div>
+                        <span class="task-points">5.0 Valores</span>
+                    </div>
+                    <div class="task-instruction">
+                        <strong>Procedimento:</strong> Mantendo <strong>T<sub>ext</sub> = 10 °C</strong> e <strong>Manutenção Ótima</strong>, aumente a temperatura alvo do depósito (<strong>T<sub>setpoint</sub></strong>) de <strong>48 °C</strong> para <strong>62 °C</strong>. Registe o novo valor do COP e calcule a quebra percentual face ao COP anterior (3.94).
+                    </div>
+                    <div class="task-inputs">
+                        <div>
+                            <label class="field-label" for="t3-cop">3.1. Novo COP a T<sub>setpoint</sub> = 62 °C:</label>
+                            <input type="number" step="0.01" id="t3-cop" placeholder="Ex.: 3.00">
+                        </div>
+                        <div>
+                            <label class="field-label" for="t3-drop">3.2. Queda percentual do COP (%):</label>
+                            <input type="number" step="0.1" id="t3-drop" placeholder="Ex.: 23.9">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="field-label" for="t3-concept">3.3. Conclusão técnica para regulação em obra (UFCD 10975):</label>
+                        <select id="t3-concept">
+                            <option value="">-- Selecione a conclusão correta --</option>
+                            <option value="A">Deve manter-se sempre o setpoint a 65 °C para maximizar o rendimento do compressor.</option>
+                            <option value="B">Aumentar o setpoint eleva o salto térmico (&Delta;T), obrigando o compressor a maior esforço e reduzindo significativamente o COP.</option>
+                            <option value="C">O aumento de &Delta;T apenas afeta o coletor solar e não altera o consumo elétrico da bomba de calor.</option>
+                        </select>
+                    </div>
+                    <div id="fb-t3" class="feedback-msg"></div>
+                </div>
+
+                <!-- TAREFA 4 -->
+                <div class="task-box" id="box-t4">
+                    <div class="task-header">
+                        <div class="task-title">Tarefa 4 — Diagnóstico de Manutenção &amp; Poupança vs. Resistência</div>
+                        <span class="task-points">5.0 Valores</span>
+                    </div>
+                    <div class="task-instruction">
+                        <strong>Procedimento:</strong> Volte a colocar <strong>T<sub>setpoint</sub> = 48 °C</strong> (T<sub>ext</sub> = 10 °C) e selecione no estado de manutenção a avaria <strong>"Incrustação / Falta de Fluido (65%)"</strong>. Registe o COP degradado e compare o consumo elétrico da bomba de calor (<strong>W<sub>el</sub></strong>) com o de um termoacumulador elétrico convencional (COP = 1.0) para fornecer os mesmos <strong>6.00 kW</strong> térmicos.
+                    </div>
+                    <div class="task-inputs">
+                        <div>
+                            <label class="field-label" for="t4-cop">4.1. COP com Falta de Fluido / Sujidade:</label>
+                            <input type="number" step="0.01" id="t4-cop" placeholder="Ex.: 2.56">
+                        </div>
+                        <div>
+                            <label class="field-label" for="t4-wel">4.2. Novo consumo elétrico W<sub>el</sub> (kW):</label>
+                            <input type="number" step="0.01" id="t4-wel" placeholder="Ex.: 2.34">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="field-label" for="t4-saving">4.3. Mesmo com essa perda por falta de manutenção, quanto poupa em eletricidade (%) face à resistência elétrica (6.00 kW)?</label>
+                        <input type="number" step="0.1" id="t4-saving" placeholder="Ex.: 61.0">
+                    </div>
+                    <div id="fb-t4" class="feedback-msg"></div>
+                </div>
+
+                <!-- Botões de Ação da Ficha -->
+                <div class="no-print" style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-top:1rem;">
+                    <button type="button" class="btn-success" style="flex:1; justify-content:center; padding:0.75rem;" onclick="validateWorksheet()">
+                        ✅ Verificar Respostas e Calcular Nota
+                    </button>
+                    <button type="button" class="btn-outline" onclick="resetWorksheet()">
+                        ↺ Limpar Ficha
+                    </button>
+                </div>
+            </section>
+        </div>
+
+    </main>
+
+    <!-- Notificação Toast -->
+    <div id="toast-notice">Leitura registada no caderno de ensaios.</div>
+
+    <script>
+        // Estado atual da simulação
+        const simState = {
+            G: 800,
+            Ac: 4.0,
+            Text: 10,
+            Tset: 48,
+            maintFactor: 1.0,
+            // Grandezas calculadas
+            etaSolar: 0.66,
+            Qrad: 3.20,
+            Qsolar: 2.11,
+            deltaT: 38.0,
+            copCarnot: 8.45,
+            copReal: 3.94,
+            QutilBC: 6.00,
+            Wel: 1.52,
+            Qamb: 4.48,
+            savingPct: 74.6
+        };
+
+        let readingCount = 0;
+
+        // Referências DOM dos controlos
+        const ctrlG = document.getElementById('ctrl-g');
+        const ctrlAc = document.getElementById('ctrl-ac');
+        const ctrlText = document.getElementById('ctrl-text');
+        const ctrlTset = document.getElementById('ctrl-tset');
+        const ctrlMaint = document.getElementById('ctrl-maint');
+
+        // Inicializar data de hoje no campo da ficha
+        document.getElementById('st-date').valueAsDate = new Date();
+
+        // Função de atualização física da bancada
+        function updateSimulation() {
+            simState.G = parseFloat(ctrlG.value);
+            simState.Ac = parseFloat(ctrlAc.value);
+            simState.Text = parseFloat(ctrlText.value);
+            simState.Tset = parseFloat(ctrlTset.value);
+            simState.maintFactor = parseFloat(ctrlMaint.value);
+
+            // Atualizar etiquetas dos controlos
+            document.getElementById('val-g').textContent = `${simState.G} W/m²`;
+            document.getElementById('val-ac').textContent = `${simState.Ac.toFixed(1)} m²`;
+            document.getElementById('val-text').textContent = `${simState.Text} °C`;
+            document.getElementById('val-tset').textContent = `${simState.Tset} °C`;
+
+            const maintLabels = {
+                '1': 'Ótimo (100%)',
+                '0.82': 'Sujidade Ligeira (82%)',
+                '0.65': 'Incrustação / Fluido (65%)'
+            };
+            const maintText = maintLabels[simState.maintFactor.toString()] || 'Ótimo (100%)';
+            document.getElementById('val-maint-badge').textContent = maintText;
+
+            // --- FÍSICA DO COLETOR SOLAR TÉRMICO (Curva EN/ISO 9806 simplificada) ---
+            // eta = eta0 - a1 * (Tm - Text) / G
+            // Sempre limitado estritamente abaixo de 100% (0.76 máximo ótico)
+            if (simState.G <= 0) {
+                simState.etaSolar = 0;
+                simState.Qrad = 0;
+                simState.Qsolar = 0;
+            } else {
+                const eta0 = 0.76;
+                const a1 = 3.5; // W/(m²·K)
+                const Tm = simState.Tset + 4; // Temperatura média do fluido no coletor
+                const lossTerm = Math.max(0, a1 * (Tm - simState.Text) / simState.G);
+                simState.etaSolar = Math.max(0, Math.min(0.76, eta0 - lossTerm));
+                simState.Qrad = (simState.G * simState.Ac) / 1000.0; // kW
+                simState.Qsolar = simState.Qrad * simState.etaSolar; // kW
+            }
+
+            // --- FÍSICA DA BOMBA DE CALOR DE APOIO ---
+            // Temperatura de evaporação (fonte fria) e condensação (fonte quente) em Kelvin
+            // Adiciona-se approach térmico realista nos permutadores (+5K condensador, -5K evaporador)
+            const TquenteC = simState.Tset + 5;
+            const TfriaC = simState.Text - 5;
+            const TquenteK = TquenteC + 273.15;
+            const TfriaK = TfriaC + 273.15;
+
+            simState.deltaT = TquenteK - TfriaK; // Igual a (Tset - Text + 10)
+            simState.copCarnot = TquenteK / simState.deltaT;
+
+            // Eficiência de segunda lei base do ciclo frigorífico (0.56 em estado ótimo)
+            const etaCarnotBase = 0.56 * simState.maintFactor;
+            simState.copReal = Math.max(1.15, simState.copCarnot * etaCarnotBase);
+
+            // Potência térmica útil nominal da bomba de calor = 6.00 kW
+            simState.QutilBC = 6.00;
+            simState.Wel = simState.QutilBC / simState.copReal;
+            simState.Qamb = simState.QutilBC - simState.Wel;
+            simState.savingPct = ((simState.QutilBC - simState.Wel) / simState.QutilBC) * 100.0;
+
+            // --- ATUALIZAR INSTRUMENTOS DIGITAIS ---
+            document.getElementById('disp-eta').textContent = `${(simState.etaSolar * 100).toFixed(1)} %`;
+            document.getElementById('disp-eta-dec').textContent = `η = ${simState.etaSolar.toFixed(3)} (< 1.0)`;
+
+            document.getElementById('disp-qsolar').textContent = `${simState.Qsolar.toFixed(2)} kW`;
+            document.getElementById('disp-grad').textContent = `Radiação: ${simState.Qrad.toFixed(2)} kW`;
+
+            document.getElementById('disp-cop').textContent = simState.copReal.toFixed(2);
+            document.getElementById('disp-cop-carnot').textContent = `Carnot máx: ${simState.copCarnot.toFixed(2)}`;
+
+            document.getElementById('disp-qutil').textContent = `${simState.QutilBC.toFixed(2)} kW`;
+            document.getElementById('disp-deltat').textContent = `ΔT ciclo = ${simState.deltaT.toFixed(1)} K`;
+
+            document.getElementById('disp-wel').textContent = `${simState.Wel.toFixed(2)} kW`;
+            document.getElementById('disp-qamb').textContent = `Ar (Q_amb): ${simState.Qamb.toFixed(2)} kW`;
+
+            document.getElementById('disp-saving').textContent = `${simState.savingPct.toFixed(1)} %`;
+
+            // Indicador de regime
+            const regimeEl = document.getElementById('regime-indicator');
+            if (simState.Qsolar > 0.2) {
+                regimeEl.textContent = 'Regime: Híbrido (Solar + BC)';
+                regimeEl.style.color = '#0284c7';
+            } else {
+                regimeEl.textContent = 'Regime: Apoio Puro (Sem Sol)';
+                regimeEl.style.color = '#d97706';
+            }
+
+            // --- ATUALIZAR ESQUEMA SINÓTICO SVG ---
+            document.getElementById('svg-txt-rad').textContent = `${simState.Qrad.toFixed(2)} kW`;
+            document.getElementById('svg-txt-ac').textContent = `Ac = ${simState.Ac.toFixed(1)} m² | G = ${simState.G}`;
+            document.getElementById('svg-txt-eta').textContent = `η = ${(simState.etaSolar * 100).toFixed(1)}%`;
+            document.getElementById('svg-txt-qsol').textContent = `${simState.Qsolar.toFixed(2)} kW`;
+            document.getElementById('svg-txt-tset').textContent = `${simState.Tset} °C`;
+            document.getElementById('svg-txt-text').textContent = `${simState.Text} °C`;
+            document.getElementById('svg-txt-maint').textContent = `Estado: ${maintText}`;
+            document.getElementById('svg-txt-cop').textContent = `COP = ${simState.copReal.toFixed(2)}`;
+            document.getElementById('svg-txt-qamb').textContent = `Q_amb: ${simState.Qamb.toFixed(2)} kW`;
+            document.getElementById('svg-txt-wel').textContent = `W_el: ${simState.Wel.toFixed(2)} kW`;
+            document.getElementById('svg-txt-qbc').textContent = `${simState.QutilBC.toFixed(2)} kW`;
+            document.getElementById('svg-balance-eq').textContent =
+                `${simState.QutilBC.toFixed(2)} kW = ${simState.Qamb.toFixed(2)} kW + ${simState.Wel.toFixed(2)} kW`;
+
+            // Espessura e animação das setas solares
+            const lineRad = document.getElementById('svg-line-rad');
+            const lineQsol = document.getElementById('svg-line-qsol');
+            if (simState.G <= 0 || simState.Qsolar <= 0.01) {
+                lineRad.setAttribute('class', 'flow-paused');
+                lineQsol.setAttribute('class', 'flow-paused');
+            } else {
+                lineRad.setAttribute('class', 'flow-anim');
+                lineQsol.setAttribute('class', 'flow-anim');
+                lineRad.setAttribute('stroke-width', Math.max(2, Math.min(9, simState.Qrad * 1.2)).toFixed(1));
+                lineQsol.setAttribute('stroke-width', Math.max(2, Math.min(9, simState.Qsolar * 1.6)).toFixed(1));
+            }
+
+            // Espessura das setas da Bomba de Calor
+            document.getElementById('svg-line-qamb').setAttribute('stroke-width', Math.max(2.5, Math.min(9, simState.Qamb * 1.2)).toFixed(1));
+            document.getElementById('svg-line-wel').setAttribute('stroke-width', Math.max(2, Math.min(8, simState.Wel * 1.5)).toFixed(1));
+
+            // Desenhar gráfico COP vs Delta T
+            drawCopCurve();
+        }
+
+        // Atalho para cenários da ficha
+        function setScenario(g, ac, text, tset, maint) {
+            ctrlG.value = g;
+            ctrlAc.value = ac;
+            ctrlText.value = text;
+            ctrlTset.value = tset;
+            ctrlMaint.value = maint.toString();
+            updateSimulation();
+            showToast(`Cenário aplicado: G=${g} W/m², Text=${text}°C, Tset=${tset}°C`);
+        }
+
+        // Congelar leitura no caderno de ensaios
+        function freezeReading() {
+            const tbody = document.getElementById('readings-body');
+            if (readingCount === 0) {
+                tbody.innerHTML = '';
+            }
+            readingCount++;
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><strong>${readingCount}</strong></td>
+                <td>${simState.G}</td>
+                <td>${(simState.etaSolar * 100).toFixed(1)}%</td>
+                <td>${simState.Text}°C</td>
+                <td>${simState.Tset}°C</td>
+                <td>${simState.deltaT.toFixed(0)}K</td>
+                <td>${simState.QutilBC.toFixed(2)}</td>
+                <td>${simState.Wel.toFixed(2)}</td>
+                <td style="font-weight:bold; color:#059669;">${simState.copReal.toFixed(2)}</td>
+            `;
+            tbody.appendChild(row);
+            showToast(`Leitura #${readingCount} registada no caderno de ensaios!`);
+        }
+
+        function clearReadings() {
+            readingCount = 0;
+            document.getElementById('readings-body').innerHTML = `
+                <tr>
+                    <td colspan="9" style="color:#64748b; font-family:var(--font-sans);">Clique em "Congelar / Registar Leitura" para guardar pontos de ensaio aqui.</td>
+                </tr>
+            `;
+        }
+
+        // Desenhar curva COP vs Delta T no Canvas
+        function drawCopCurve() {
+            const canvas = document.getElementById('cop-curve-canvas');
+            const rect = canvas.parentElement.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            const ctx = canvas.getContext('2d');
+            ctx.scale(dpr, dpr);
+
+            const w = rect.width;
+            const h = rect.height;
+            const padL = 38, padR = 16, padT = 16, padB = 26;
+            const plotW = w - padL - padR;
+            const plotH = h - padT - padB;
+
+            ctx.clearRect(0, 0, w, h);
+
+            const minDT = 15, maxDT = 75;
+            const minCOP = 1.0, maxCOP = 7.0;
+
+            const toX = dt => padL + ((dt - minDT) / (maxDT - minDT)) * plotW;
+            const toY = c => padT + plotH - ((Math.min(maxCOP, Math.max(minCOP, c)) - minCOP) / (maxCOP - minCOP)) * plotH;
+
+            // Grelha horizontal
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 1;
+            ctx.font = '10px monospace';
+            ctx.fillStyle = '#94a3b8';
+            ctx.textAlign = 'right';
+
+            for (let c = 1; c <= 7; c += 1) {
+                const y = toY(c);
+                ctx.beginPath();
+                ctx.moveTo(padL, y);
+                ctx.lineTo(w - padR, y);
+                ctx.stroke();
+                ctx.fillText(c.toFixed(0), padL - 6, y + 3);
+            }
+
+            // Linha referência COP = 1 (Resistência)
+            ctx.strokeStyle = '#e11d48';
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(padL, toY(1.0));
+            ctx.lineTo(w - padR, toY(1.0));
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Eixo X (Delta T)
+            ctx.textAlign = 'center';
+            for (let dt = 15; dt <= 75; dt += 15) {
+                const x = toX(dt);
+                ctx.beginPath();
+                ctx.moveTo(x, padT);
+                ctx.lineTo(x, h - padB);
+                ctx.stroke();
+                ctx.fillText(`${dt}K`, x, h - 8);
+            }
+
+            // Curva COP em função de Delta T para a temperatura de condensação atual
+            const TquenteK = (simState.Tset + 5) + 273.15;
+            const eta2nd = 0.56 * simState.maintFactor;
+
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            for (let dt = minDT; dt <= maxDT; dt += 1) {
+                const cVal = Math.max(1.15, (TquenteK / dt) * eta2nd);
+                const x = toX(dt);
+                const y = toY(cVal);
+                if (dt === minDT) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            // Ponto atual de operação
+            const curX = toX(Math.min(maxDT, Math.max(minDT, simState.deltaT)));
+            const curY = toY(simState.copReal);
+
+            ctx.strokeStyle = '#fbbf24';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.moveTo(padL, curY);
+            ctx.lineTo(curX, curY);
+            ctx.lineTo(curX, h - padB);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.fillStyle = '#34d399';
+            ctx.beginPath();
+            ctx.arc(curX, curY, 5.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#0f172a';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        }
+
+        // Função auxiliar de comparação numérica com tolerância
+        function isClose(val, target, tol) {
+            if (isNaN(val)) return false;
+            return Math.abs(val - target) <= tol;
+        }
+
+        // Validação automática da Ficha de Trabalho (0 a 20 valores)
+        function validateWorksheet() {
+            let totalScore = 0;
+
+            // --- TAREFA 1 (5.0 valores: 1.5 + 1.5 + 2.0) ---
+            // Valores esperados para G=800, Text=10, Tset=48, maint=1.0:
+            // eta = 0.76 - 3.5*(52-10)/800 = 0.76 - 0.18375 = 0.57625 -> 57.6%
+            // TquenteK = 53 + 273.15 = 326.15; TfriaK = 5 + 273.15 = 278.15; dT = 48K
+            // COP = (326.15 / 48) * 0.56 = 3.805 -> 3.81
+            const t1Eta = parseFloat(document.getElementById('t1-eta').value);
+            const t1Cop = parseFloat(document.getElementById('t1-cop').value);
+            const t1Conc = document.getElementById('t1-concept').value;
+
+            let s1 = 0;
+            if (isClose(t1Eta, 57.6, 1.0)) s1 += 1.5;
+            if (isClose(t1Cop, 3.81, 0.08)) s1 += 1.5;
+            if (t1Conc === 'B') s1 += 2.0;
+            totalScore += s1;
+
+            const fb1 = document.getElementById('fb-t1');
+            if (s1 === 5.0) {
+                fb1.className = 'feedback-msg feedback-ok';
+                fb1.innerHTML = `<strong>Correto (5.0 / 5.0 val.):</strong> O coletor apresenta &eta; = 57.6% (&lt; 100%) porque converte radiação incidente, enquanto a bomba de calor atinge COP = 3.81 (&gt; 1) porque transporta calor gratuito do ar exterior.`;
+            } else {
+                fb1.className = 'feedback-msg feedback-err';
+                fb1.innerHTML = `<strong>Pontuação: ${s1.toFixed(1)} / 5.0 val.</strong> Verifique o Cenário Tarefa 1-2: &eta;<sub>solar</sub> = <strong>57.6%</strong>, COP = <strong>3.81</strong> e a opção correta é a <strong>B</strong>.`;
+            }
+
+            // --- TAREFA 2 (5.0 valores: 2.5 + 2.5) ---
+            // Qutil = 6.00 kW, COP = 3.81 => Wel = 6.00 / 3.805 = 1.58 kW; Qamb = 6.00 - 1.58 = 4.42 kW
+            const t2Cop = parseFloat(document.getElementById('t2-cop').value);
+            const t2Qamb = parseFloat(document.getElementById('t2-qamb').value);
+
+            let s2 = 0;
+            if (isClose(t2Cop, 3.81, 0.08)) s2 += 2.5;
+            if (isClose(t2Qamb, 4.42, 0.12)) s2 += 2.5;
+            totalScore += s2;
+
+            const fb2 = document.getElementById('fb-t2');
+            if (s2 === 5.0) {
+                fb2.className = 'feedback-msg feedback-ok';
+                fb2.innerHTML = `<strong>Correto (5.0 / 5.0 val.):</strong> COP = 6.00 / 1.58 = 3.81. Dos 6.00 kW entregues à água, 4.42 kW provêm gratuitamente do ar exterior!`;
+            } else {
+                fb2.className = 'feedback-msg feedback-err';
+                fb2.innerHTML = `<strong>Pontuação: ${s2.toFixed(1)} / 5.0 val.</strong> Valores esperados: COP = <strong>3.81</strong> e Q<sub>amb</sub> = Q<sub>útil</sub> &minus; W<sub>el</sub> = 6.00 &minus; 1.58 = <strong>4.42 kW</strong>.`;
+            }
+
+            // --- TAREFA 3 (5.0 valores: 1.5 + 1.5 + 2.0) ---
+            // Tset = 62°C => TquenteK = 67 + 273.15 = 340.15; dT = 62K
+            // COP_new = (340.15 / 62) * 0.56 = 3.072 -> 3.07
+            // Queda % = (3.805 - 3.072) / 3.805 * 100 = 19.3%
+            const t3Cop = parseFloat(document.getElementById('t3-cop').value);
+            const t3Drop = parseFloat(document.getElementById('t3-drop').value);
+            const t3Conc = document.getElementById('t3-concept').value;
+
+            let s3 = 0;
+            if (isClose(t3Cop, 3.07, 0.08)) s3 += 1.5;
+            if (isClose(t3Drop, 19.3, 1.5)) s3 += 1.5;
+            if (t3Conc === 'B') s3 += 2.0;
+            totalScore += s3;
+
+            const fb3 = document.getElementById('fb-t3');
+            if (s3 === 5.0) {
+                fb3.className = 'feedback-msg feedback-ok';
+                fb3.innerHTML = `<strong>Correto (5.0 / 5.0 val.):</strong> Ao subir o setpoint para 62 °C, &Delta;T sobe para 62 K e o COP cai para 3.07 (quebra de ~19.3%).`;
+            } else {
+                fb3.className = 'feedback-msg feedback-err';
+                fb3.innerHTML = `<strong>Pontuação: ${s3.toFixed(1)} / 5.0 val.</strong> A 62 °C, o novo COP é <strong>3.07</strong>, representando uma quebra de <strong>19.3%</strong> (Opção <strong>B</strong>).`;
+            }
+
+            // --- TAREFA 4 (5.0 valores: 1.5 + 1.5 + 2.0) ---
+            // Tset = 48°C, Text = 10°C, maint = 0.65:
+            // COP_avaria = 3.805 * 0.65 = 2.473 -> 2.47
+            // Wel_avaria = 6.00 / 2.473 = 2.426 -> 2.43 kW
+            // Poupança vs 6.00 kW = (6.00 - 2.426) / 6.00 * 100 = 59.6%
+            const t4Cop = parseFloat(document.getElementById('t4-cop').value);
+            const t4Wel = parseFloat(document.getElementById('t4-wel').value);
+            const t4Sav = parseFloat(document.getElementById('t4-saving').value);
+
+            let s4 = 0;
+            if (isClose(t4Cop, 2.47, 0.08)) s4 += 1.5;
+            if (isClose(t4Wel, 2.43, 0.08)) s4 += 1.5;
+            if (isClose(t4Sav, 59.6, 1.5)) s4 += 2.0;
+            totalScore += s4;
+
+            const fb4 = document.getElementById('fb-t4');
+            if (s4 === 5.0) {
+                fb4.className = 'feedback-msg feedback-ok';
+                fb4.innerHTML = `<strong>Correto (5.0 / 5.0 val.):</strong> Com falta de fluido/sujidade, o COP cai para 2.47 (W<sub>el</sub> sobe para 2.43 kW), mantendo ainda 59.6% de poupança face à resistência elétrica.`;
+            } else {
+                fb4.className = 'feedback-msg feedback-err';
+                fb4.innerHTML = `<strong>Pontuação: ${s4.toFixed(1)} / 5.0 val.</strong> Esperado: COP = <strong>2.47</strong>, W<sub>el</sub> = <strong>2.43 kW</strong> e poupança de <strong>59.6%</strong> face aos 6.00 kW da resistência.`;
+            }
+
+            // Apresentar Banner da Classificação Final
+            const banner = document.getElementById('score-banner');
+            const scoreDisplay = document.getElementById('score-display');
+            const scoreSummary = document.getElementById('score-summary');
+
+            banner.classList.add('visible');
+            scoreDisplay.textContent = `${totalScore.toFixed(1)} / 20 val.`;
+            scoreDisplay.style.color = totalScore >= 10 ? '#34d399' : '#fb7185';
+
+            const studentName = document.getElementById('st-name').value.trim() || 'Formando';
+            scoreSummary.textContent = `${studentName} — Avaliação concluída. Pode agora imprimir ou guardar em PDF.`;
+
+            showToast(`Ficha corrigida! Classificação: ${totalScore.toFixed(1)} / 20 valores.`);
+        }
+
+        function resetWorksheet() {
+            const ids = ['t1-eta', 't1-cop', 't1-concept', 't2-cop', 't2-qamb', 't3-cop', 't3-drop', 't3-concept', 't4-cop', 't4-wel', 't4-saving'];
+            ids.forEach(id => document.getElementById(id).value = '');
+            ['fb-t1', 'fb-t2', 'fb-t3', 'fb-t4'].forEach(id => {
+                const el = document.getElementById(id);
+                el.className = 'feedback-msg';
+                el.innerHTML = '';
+            });
+            document.getElementById('score-banner').classList.remove('visible');
+            showToast('Campos da ficha de trabalho limpos.');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast-notice');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Listeners
+        [ctrlG, ctrlAc, ctrlText, ctrlTset].forEach(el => el.addEventListener('input', updateSimulation));
+        ctrlMaint.addEventListener('change', updateSimulation);
+        window.addEventListener('resize', drawCopCurve);
+
+        // Inicializar simulação
+        window.addEventListener('load', updateSimulation);
+    </script>
+</body>
+</html>
